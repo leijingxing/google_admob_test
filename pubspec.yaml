@@ -1,0 +1,67 @@
+name: flutter_base
+description: "flutter基础框架项目"
+
+publish_to: 'none'
+
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  dio: ^5.9.2
+  dio_cache_interceptor: ^4.0.5
+  http_cache_hive_store: ^5.0.2
+  # GetX 是 Flutter 上的一个轻量且强大的解决方案：高性能的状态管理、智能的依赖注入和便捷的路由管理。 https://github.com/jonataslaw/getx
+  get: ^4.7.3
+  # 权限检查
+  permission_handler: ^12.0.1
+  # 持久化存储数据 https://docs.hivedb.dev/#/basics/hive_in_flutter
+  hive_flutter: ^1.1.0
+  # 不依赖原生的toast，可以自定义UI，也用它来封装Loading或者dialog
+  bot_toast: ^4.1.3
+  easy_refresh: ^3.4.0
+  flutter_screenutil: ^5.9.3
+  talker_flutter: ^5.1.14
+  talker_dio_logger: ^5.1.14
+  meta: ^1.17.0
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  # 生成app图标
+  icons_launcher: ^3.0.3
+  build_runner: ^2.11.1
+  flutter_gen_runner: ^5.12.0
+  http_parser: any
+
+
+flutter_gen:
+  output: lib/generated/
+  line_length: 160
+
+icons_launcher:
+  image_path: "assets/app-logo.png"
+  platforms:
+    android:
+      enable: true
+    ios:
+      enable: true
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/app-logo.png # app图标
+    - assets/images/
+    - assets/svg/
