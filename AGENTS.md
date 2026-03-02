@@ -12,6 +12,7 @@
 ## 技术基线
 - 状态管理：GetX（`GetxController`、`GetView`、`Binding`）。
 - 网络层：统一使用项目封装的 `HttpService`。
+- 提示反馈：所有 Toast 统一使用 `AppToast`。
 - 适配与资源：遵循项目既有约定（如 `flutter_screenutil`、`flutter_gen`）。
 - 环境入口：`main_dev.dart`、`main_prod.dart`。
 
@@ -48,7 +49,28 @@
 - 所有网络请求必须走 `HttpService`，禁止模块内直连第三方网络库。
 - `modules/**` 不直接承担网络细节，业务页面通过 `data/repository` 获取数据。
 - 请求成功态、空态、失败态必须完整处理，失败态必须可观测（日志或 UI 反馈）。
-- 新增或修改模型后，必须同步更新序列化与解析注册逻辑并重新生成代码。
+- 所有模型解析必须在 `repository` 调用时显式传入 `parser`，禁止依赖全局隐式注册表。
+- 新增或修改模型后，必须执行代码生成并在对应仓库请求中补齐 `parser`。
+- 列表接口必须显式解析 `List<T>`，禁止 `dynamic` 透传到 UI 层。
+
+## AI 生成约束（必须遵守）
+- 生成模型时必须使用 `json_serializable`：
+  - 文件结构：`xxx_model.dart` + `part 'xxx_model.g.dart';`
+  - 必须实现：`factory XxxModel.fromJson(...)` 和 `toJson()`
+- 字段容错统一使用 `lib/data/models/json_converters.dart`：
+  - `int` 字段优先 `@IntSafeConverter()`
+  - `String` 字段优先 `@StringSafeConverter()`
+  - `String?` 字段优先 `@NullableStringSafeConverter()`
+- Repository 请求必须显式传 `parser`：
+  - 单对象：`parser: (json) => XxxModel.fromJson(Map<String, dynamic>.from(json as Map))`
+  - 列表：`parser: (json) => (json as List).map(...).toList()`
+- 禁止输出或依赖以下方案：
+  - 禁止 Android Studio 插件 `FlutterJsonBeanFactory`
+  - 禁止 `JsonConvert.fromJsonAsT` 全局注册表方案
+  - 禁止在 UI 层直接解析 JSON
+- 生成完成后必须执行：
+  - `dart run build_runner build --delete-conflicting-outputs`
+  - `flutter analyze`
 
 ## 代码生成与资源约束
 - 严禁手动修改：`*.g.dart`、`*.freezed.dart`、`lib/generated/**`。
@@ -87,6 +109,7 @@
 - 禁止手改任何生成文件。
 - 禁止在 `modules/**` 直接编写网络实现细节。
 - 禁止把业务逻辑堆在 Widget 层（应下沉至 Controller/Repository）。
+- 禁止直接使用第三方或原生 Toast API（如 `BotToast.showText`、`Get.snackbar` 等）替代 `AppToast`。
 - 禁止提交密钥、证书或任何敏感配置明文。
 
 ## 推荐事项（SHOULD）

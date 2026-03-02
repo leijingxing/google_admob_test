@@ -32,6 +32,7 @@ dependencies:
   talker_flutter: ^5.1.14
   talker_dio_logger: ^5.1.14
   meta: ^1.17.0
+  json_annotation: ^4.11.0
 
 
 dev_dependencies:
@@ -42,6 +43,7 @@ dev_dependencies:
   # 生成app图标
   icons_launcher: ^3.0.3
   build_runner: ^2.11.1
+  json_serializable: ^6.13.0
   flutter_gen_runner: ^5.12.0
   http_parser: any
 

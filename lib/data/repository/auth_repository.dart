@@ -17,7 +17,7 @@ class AuthRepository {
     // return HttpService().post<String>(
     //   '/auth/login',
     //   data: {'username': username, 'password': password},
-    //   convert: (json) => (json['token'] ?? '') as String,
+    //   parser: (json) => (json['token'] ?? '') as String,
     // );
   }
 

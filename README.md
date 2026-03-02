@@ -46,6 +46,7 @@ ci/            # 构建与 CI 脚本
   - 局部高频刷新使用 `obs + Obx`
 - 依赖注入：通过 `Binding` 注入，禁止在 View 里直接创建页面级 Controller。
 - 网络访问：必须通过 `HttpService`，并经 `data/repository` 对外提供。
+- 模型解析：统一使用 `json_serializable`，并在 `repository` 请求时显式传 `parser`。
 - 生成文件：`*.g.dart`、`*.freezed.dart`、`lib/generated/**` 严禁手改。
 - 注释规范：遵循 `COMMENT_STANDARD.md`。
 
@@ -83,20 +84,103 @@ dart run ci/build_ci.dart
 2. 新建页面、`*_controller.dart`、`*_binding.dart`（Binding 与 Controller 分文件）
 3. 配置路由：`lib/router/app_routes.dart`、`lib/router/app_pages.dart`
 4. 新增模型与仓库逻辑：`lib/data/models`、`lib/data/repository`
-5. 联调后执行：
+5. 模型与接口解析按以下标准实现：
+   - 模型使用 `json_serializable`（`@JsonSerializable + part '*.g.dart'`）
+   - 每个接口在 `repository` 显式传 `parser`，禁止全局隐式解析
+   - 列表接口同样显式解析 `List<T>`
+6. 联调后执行：
    - `dart format .`
    - `flutter analyze`
    - `dart run build_runner build --delete-conflicting-outputs`（若涉及模型/序列化/资源）
-6. 提交 PR（含验证结果与影响范围）
+7. 提交 PR（含验证结果与影响范围）
 
-## 7. 提交规范
+## 7. parser 示例
+
+```dart
+// 单对象
+final userRes = await HttpService().get<UserModel>(
+  '/user/info',
+  parser: (json) => UserModel.fromJson(Map<String, dynamic>.from(json as Map)),
+);
+
+// 列表
+final usersRes = await HttpService().get<List<UserModel>>(
+  '/user/list',
+  parser: (json) => (json as List)
+      .map((e) => UserModel.fromJson(Map<String, dynamic>.from(e as Map)))
+      .toList(),
+);
+```
+
+## 8. AI 开发固定模板
+
+### 8.1 新增模型模板
+```dart
+import 'package:json_annotation/json_annotation.dart';
+import 'json_converters.dart';
+
+part 'xxx_model.g.dart';
+
+@JsonSerializable()
+class XxxModel {
+  @IntSafeConverter()
+  final int id;
+
+  @StringSafeConverter()
+  final String name;
+
+  @NullableStringSafeConverter()
+  final String? remark;
+
+  const XxxModel({
+    required this.id,
+    required this.name,
+    this.remark,
+  });
+
+  factory XxxModel.fromJson(Map<String, dynamic> json) =>
+      _$XxxModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$XxxModelToJson(this);
+}
+```
+
+### 8.2 新增接口模板（Repository）
+```dart
+// 单对象接口
+Future<Result<XxxModel>> fetchDetail() {
+  return HttpService().get<XxxModel>(
+    '/xxx/detail',
+    parser: (json) => XxxModel.fromJson(Map<String, dynamic>.from(json as Map)),
+  );
+}
+
+// 列表接口
+Future<Result<List<XxxModel>>> fetchList() {
+  return HttpService().get<List<XxxModel>>(
+    '/xxx/list',
+    parser: (json) => (json as List)
+        .map((e) => XxxModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList(),
+  );
+}
+```
+
+### 8.3 AI 生成后检查清单
+1. 是否使用了 `json_serializable`（而不是插件生成）
+2. 是否使用了统一容错转换器（`IntSafeConverter` 等）
+3. 是否在 Repository 显式传了 `parser`
+4. 是否执行了 `dart run build_runner build --delete-conflicting-outputs`
+5. 是否执行了 `flutter analyze`
+
+## 9. 提交规范
 
 - 建议使用 Conventional Commits，例如：
   - `feat(login): 新增短信验证码登录`
   - `fix(order): 修复订单详情空态闪烁`
   - `refactor(network): 收敛错误码映射逻辑`
 
-## 8. 注意事项
+## 10. 注意事项
 
 - 不要提交密钥、证书、账号等敏感信息。
 - 不要在 Widget 中堆积业务逻辑，应下沉到 Controller/Repository。

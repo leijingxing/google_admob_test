@@ -10,9 +10,11 @@ import 'package:talker_dio_logger/talker_dio_logger_interceptor.dart';
 import 'package:talker_dio_logger/talker_dio_logger_settings.dart';
 
 import '../../global.dart';
-import 'json_parser.dart';
 
 export 'http_paginated_result.dart';
+
+/// 响应解析器：将接口 data 段转换为目标类型。
+typedef ResponseParser<T> = T Function(dynamic json);
 
 /// 网络请求统一服务，封装 Dio 初始化、缓存策略、日志与错误转换。
 class HttpService {
@@ -114,6 +116,7 @@ class HttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
+    ResponseParser<T>? parser,
     CachePolicy cachePolicy = CachePolicy.noCache,
     Duration? cacheDuration,
     bool enableDedupe = false,
@@ -125,6 +128,7 @@ class HttpService {
       queryParameters: queryParameters,
       options: options,
       cancelToken: cancelToken,
+      parser: parser,
       cachePolicy: cachePolicy,
       cacheDuration: cacheDuration,
       enableDedupe: enableDedupe,
@@ -139,6 +143,7 @@ class HttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
+    ResponseParser<T>? parser,
     bool enableDedupe = true,
     String? dedupeKey,
   }) async {
@@ -149,6 +154,7 @@ class HttpService {
       queryParameters: queryParameters,
       options: options,
       cancelToken: cancelToken,
+      parser: parser,
       enableDedupe: enableDedupe,
       dedupeKey: dedupeKey,
     );
@@ -161,6 +167,7 @@ class HttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
+    ResponseParser<T>? parser,
     bool enableDedupe = true,
     String? dedupeKey,
   }) async {
@@ -171,6 +178,7 @@ class HttpService {
       queryParameters: queryParameters,
       options: options,
       cancelToken: cancelToken,
+      parser: parser,
       enableDedupe: enableDedupe,
       dedupeKey: dedupeKey,
     );
@@ -183,6 +191,7 @@ class HttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
+    ResponseParser<T>? parser,
     bool enableDedupe = true,
     String? dedupeKey,
   }) async {
@@ -193,6 +202,7 @@ class HttpService {
       queryParameters: queryParameters,
       options: options,
       cancelToken: cancelToken,
+      parser: parser,
       enableDedupe: enableDedupe,
       dedupeKey: dedupeKey,
     );
@@ -210,6 +220,7 @@ class HttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
+    ResponseParser<T>? parser,
     CachePolicy cachePolicy = CachePolicy.noCache,
     Duration? cacheDuration,
     ProgressCallback? onSendProgress,
@@ -224,6 +235,7 @@ class HttpService {
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
+        parser: parser,
         cachePolicy: cachePolicy,
         cacheDuration: cacheDuration,
         onSendProgress: onSendProgress,
@@ -252,6 +264,7 @@ class HttpService {
       queryParameters: queryParameters,
       options: options,
       cancelToken: cancelToken,
+      parser: parser,
       cachePolicy: cachePolicy,
       cacheDuration: cacheDuration,
       onSendProgress: onSendProgress,
@@ -275,6 +288,7 @@ class HttpService {
     Map<String, dynamic>? queryParameters,
     Options? options,
     CancelToken? cancelToken,
+    ResponseParser<T>? parser,
     CachePolicy cachePolicy = CachePolicy.noCache,
     Duration? cacheDuration,
     ProgressCallback? onSendProgress,
@@ -302,35 +316,27 @@ class HttpService {
       );
 
       final responseBody = response.data;
+      final responseData =
+          (responseBody is Map && responseBody.containsKey('data'))
+              ? responseBody['data']
+              : responseBody;
 
-      // 标准响应：{code: ..., data: ...}
-      if (responseBody is Map && responseBody.containsKey('data')) {
-        final responseData = responseBody['data'];
-        if (T == dynamic || T.toString().startsWith('Map<')) {
-          return Success(responseData as T);
-        }
-        final parsedData = parseData<T>(responseData);
-        return Success(parsedData);
+      if (parser != null) {
+        return Success(parser(responseData));
       }
 
-      // 非标准响应：将完整响应体作为数据尝试返回
-      if (responseBody is T) {
-        return Success(responseBody);
+      if (responseData is T) {
+        return Success(responseData);
       }
-      if (T == dynamic) {
-        return Success(responseBody);
+      if (T == dynamic || T.toString().startsWith('Map<')) {
+        return Success(responseData as T);
       }
-      try {
-        return Success(responseBody as T);
-      } catch (_) {
-        return Failure(
-          AppError(
-            code: -1,
-            message:
-                '响应类型不匹配: 期望 ${T.toString()} 但收到 ${responseBody.runtimeType.toString()}',
-          ),
-        );
-      }
+      return Failure(
+        AppError(
+          code: -1,
+          message: '未提供解析器(parser)，无法将响应转换为 ${T.toString()}',
+        ),
+      );
     } on DioException catch (e) {
       return Failure(_createErrorEntity(e));
     } on AppError catch (e) {
