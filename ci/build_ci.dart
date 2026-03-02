@@ -6,18 +6,22 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
-import 'package:http_parser/http_parser.dart';
 
 // --- 脚本配置常量 (请根据你的实际情况修改) ---
 
-/// 上传 Apk 的私有服务器相关配置
-// 注意：这里将端口修改为 Go 应用的端口 1234
-const SERVER_IP = '172.18.254.96'; // 如果 Go 应用运行在本地，可以改为 'localhost' 或 '127.0.0.1'
-const GO_APP_PORT = 1234; // Go 应用的端口号
-
-// WAN_SERVER_IP 保持不变，用于通知中的外部访问链接，如果 Go 应用有外部 IP，可以修改
-const WAN_SERVER_IP = 'https://blog.u2828180.nyat.app:46793';
+/// S3 相关配置（建议通过环境变量注入，避免明文密钥）
+/// PowerShell 示例：
+/// $env:S3_ENDPOINT='http://111.9.22.231:50134'
+/// $env:S3_ACCESS_KEY='你的AccessKey'
+/// $env:S3_SECRET_KEY='你的SecretKey'
+/// $env:S3_BUCKET='你的bucket'
+const DEFAULT_S3_ENDPOINT = 'http://111.9.22.231:50134';
+const DEFAULT_S3_REGION = 'us-east-1';
+const DEFAULT_S3_ACCESS_KEY = 'PRPXPXC1190RAGKDG45X';
+const DEFAULT_S3_SECRET_KEY = '2Ug4HRryOSypBMfwA1PsF7dvx31ZRB14LuFJ3FFu';
+const DEFAULT_S3_BUCKET = 'app';
 
 /// 企业微信 Webhook 相关配置
 const WECHAT_WEBHOOK_URL = 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send';
@@ -58,7 +62,9 @@ void main(List<String> args) async {
 /// 封装了脚本的所有配置项
 class BuildConfig {
   /// Flavor 名称 (例如: dev, prod)
-  final String flavor;
+  final String? flavor;
+  /// 构建渠道标识（用于日志与上传），不一定等于 Gradle flavor
+  final String channel;
   /// Dart 入口文件路径 (例如: lib/main_dev.dart)
   final String entryPoint;
   /// 应用显示名称 (从 resValue 中获取)
@@ -70,6 +76,7 @@ class BuildConfig {
 
   BuildConfig({
     required this.flavor,
+    required this.channel,
     required this.entryPoint,
     required this.appName,
     required this.finalPackageId,
@@ -80,19 +87,28 @@ class BuildConfig {
   static Future<BuildConfig> fromArgs(List<String> args) async {
     // 1. 从 .run/*.xml 文件中选择一个运行配置
     final runConfig = await RunConfig.selectFromLocal();
-    Logger.success('已选择构建配置: ${runConfig.name} (Flavor: ${runConfig.flavor})');
+    Logger.success('已选择构建配置: ${runConfig.name} (Flavor: ${runConfig.flavor ?? 'default'})');
+
+    final hasValidFlavor = await GradleParser.supportsFlavor(runConfig.flavor);
+    final effectiveFlavor = hasValidFlavor ? runConfig.flavor : null;
+    if (runConfig.flavor != null && !hasValidFlavor) {
+      Logger.warn('Gradle 中未定义 flavor "${runConfig.flavor}"，将自动以无 flavor 模式构建。');
+    }
 
     // 2. 基于选择的 flavor，从 build.gradle.kts 解析详细信息
-    final appName = await GradleParser.getAppName(runConfig.flavor) ?? runConfig.name;
-    final packageId = await GradleParser.getFinalPackageId(runConfig.flavor);
+    final appName = await GradleParser.getAppName(effectiveFlavor) ?? runConfig.name;
+    final packageId = await GradleParser.getFinalPackageId(effectiveFlavor);
 
     // 3. 确定最终构建产物的路径
     // Flutter 3.19+ aab/apk产物默认带flavor和build mode
     // e.g., build/app/outputs/flutter-apk/app-dev-release.apk
-    final apkPath = 'build/app/outputs/flutter-apk/app-${runConfig.flavor}-release.apk';
+    final apkPath = (effectiveFlavor == null || effectiveFlavor.isEmpty)
+        ? 'build/app/outputs/flutter-apk/app-release.apk'
+        : 'build/app/outputs/flutter-apk/app-$effectiveFlavor-release.apk';
 
     return BuildConfig(
-      flavor: runConfig.flavor,
+      flavor: effectiveFlavor,
+      channel: runConfig.flavor ?? 'default',
       entryPoint: runConfig.entryPoint,
       appName: appName,
       finalPackageId: packageId,
@@ -140,19 +156,20 @@ class BuildRunner {
   /// 执行 Flutter 构建命令
   Future<void> _buildApk() async {
     final startTime = DateTime.now();
-    Logger.info('开始构建APK (Flavor: ${config.flavor})...');
+    Logger.info('开始构建APK (Flavor: ${config.flavor ?? 'default'})...');
 
     final flutterBin = _getFlutterSdkPath() ?? 'flutter';
-    // 新的构建命令，使用 flavor 和 target
-    final buildArgs = [
+    // 构建命令：有 flavor 才追加 --flavor
+    final buildArgs = <String>[
       'build',
       'apk',
       '--release',
-      '--flavor',
-      config.flavor,
       '-t',
       config.entryPoint,
     ];
+    if (config.flavor != null && config.flavor!.isNotEmpty) {
+      buildArgs.insertAll(3, ['--flavor', config.flavor!]);
+    }
 
     Logger.info('执行命令: $flutterBin ${buildArgs.join(' ')}');
 
@@ -184,7 +201,7 @@ class BuildRunner {
     if (uploadToPgyer) {
       await _performPgyerUpload(apkFile, updateLog);
     } else {
-      await _performCustomServerUpload(apkFile, updateLog);
+      await _performS3Upload(apkFile, updateLog);
     }
   }
 
@@ -256,74 +273,32 @@ class BuildRunner {
     }
   }
 
-  /// 执行自定义服务器上传
-  Future<void> _performCustomServerUpload(File apkFile, String updateLog) async {
-    Logger.info('开始上传到自定义服务器...');
-    await _uploadToCustomServer(apkFile, updateLog);
-    Logger.success('上传到自定义服务器成功！');
+  /// 执行 S3 上传
+  Future<void> _performS3Upload(File apkFile, String updateLog) async {
+    Logger.info('开始上传到公司生产 S3...');
+    final uploadedUrl = await S3Uploader.uploadApk(
+      filePath: apkFile.path,
+      packageId: config.finalPackageId,
+      channel: config.channel,
+    );
+    Logger.success('上传到公司生产 S3 成功！');
 
     final size = await apkFile.length() / 1024 / 1024;
     final buildTime = _fmtTime(DateTime.now());
 
-    // 自定义服务器的下载链接结构
-    final detailPageUrl = 'http://$SERVER_IP:$GO_APP_PORT/app/${config.finalPackageId}';
-    final publicDownloadUrl = '$WAN_SERVER_IP/app/${config.finalPackageId}';
-
     final results = <String, dynamic>{
       '项目': config.appName,
-      '环境': config.flavor,
+      '环境': config.channel,
       '大小': '${size.toStringAsFixed(2)}MB',
       '包名': config.finalPackageId,
       '构建时间': buildTime,
       '更新日志': updateLog,
-      '下载链接': '[内网](${Uri.encodeFull(detailPageUrl)})  [外网](${Uri.encodeFull(publicDownloadUrl)})',
+      '下载链接': Uri.encodeFull(uploadedUrl),
     };
 
     Logger.info('构建结果详情:');
     Logger.info(ENCODER.convert(results));
     await _sendWeChatNotification(results);
-  }
-
-  /// 上传文件到自定义服务器的具体实现
-  Future<void> _uploadToCustomServer(File apkFile, String updateLog) async {
-    Logger.info('上传中 (请耐心等待)...');
-    try {
-      final dio = Dio();
-      final originalFilename = apkFile.path.split(Platform.pathSeparator).last;
-
-      final formData = FormData.fromMap({
-        'projectName': config.appName,
-        'channel': config.flavor, // 使用 flavor 作为 channel
-        'releaseNotes': updateLog,
-        'source': 'app', // 你可以自定义这个字段
-        'file': await MultipartFile.fromFile(
-          apkFile.path,
-          filename: originalFilename,
-          contentType: MediaType('application', 'vnd.android.package-archive'),
-        ),
-      });
-
-      final resp = await dio.post(
-        'http://$SERVER_IP:$GO_APP_PORT/api/upload', // 自定义服务器的上传接口
-        data: formData,
-        onSendProgress: (sent, total) {
-          if (total != -1) {
-            final percentage = (sent / total * 100).toStringAsFixed(1);
-            stdout.write('\r上传进度: $percentage%');
-          }
-        },
-      );
-      stdout.writeln(); // 进度条完成后换行
-
-      if (resp.statusCode == 200) {
-        Logger.info('上传成功，服务器响应: ${resp.data}');
-      } else {
-        throw Exception('服务器返回错误: ${resp.statusCode}, ${resp.data}');
-      }
-    } catch (e) {
-      Logger.error('上传到自定义服务器时发生错误: $e');
-      rethrow;
-    }
   }
 
   /// 发送企业微信通知
@@ -366,8 +341,16 @@ abstract final class GradleParser {
     return _contentCache!;
   }
 
+  /// 检查指定 flavor 是否在 Gradle 的 productFlavors 中定义
+  static Future<bool> supportsFlavor(String? flavor) async {
+    if (flavor == null || flavor.isEmpty) return false;
+    final content = await _getGradleContent();
+    if (!content.contains('productFlavors')) return false;
+    return RegExp('create\\("$flavor"\\)\\s*\\{').hasMatch(content);
+  }
+
   /// 获取指定 Flavor 的最终包名
-  static Future<String> getFinalPackageId(String flavor) async {
+  static Future<String> getFinalPackageId(String? flavor) async {
     final content = await _getGradleContent();
 
     // 1. 获取默认包名
@@ -376,6 +359,9 @@ abstract final class GradleParser {
     if (baseId == null) throw Exception('在 build.gradle.kts 中找不到默认的 applicationId');
 
     // 2. 查找指定 flavor 的配置块
+    if (flavor == null || flavor.isEmpty) {
+      return baseId;
+    }
     final flavorBlockMatch = RegExp('create\\("$flavor"\\)\\s*\\{([\\s\\S]*?)\\}').firstMatch(content);
     if (flavorBlockMatch == null) {
       // 如果没有找到独立的 flavor 块 (例如 prod flavor 可能直接使用默认值)，则返回基础ID
@@ -401,7 +387,8 @@ abstract final class GradleParser {
   }
 
   /// 获取指定 Flavor 的应用名称
-  static Future<String?> getAppName(String flavor) async {
+  static Future<String?> getAppName(String? flavor) async {
+    if (flavor == null || flavor.isEmpty) return null;
     final content = await _getGradleContent();
     final flavorBlockMatch = RegExp('create\\("$flavor"\\)\\s*\\{([\\s\\S]*?)\\}').firstMatch(content);
     if (flavorBlockMatch == null) return null;
@@ -416,26 +403,41 @@ abstract final class GradleParser {
 /// 解析 .run/*.xml IDEA/Android Studio 运行配置
 class RunConfig {
   final String name;
-  final String flavor;
+  final String? flavor;
   final String entryPoint;
 
   const RunConfig({required this.name, required this.flavor, required this.entryPoint});
 
   static final _nameReg = RegExp(r'<configuration .*name="([^"]+)"');
   static final _flavorReg = RegExp(r'<option name="buildFlavor" value="([^"]+)" />');
+  static final _additionalArgsReg = RegExp(r'<option name="additionalArgs" value="([^"]+)" />');
   static final _entryPointReg = RegExp(r'<option name="filePath" value="\$PROJECT_DIR\$([^"]+)" />');
 
   /// 从文件中解析配置
   static RunConfig? fromFile(File file) {
     final content = file.readAsStringSync();
     final name = _nameReg.firstMatch(content)?.group(1);
-    final flavor = _flavorReg.firstMatch(content)?.group(1);
+    var flavor = _flavorReg.firstMatch(content)?.group(1);
+    final additionalArgs = _additionalArgsReg.firstMatch(content)?.group(1) ?? '';
     final entryPoint = _entryPointReg.firstMatch(content)?.group(1)?.substring(1); // 移除开头的 '/'
 
-    if (name != null && flavor != null && entryPoint != null) {
+    if (flavor == null || flavor.isEmpty) {
+      flavor = RegExp(r'--flavor\s+([A-Za-z0-9_-]+)').firstMatch(additionalArgs)?.group(1);
+    }
+    if ((flavor == null || flavor.isEmpty) && entryPoint != null) {
+      flavor = _inferFlavorFromEntryPoint(entryPoint);
+    }
+
+    if (name != null && entryPoint != null) {
       return RunConfig(name: name, flavor: flavor, entryPoint: entryPoint);
     }
     return null;
+  }
+
+  static String? _inferFlavorFromEntryPoint(String entryPoint) {
+    final fileName = entryPoint.split('/').last;
+    final match = RegExp(r'^main_([A-Za-z0-9_-]+)\.dart$').firstMatch(fileName);
+    return match?.group(1);
   }
 
   /// 从本地 .run 目录中扫描并让用户选择一个配置
@@ -452,7 +454,7 @@ class RunConfig {
 
     Logger.prompt('检测到多个运行配置，请选择一个:');
     for (var i = 0; i < configs.length; i++) {
-      Logger.info('$i: ${configs[i].name} (Flavor: ${configs[i].flavor})');
+      Logger.info('$i: ${configs[i].name} (Flavor: ${configs[i].flavor ?? 'default'})');
     }
 
     const prompt = '请输入序号 (默认 0)';
@@ -505,6 +507,7 @@ abstract final class Logger {
   static void info(Object? obj) => stdout.writeln(obj);
   static void success(Object? obj) => stdout.writeln('$_green$obj$_reset');
   static void error(Object? obj) => stderr.writeln('$_red$obj$_reset');
+  static void warn(Object? obj) => stdout.writeln('$_yellow$obj$_reset');
   static void prompt(String message, {bool ln = true}) {
     final coloredMessage = '$_yellow$message$_reset';
     if (ln) {
@@ -656,5 +659,123 @@ class AppUploader {
     } else {
       throw Exception('获取构建信息失败: ${response.data}');
     }
+  }
+}
+
+/// S3 上传模块（Signature V4）
+abstract final class S3Uploader {
+  static Future<String> uploadApk({
+    required String filePath,
+    required String packageId,
+    required String channel,
+  }) async {
+    final endpoint = (Platform.environment['S3_ENDPOINT'] ?? DEFAULT_S3_ENDPOINT).trim();
+    final accessKey = (Platform.environment['S3_ACCESS_KEY'] ?? DEFAULT_S3_ACCESS_KEY).trim();
+    final secretKey = (Platform.environment['S3_SECRET_KEY'] ?? DEFAULT_S3_SECRET_KEY).trim();
+    final bucket = (Platform.environment['S3_BUCKET'] ?? DEFAULT_S3_BUCKET).trim();
+    final region = (Platform.environment['S3_REGION'] ?? DEFAULT_S3_REGION).trim();
+
+    if (accessKey.isEmpty || secretKey.isEmpty || bucket.isEmpty) {
+      throw Exception(
+        '缺少 S3 配置。请设置环境变量：S3_ACCESS_KEY、S3_SECRET_KEY、S3_BUCKET（可选 S3_ENDPOINT、S3_REGION）。',
+      );
+    }
+
+    final endpointUri = Uri.parse(endpoint);
+    final file = File(filePath);
+    if (!await file.exists()) {
+      throw FileSystemException('待上传文件不存在', filePath);
+    }
+
+    final bytes = await file.readAsBytes();
+    final fileName = file.path.split(RegExp(r'[\\/]')).last;
+    final now = DateTime.now().toUtc();
+    final dateStamp = _yyyyMMdd(now);
+    final amzDate = _amzDate(now);
+
+    final objectKey = '$packageId/$channel/$dateStamp/$fileName';
+    final encodedKey = objectKey.split('/').map(Uri.encodeComponent).join('/');
+    final uri = endpointUri.replace(path: '/$bucket/$encodedKey');
+
+    final payloadHash = sha256.convert(bytes).toString();
+    final canonicalUri = '/$bucket/$encodedKey';
+    final host = endpointUri.hasPort ? '${endpointUri.host}:${endpointUri.port}' : endpointUri.host;
+    final canonicalHeaders = 'host:$host\nx-amz-content-sha256:$payloadHash\nx-amz-date:$amzDate\n';
+    final signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+    final canonicalRequest = [
+      'PUT',
+      canonicalUri,
+      '',
+      canonicalHeaders,
+      signedHeaders,
+      payloadHash,
+    ].join('\n');
+
+    final credentialScope = '$dateStamp/$region/s3/aws4_request';
+    final stringToSign = [
+      'AWS4-HMAC-SHA256',
+      amzDate,
+      credentialScope,
+      sha256.convert(utf8.encode(canonicalRequest)).toString(),
+    ].join('\n');
+
+    final signingKey = _getSigningKey(secretKey, dateStamp, region, 's3');
+    final signature = _hmacHex(signingKey, stringToSign);
+    final authorization = 'AWS4-HMAC-SHA256 Credential=$accessKey/$credentialScope, SignedHeaders=$signedHeaders, Signature=$signature';
+
+    final httpClient = HttpClient();
+    try {
+      Logger.info('上传中 (S3, 请耐心等待)...');
+      final request = await httpClient.openUrl('PUT', uri);
+      request.headers.set(HttpHeaders.hostHeader, host);
+      request.headers.set('x-amz-content-sha256', payloadHash);
+      request.headers.set('x-amz-date', amzDate);
+      request.headers.set(HttpHeaders.authorizationHeader, authorization);
+      request.headers.set(HttpHeaders.contentTypeHeader, 'application/vnd.android.package-archive');
+      request.contentLength = bytes.length;
+      request.add(bytes);
+
+      final response = await request.close();
+      final body = await utf8.decodeStream(response);
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('S3 上传失败: HTTP ${response.statusCode}, body: $body');
+      }
+    } finally {
+      httpClient.close(force: true);
+    }
+
+    return uri.toString();
+  }
+
+  static List<int> _getSigningKey(String secretKey, String dateStamp, String region, String service) {
+    final kDate = _hmacBytes(utf8.encode('AWS4$secretKey'), dateStamp);
+    final kRegion = _hmacBytes(kDate, region);
+    final kService = _hmacBytes(kRegion, service);
+    return _hmacBytes(kService, 'aws4_request');
+  }
+
+  static List<int> _hmacBytes(List<int> key, String data) {
+    final hmac = Hmac(sha256, key);
+    return hmac.convert(utf8.encode(data)).bytes;
+  }
+
+  static String _hmacHex(List<int> key, String data) {
+    final hmac = Hmac(sha256, key);
+    return hmac.convert(utf8.encode(data)).toString();
+  }
+
+  static String _yyyyMMdd(DateTime t) {
+    final m = t.month.toString().padLeft(2, '0');
+    final d = t.day.toString().padLeft(2, '0');
+    return '${t.year}$m$d';
+  }
+
+  static String _amzDate(DateTime t) {
+    final m = t.month.toString().padLeft(2, '0');
+    final d = t.day.toString().padLeft(2, '0');
+    final h = t.hour.toString().padLeft(2, '0');
+    final min = t.minute.toString().padLeft(2, '0');
+    final s = t.second.toString().padLeft(2, '0');
+    return '${t.year}$m${d}T$h$min${s}Z';
   }
 }

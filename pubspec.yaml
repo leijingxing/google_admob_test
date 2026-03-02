@@ -32,6 +32,7 @@ dependencies:
   talker_flutter: ^5.1.14
   talker_dio_logger: ^5.1.14
   meta: ^1.17.0
+  crypto: ^3.0.6
   json_annotation: ^4.11.0
 
 
