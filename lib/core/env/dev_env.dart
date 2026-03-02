@@ -6,7 +6,7 @@ class DevEnv implements Env {
   String get title => '[DEV] Flutter Base';
 
   @override
-  String get apiBaseUrl => 'https://example-dev.com';
+  String get apiBaseUrl => 'http://111.9.22.231:50511';
 
   @override
   bool get debug => true;

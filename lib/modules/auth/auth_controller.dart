@@ -29,8 +29,8 @@ class AuthController extends GetxController {
   void onInit() {
     super.onInit();
     // [CONSTRAINT]: 作为脚手架默认演示账号，便于快速联调。
-    usernameController.text = 'admin';
-    passwordController.text = '123456';
+    usernameController.text = 'jwhxadmin';
+    passwordController.text = 'jwhxadmin';
   }
 
   /// 切换密码显示状态。
@@ -84,12 +84,15 @@ class AuthController extends GetxController {
       if (_isDisposed || isClosed) return;
 
       await result.when(
-        success: (token) async {
+        success: (loginResult) async {
           if (_isDisposed || isClosed) return;
-          if (token.isEmpty) {
+          if (loginResult.accessToken.isEmpty) {
             AppToast.showWarning('登录失败，请稍后重试');
             return;
           }
+          final token = loginResult.tokenType.isEmpty
+              ? loginResult.accessToken
+              : '${loginResult.tokenType} ${loginResult.accessToken}';
           await UserManager.saveToken(token);
           if (!_isDisposed && !isClosed && Get.currentRoute != Routes.home) {
             await Get.offAllNamed(Routes.home);

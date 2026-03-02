@@ -1,24 +1,32 @@
+import 'dart:convert';
+
+import '../../core/http/http_service.dart';
 import '../../core/http/result.dart';
+import '../models/login_token_model.dart';
 
 /// 登录模块仓库层，统一管理鉴权相关数据请求。
 class AuthRepository {
-  /// 账号登录，当前脚手架默认返回 mock token。
-  Future<Result<String>> login({
+  /// 账号登录，调用真实鉴权接口。
+  Future<Result<LoginTokenModel>> login({
     required String username,
     required String password,
   }) async {
-    // 脚手架默认返回模拟 token，实际项目替换为真实接口。
     if (username.isEmpty || password.isEmpty) {
       return Failure(AppError(code: -1, message: '用户名或密码不能为空'));
     }
 
-    return Success('mock-token-${DateTime.now().millisecondsSinceEpoch}');
-    // 示例真实请求：
-    // return HttpService().post<String>(
-    //   '/auth/login',
-    //   data: {'username': username, 'password': password},
-    //   parser: (json) => (json['token'] ?? '') as String,
-    // );
+    final encodedPassword = base64Encode(utf8.encode(password));
+    return HttpService().post<LoginTokenModel>(
+      '/auth/oauth/token',
+      data: {
+        'type': 1,
+        'grant_type': 'password',
+        'username': username,
+        'password': encodedPassword,
+      },
+      parser: (json) =>
+          LoginTokenModel.fromJson(Map<String, dynamic>.from(json as Map)),
+    );
   }
 
   /// 退出登录，预留服务端登出扩展点。
