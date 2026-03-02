@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +8,9 @@ import 'package:talker_dio_logger/talker_dio_logger_interceptor.dart';
 import 'package:talker_dio_logger/talker_dio_logger_settings.dart';
 
 import '../../global.dart';
+import 'http_auth_strategy.dart';
+import 'http_error_mapper.dart';
+import 'http_response_protocol.dart';
 
 export 'http_paginated_result.dart';
 
@@ -31,16 +32,13 @@ class HttpService {
   late final CacheOptions? _cacheOptions;
   final Map<String, Future<Result<dynamic>>> _inflightRequests =
       <String, Future<Result<dynamic>>>{};
+  final HttpAuthStrategy _authStrategy = HttpAuthStrategy();
+  final HttpErrorMapper _errorMapper = HttpErrorMapper();
+  final HttpResponseProtocol _responseProtocol = HttpResponseProtocol();
 
   /// 仅在测试或调试场景使用，便于自定义 Adapter/拦截器
   @visibleForTesting
   Dio get testingClient => _dio;
-
-  // =======================================================================
-  // >> 依赖注入的回调函数 <<
-  // =======================================================================
-  Future<String?> Function()? _getToken;
-  Future<void> Function(DioException error)? _onAuthError;
 
   /// 初始化网络服务，必须在应用启动时调用
   ///
@@ -52,8 +50,7 @@ class HttpService {
     Future<void> Function(DioException error)? onAuthError,
     String? cachePath,
   }) {
-    _getToken = getToken;
-    _onAuthError = onAuthError;
+    _authStrategy.configure(getToken: getToken, onAuthError: onAuthError);
 
     final options = BaseOptions(
       baseUrl: Environment.currentEnv.apiBaseUrl,
@@ -315,11 +312,7 @@ class HttpService {
         onSendProgress: onSendProgress,
       );
 
-      final responseBody = response.data;
-      final responseData =
-          (responseBody is Map && responseBody.containsKey('data'))
-              ? responseBody['data']
-              : responseBody;
+      final responseData = _responseProtocol.unwrap(response.data);
 
       if (parser != null) {
         return Success(parser(responseData));
@@ -332,13 +325,10 @@ class HttpService {
         return Success(responseData as T);
       }
       return Failure(
-        AppError(
-          code: -1,
-          message: '未提供解析器(parser)，无法将响应转换为 ${T.toString()}',
-        ),
+        AppError(code: -1, message: '未提供解析器(parser)，无法将响应转换为 ${T.toString()}'),
       );
     } on DioException catch (e) {
-      return Failure(_createErrorEntity(e));
+      return Failure(_errorMapper.map(e));
     } on AppError catch (e) {
       return Failure(e);
     } catch (e) {
@@ -365,109 +355,23 @@ class HttpService {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    if (_getToken != null) {
-      final token = await _getToken!();
-      if (token != null && token.isNotEmpty) {
-        options.headers['Authorization'] = token;
-        options.headers['content-type'] = 'application/json';
-      }
-    }
+    await _authStrategy.applyToken(options);
     return handler.next(options);
   }
 
   /// 响应拦截：基于约定 code 字段判定业务成功
   void _onResponse(Response response, ResponseInterceptorHandler handler) {
-    final responseData = response.data;
-    if (responseData is Map<String, dynamic>) {
-      if (responseData.containsKey('success') &&
-          responseData['success'] == false) {
-        final errCodeStr = responseData['errCode']?.toString();
-        final errCodeInt = int.tryParse(errCodeStr ?? '') ?? -1;
-        final errMsg = responseData['message'] ?? '业务逻辑错误';
-        return handler.reject(
-          DioException(
-            requestOptions: response.requestOptions,
-            response: response,
-            error: AppError(code: errCodeInt, message: errMsg),
-          ),
-          true,
-        );
-      }
-      if (responseData.containsKey('code')) {
-        final code = responseData['code'];
-        if (code != 0 && code != 200) {
-          return handler.reject(
-            DioException(
-              requestOptions: response.requestOptions,
-              response: response,
-              error: AppError(
-                code: code is String ? (int.tryParse(code) ?? -1) : code,
-                message: responseData['message'] ?? '业务逻辑错误',
-              ),
-            ),
-            true,
-          );
-        }
-      }
+    try {
+      _responseProtocol.validate(response);
+      return handler.next(response);
+    } on DioException catch (error) {
+      return handler.reject(error, true);
     }
-    return handler.next(response);
   }
 
   /// 异常拦截：处理 401 回调并交给统一错误转换
   void _onError(DioException err, ErrorInterceptorHandler handler) {
-    final appError = err.error;
-    if (appError is AppError && appError.code == 1001 && _onAuthError != null) {
-      unawaited(_onAuthError!(err));
-    }
-    if (err.response?.statusCode == 401 && _onAuthError != null) {
-      _onAuthError!(err);
-    }
+    _authStrategy.handleAuthError(err);
     return handler.next(err);
-  }
-
-  /// 将 Dio 层异常转换为可读的 AppError
-  AppError _createErrorEntity(DioException error) {
-    if (error.error is AppError) {
-      return error.error as AppError;
-    }
-
-    switch (error.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        return AppError(code: -2, message: '网络连接超时，请检查您的网络设置');
-      case DioExceptionType.badResponse:
-        final statusCode = error.response?.statusCode ?? -1;
-        if (error.response?.data?['message'] != null) {
-          return AppError(
-            code: statusCode,
-            message: error.response?.data?['message'],
-          );
-        }
-        switch (statusCode) {
-          case 401:
-            return AppError(code: statusCode, message: '认证失败，请重新登录');
-          case 403:
-            return AppError(code: statusCode, message: '没有权限访问');
-          case 404:
-            return AppError(code: statusCode, message: '您访问的资源不存在');
-          case 500:
-          case 502:
-          case 503:
-            return AppError(code: statusCode, message: '服务器开小差了，请稍后再试');
-          default:
-            final errMsg = error.response?.data?['message'] ?? '请求失败';
-            return AppError(code: statusCode, message: errMsg);
-        }
-      case DioExceptionType.cancel:
-        return AppError(code: -3, message: '请求已取消');
-      case DioExceptionType.unknown:
-        if (error.message != null) {
-          return AppError(code: -1, message: error.message!);
-        }
-        return AppError(code: -4, message: '请求错误，请稍后重试');
-      default:
-        return AppError(code: -1, message: '请求错误，请稍后重试');
-    }
   }
 }
