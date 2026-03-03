@@ -8,9 +8,8 @@ class SplashController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    Future<void>.delayed(const Duration(milliseconds: 100), () {
-      final next = UserManager.isLogin ? Routes.home : Routes.authLogin;
-      Get.offAllNamed(next);
-    });
+    // Global.init 已在 main_* 入口中 await 完成，进入 Splash 时后端服务已就绪。
+    final next = UserManager.isLogin ? Routes.home : Routes.authLogin;
+    Get.offAllNamed(next);
   }
 }
