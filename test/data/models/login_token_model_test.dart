@@ -1,4 +1,4 @@
-import 'package:flutter_base/data/models/login_token_model.dart';
+import 'package:flutter_base/data/models/auth/login_token_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -607,7 +607,7 @@ class AppUploader {
       '_api_key': _pgyerApiKey,
       'buildType': 'android',
       'buildInstallType': 1,
-      if (updateDescription != null) 'buildUpdateDescription': updateDescription,
+      'buildUpdateDescription': ?updateDescription,
     }));
     if (response.statusCode == 200 && response.data['code'] == 0) {
       return response.data['data'] as Map<String, dynamic>;

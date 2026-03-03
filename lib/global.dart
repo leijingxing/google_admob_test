@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:talker_flutter/talker_flutter.dart';
+import 'package:talker/talker.dart';
 
 import 'core/constants/storage.dart';
 import 'core/env/env.dart';
@@ -10,7 +10,7 @@ import 'core/utils/storage_util.dart';
 import 'core/utils/user_manager.dart';
 
 /// 全局 Talker 实例，用于日志记录与网络日志展示。
-final talker = TalkerFlutter.init();
+final talker = Talker();
 
 /// [功能]: 应用启动阶段的全局初始化入口。
 /// [说明]:
