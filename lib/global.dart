@@ -1,3 +1,4 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -20,6 +21,30 @@ class Global {
   /// 是否首次打开应用。
   static bool isFirstOpen = false;
 
+  /// 统一配置 EasyRefresh 中文文案，避免各页面重复设置。
+  static void _initEasyRefreshLocalization() {
+    EasyRefresh.defaultHeaderBuilder = () => const ClassicHeader(
+      dragText: '下拉刷新',
+      armedText: '松开刷新',
+      readyText: '正在刷新...',
+      processingText: '正在刷新...',
+      processedText: '刷新完成',
+      noMoreText: '没有更多数据',
+      failedText: '刷新失败',
+      messageText: '上次更新：%T',
+    );
+    EasyRefresh.defaultFooterBuilder = () => const ClassicFooter(
+      dragText: '上拉加载',
+      armedText: '松开加载',
+      readyText: '正在加载...',
+      processingText: '正在加载...',
+      processedText: '加载完成',
+      noMoreText: '没有更多数据',
+      failedText: '加载失败',
+      messageText: '上次更新：%T',
+    );
+  }
+
   /// [功能]: 初始化全局依赖。
   /// [输入]:
   ///   - [env]: 当前运行环境配置（开发/生产）。
@@ -29,6 +54,7 @@ class Global {
   ///   3. 记录首开标记与系统 UI 样式。
   static Future<void> init({required Env env}) async {
     WidgetsFlutterBinding.ensureInitialized();
+    _initEasyRefreshLocalization();
     await StorageUtil.init();
 
     Environment().init(env);

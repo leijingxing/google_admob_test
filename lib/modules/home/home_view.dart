@@ -4,9 +4,10 @@ import 'package:get/get.dart';
 import '../../core/constants/app_colors.dart';
 import '../dashboard/dashboard_view.dart';
 import '../profile/profile_view.dart';
+import '../refresh_test/refresh_test_view.dart';
 import 'home_controller.dart';
 
-/// 首页：底部 Tab（主页 / 个人）。
+/// 首页：底部 Tab（主页 / 测试 / 个人）。
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
@@ -18,7 +19,7 @@ class HomeView extends GetView<HomeController> {
           backgroundColor: const Color(0xFFF5F8FC),
           body: IndexedStack(
             index: logic.currentIndex,
-            children: const [DashboardView(), ProfileView()],
+            children: const [DashboardView(), RefreshTestView(), ProfileView()],
           ),
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: logic.currentIndex,
@@ -29,6 +30,11 @@ class HomeView extends GetView<HomeController> {
                 icon: Icon(Icons.home_outlined),
                 activeIcon: Icon(Icons.home_rounded),
                 label: '主页',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.science_outlined),
+                activeIcon: Icon(Icons.science_rounded),
+                label: '测试',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.person_outline_rounded),
