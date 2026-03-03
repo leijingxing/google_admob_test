@@ -18,7 +18,7 @@ class DashboardView extends GetView<DashboardController> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFF5FAFF), Color(0xFFEFF4FB)],
+              colors: [Color(0xFFF3F8FF), Color(0xFFEAF2FF)],
             ),
           ),
           child: CustomScrollView(
@@ -26,10 +26,10 @@ class DashboardView extends GetView<DashboardController> {
             slivers: [
               SliverAppBar(
                 pinned: true,
-                expandedHeight: AppDimens.dp200,
+                expandedHeight: AppDimens.dp220,
                 elevation: 0,
                 surfaceTintColor: Colors.transparent,
-                backgroundColor: const Color(0xFF145AA3),
+                backgroundColor: const Color(0xFF1F5FAE),
                 flexibleSpace: FlexibleSpaceBar(
                   titlePadding: EdgeInsets.only(
                     left: AppDimens.dp16,
@@ -55,30 +55,30 @@ class DashboardView extends GetView<DashboardController> {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [Color(0xFF0F3A68), Color(0xFF1C6ABD)],
+                        colors: [Color(0xFF124A90), Color(0xFF2A78C8)],
                       ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '你好，今天也很适合推进 Demo',
+                          logic.greeting,
                           style: TextStyle(
-                            color: const Color(0xFFDCEEFF),
+                            color: Color(0xFFDCEEFF),
                             fontSize: AppDimens.sp12,
                           ),
                         ),
                         SizedBox(height: AppDimens.dp8),
                         Text(
-                          '快速开始你的业务模块',
+                          '今日业务总览',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: AppDimens.sp20,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        SizedBox(height: AppDimens.dp12),
-                        const _OverviewChips(),
+                        SizedBox(height: AppDimens.dp10),
+                        _WeatherChip(text: logic.weather),
                       ],
                     ),
                   ),
@@ -88,26 +88,40 @@ class DashboardView extends GetView<DashboardController> {
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
                     AppDimens.dp16,
-                    AppDimens.dp16,
+                    AppDimens.dp14,
                     AppDimens.dp16,
                     AppDimens.dp24,
                   ),
                   child: Column(
-                    children: logic.cards.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final item = entry.value;
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: AppDimens.dp12),
-                        child: _DashboardCard(
-                          icon: item.icon,
-                          title: item.title,
-                          subtitle: item.subtitle,
-                          accentColor: index.isEven
-                              ? const Color(0xFF1967B4)
-                              : const Color(0xFF2A9D8F),
-                        ),
-                      );
-                    }).toList(),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _SectionTitle(title: '数据概览'),
+                      SizedBox(height: AppDimens.dp10),
+                      _StatsGrid(stats: logic.stats),
+                      SizedBox(height: AppDimens.dp16),
+                      _SectionTitle(title: '快捷入口'),
+                      SizedBox(height: AppDimens.dp10),
+                      _QuickActionGrid(
+                        items: logic.quickActions,
+                        onTap: logic.onQuickActionTap,
+                      ),
+                      SizedBox(height: AppDimens.dp16),
+                      _SectionTitle(title: '今日待办'),
+                      SizedBox(height: AppDimens.dp10),
+                      ...logic.todos.map(
+                        (item) => _TodoCard(item: item, onTap: logic.onTodoTap),
+                      ),
+                      SizedBox(height: AppDimens.dp16),
+                      _SectionTitle(title: '项目进度'),
+                      SizedBox(height: AppDimens.dp10),
+                      ...logic.projects.map((item) => _ProjectCard(item: item)),
+                      SizedBox(height: AppDimens.dp16),
+                      _SectionTitle(title: '最近动态'),
+                      SizedBox(height: AppDimens.dp10),
+                      ...logic.activities.map(
+                        (item) => _ActivityCard(item: item),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -119,28 +133,28 @@ class DashboardView extends GetView<DashboardController> {
   }
 }
 
-class _OverviewChips extends StatelessWidget {
-  const _OverviewChips();
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.title});
+
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const _OverviewChip(label: '模块', value: '2'),
-        SizedBox(width: AppDimens.dp8),
-        const _OverviewChip(label: '入口', value: '4'),
-        SizedBox(width: AppDimens.dp8),
-        const _OverviewChip(label: '状态', value: '正常'),
-      ],
+    return Text(
+      title,
+      style: TextStyle(
+        color: AppColors.textPrimary,
+        fontSize: AppDimens.sp16,
+        fontWeight: FontWeight.w700,
+      ),
     );
   }
 }
 
-class _OverviewChip extends StatelessWidget {
-  const _OverviewChip({required this.label, required this.value});
+class _WeatherChip extends StatelessWidget {
+  const _WeatherChip({required this.text});
 
-  final String label;
-  final String value;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
@@ -150,97 +164,355 @@ class _OverviewChip extends StatelessWidget {
         vertical: AppDimens.dp6,
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(AppDimens.dp24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
       ),
-      child: Text(
-        '$label · $value',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: AppDimens.sp10,
-          fontWeight: FontWeight.w600,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.cloud_outlined, color: Colors.white, size: AppDimens.sp14),
+          SizedBox(width: AppDimens.dp6),
+          Text(
+            text,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: AppDimens.sp10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatsGrid extends StatelessWidget {
+  const _StatsGrid({required this.stats});
+
+  final List<DashboardStatData> stats;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: stats
+          .map(
+            (item) => Expanded(
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal: AppDimens.dp4),
+                padding: EdgeInsets.all(AppDimens.dp12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppDimens.dp14),
+                  border: Border.all(color: const Color(0xFFE2EAF6)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0E2A49).withValues(alpha: 0.08),
+                      blurRadius: AppDimens.dp12,
+                      offset: Offset(0, AppDimens.dp4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: AppDimens.sp10,
+                      ),
+                    ),
+                    SizedBox(height: AppDimens.dp8),
+                    Text(
+                      item.value,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: AppDimens.sp14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: AppDimens.dp6),
+                    Text(
+                      item.trend,
+                      style: TextStyle(
+                        color: item.color,
+                        fontSize: AppDimens.sp10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class _QuickActionGrid extends StatelessWidget {
+  const _QuickActionGrid({required this.items, required this.onTap});
+
+  final List<DashboardQuickActionData> items;
+  final ValueChanged<DashboardQuickActionData> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = (constraints.maxWidth - AppDimens.dp10) / 2;
+        return Wrap(
+          spacing: AppDimens.dp10,
+          runSpacing: AppDimens.dp10,
+          children: items.map((item) {
+            return SizedBox(
+              width: cardWidth,
+              child: InkWell(
+                onTap: () => onTap(item),
+                borderRadius: BorderRadius.circular(AppDimens.dp14),
+                child: Container(
+                  padding: EdgeInsets.all(AppDimens.dp12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppDimens.dp14),
+                    border: Border.all(color: const Color(0xFFE2EAF6)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: AppDimens.dp32,
+                        height: AppDimens.dp32,
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFF2A78C8,
+                          ).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(AppDimens.dp10),
+                        ),
+                        child: Icon(item.icon, color: const Color(0xFF1F5FAE)),
+                      ),
+                      SizedBox(height: AppDimens.dp8),
+                      Text(
+                        item.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: AppDimens.sp12,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: AppDimens.dp4),
+                      Text(
+                        item.subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: AppDimens.sp10,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+}
+
+class _TodoCard extends StatelessWidget {
+  const _TodoCard({required this.item, required this.onTap});
+
+  final DashboardTodoData item;
+  final ValueChanged<DashboardTodoData> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isHigh = item.priority == '高';
+    return Container(
+      margin: EdgeInsets.only(bottom: AppDimens.dp10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimens.dp14),
+        border: Border.all(color: const Color(0xFFE2EAF6)),
+      ),
+      child: ListTile(
+        onTap: () => onTap(item),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: AppDimens.dp12,
+          vertical: AppDimens.dp2,
+        ),
+        leading: CircleAvatar(
+          radius: AppDimens.dp16,
+          backgroundColor:
+              (isHigh ? const Color(0xFFE55252) : const Color(0xFF2F8EDE))
+                  .withValues(alpha: 0.14),
+          child: Icon(
+            Icons.task_alt_rounded,
+            color: isHigh ? const Color(0xFFE55252) : const Color(0xFF2F8EDE),
+            size: AppDimens.sp14,
+          ),
+        ),
+        title: Text(
+          item.title,
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: AppDimens.sp12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Text(
+          '${item.time} · 优先级 ${item.priority}',
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: AppDimens.sp10,
+          ),
+        ),
+        trailing: Icon(
+          Icons.chevron_right_rounded,
+          color: const Color(0xFF9BA9BA),
+          size: AppDimens.sp18,
         ),
       ),
     );
   }
 }
 
-class _DashboardCard extends StatelessWidget {
-  const _DashboardCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.accentColor,
-  });
+class _ProjectCard extends StatelessWidget {
+  const _ProjectCard({required this.item});
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color accentColor;
+  final DashboardProjectData item;
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = (item.progress * 100).toStringAsFixed(0);
+    return Container(
+      margin: EdgeInsets.only(bottom: AppDimens.dp10),
+      padding: EdgeInsets.all(AppDimens.dp12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimens.dp14),
+        border: Border.all(color: const Color(0xFFE2EAF6)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  item.name,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: AppDimens.sp12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                '$percent%',
+                style: TextStyle(
+                  color: const Color(0xFF1F5FAE),
+                  fontSize: AppDimens.sp12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: AppDimens.dp8),
+          LinearProgressIndicator(
+            minHeight: AppDimens.dp6,
+            borderRadius: BorderRadius.circular(AppDimens.dp6),
+            value: item.progress,
+            backgroundColor: const Color(0xFFE9EEF7),
+            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF1F5FAE)),
+          ),
+          SizedBox(height: AppDimens.dp8),
+          Row(
+            children: [
+              Icon(
+                Icons.groups_2_outlined,
+                size: AppDimens.sp12,
+                color: AppColors.textSecondary,
+              ),
+              SizedBox(width: AppDimens.dp4),
+              Text(
+                item.owner,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: AppDimens.sp10,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActivityCard extends StatelessWidget {
+  const _ActivityCard({required this.item});
+
+  final DashboardActivityData item;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(AppDimens.dp14),
+      margin: EdgeInsets.only(bottom: AppDimens.dp10),
+      padding: EdgeInsets.all(AppDimens.dp12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppDimens.dp16),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.white, Color(0xFFF7FAFF)],
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimens.dp14),
         border: Border.all(color: const Color(0xFFE2EAF6)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0E2A49).withValues(alpha: 0.08),
-            blurRadius: AppDimens.dp12,
-            offset: Offset(0, AppDimens.dp4),
-          ),
-        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: AppDimens.dp40,
-            height: AppDimens.dp40,
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(AppDimens.dp12),
+            margin: EdgeInsets.only(top: AppDimens.dp4),
+            width: AppDimens.dp8,
+            height: AppDimens.dp8,
+            decoration: const BoxDecoration(
+              color: Color(0xFF1F5FAE),
+              shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: accentColor),
           ),
-          SizedBox(width: AppDimens.dp12),
+          SizedBox(width: AppDimens.dp10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  item.title,
                   style: TextStyle(
                     color: AppColors.textPrimary,
-                    fontSize: AppDimens.sp14,
+                    fontSize: AppDimens.sp12,
                     fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(height: AppDimens.dp4),
+                Text(
+                  item.desc,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: AppDimens.sp10,
                   ),
                 ),
                 SizedBox(height: AppDimens.dp6),
                 Text(
-                  subtitle,
+                  item.time,
                   style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: AppDimens.sp12,
+                    color: const Color(0xFF8B9AAF),
+                    fontSize: AppDimens.sp10,
                   ),
                 ),
               ],
             ),
-          ),
-          SizedBox(width: AppDimens.dp8),
-          Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: AppDimens.sp12,
-            color: const Color(0xFF9BA9BA),
           ),
         ],
       ),
