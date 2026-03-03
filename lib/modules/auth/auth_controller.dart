@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 
 import '../../core/utils/user_manager.dart';
 import '../../data/repository/auth_repository.dart';
-import '../../router/app_routes.dart';
+import '../../router/module_routes/home_routes.dart';
 
 /// 登录页控制器，负责表单校验与登录流程。
 class AuthController extends GetxController {
@@ -94,8 +94,10 @@ class AuthController extends GetxController {
               ? loginResult.accessToken
               : '${loginResult.tokenType} ${loginResult.accessToken}';
           await UserManager.saveToken(token);
-          if (!_isDisposed && !isClosed && Get.currentRoute != Routes.home) {
-            await Get.offAllNamed(Routes.home);
+          if (!_isDisposed &&
+              !isClosed &&
+              Get.currentRoute != HomeRouteNames.home) {
+            await Get.offAllNamed(HomeRouteNames.home);
           }
         },
         failure: (error) async {

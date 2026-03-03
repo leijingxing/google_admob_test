@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 
-import '../../router/app_routes.dart';
+import '../../router/module_routes/auth_routes.dart';
 import '../constants/storage.dart';
 import 'storage_util.dart';
 
@@ -26,8 +26,8 @@ class UserManager {
   static Future<void> logout() async {
     token = null;
     await StorageUtil.remove(StorageConstants.token);
-    if (Get.currentRoute != Routes.authLogin) {
-      await Get.offAllNamed(Routes.authLogin);
+    if (Get.currentRoute != AuthRouteNames.authLogin) {
+      await Get.offAllNamed(AuthRouteNames.authLogin);
     }
   }
 

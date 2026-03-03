@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../core/utils/user_manager.dart';
-import 'app_routes.dart';
+import 'module_routes/auth_routes.dart';
 
 /// [功能]: 路由登录态校验中间件。
 /// [说明]:
@@ -18,6 +18,8 @@ class AuthMiddleware extends GetMiddleware {
   /// 根据登录态决定是否重定向。
   RouteSettings? redirect(String? route) {
     if (!isLoginRequired) return null;
-    return UserManager.isLogin ? null : const RouteSettings(name: Routes.authLogin);
+    return UserManager.isLogin
+        ? null
+        : const RouteSettings(name: AuthRouteNames.authLogin);
   }
 }

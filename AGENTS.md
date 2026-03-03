@@ -16,13 +16,6 @@
 - 适配与资源：遵循项目既有约定（如 `flutter_screenutil`、`flutter_gen`）。
 - 环境入口：`main_dev.dart`、`main_prod.dart`。
 
-## 模板初始化（新项目克隆后第一步）
-1. 修改应用标识与展示信息：`pubspec.yaml`、平台包名/Bundle ID、应用名。
-2. 执行依赖安装：`flutter pub get`。
-3. 执行代码生成：`dart run build_runner build --delete-conflicting-outputs`。
-4. 启动开发环境验证：`flutter run -t lib/main_dev.dart`。
-5. 提交初始化变更，作为业务开发起点。
-
 ## 目录与分层约定
 - `lib/core/`：基础能力（网络、环境、主题、工具），不放业务页面逻辑。
 - `lib/data/`：数据层（models、repository、datasource），负责数据获取与转换。
