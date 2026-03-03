@@ -19,9 +19,8 @@ import 'package:dio/dio.dart';
 /// $env:S3_BUCKET='你的bucket'
 const DEFAULT_S3_ENDPOINT = 'http://111.9.22.231:50134';
 const DEFAULT_S3_REGION = 'us-east-1';
-const DEFAULT_S3_ACCESS_KEY = 'PRPXPXC1190RAGKDG45X';
-const DEFAULT_S3_SECRET_KEY = '2Ug4HRryOSypBMfwA1PsF7dvx31ZRB14LuFJ3FFu';
 const DEFAULT_S3_BUCKET = 'app';
+const DEFAULT_S3_PUBLIC_INCLUDE_BUCKET = true;
 
 /// 企业微信 Webhook 相关配置
 const WECHAT_WEBHOOK_URL = 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send';
@@ -670,14 +669,26 @@ abstract final class S3Uploader {
     required String channel,
   }) async {
     final endpoint = (Platform.environment['S3_ENDPOINT'] ?? DEFAULT_S3_ENDPOINT).trim();
-    final accessKey = (Platform.environment['S3_ACCESS_KEY'] ?? DEFAULT_S3_ACCESS_KEY).trim();
-    final secretKey = (Platform.environment['S3_SECRET_KEY'] ?? DEFAULT_S3_SECRET_KEY).trim();
+    var accessKey = (Platform.environment['S3_ACCESS_KEY'] ?? '').trim();
+    var secretKey = (Platform.environment['S3_SECRET_KEY'] ?? '').trim();
     final bucket = (Platform.environment['S3_BUCKET'] ?? DEFAULT_S3_BUCKET).trim();
     final region = (Platform.environment['S3_REGION'] ?? DEFAULT_S3_REGION).trim();
+    final publicBaseUrl = (Platform.environment['S3_PUBLIC_BASE_URL'] ?? endpoint).trim();
+    final includeBucketInPublicUrl = _parseBoolEnv(
+      Platform.environment['S3_PUBLIC_INCLUDE_BUCKET'],
+      fallback: DEFAULT_S3_PUBLIC_INCLUDE_BUCKET,
+    );
+
+    if (accessKey.isEmpty) {
+      accessKey = await _promptS3AccessKey();
+    }
+    if (secretKey.isEmpty) {
+      secretKey = await _promptS3SecretKey();
+    }
 
     if (accessKey.isEmpty || secretKey.isEmpty || bucket.isEmpty) {
       throw Exception(
-        '缺少 S3 配置。请设置环境变量：S3_ACCESS_KEY、S3_SECRET_KEY、S3_BUCKET（可选 S3_ENDPOINT、S3_REGION）。',
+        '缺少 S3 配置。请在控制台输入或设置环境变量：S3_ACCESS_KEY、S3_SECRET_KEY、S3_BUCKET（可选 S3_ENDPOINT、S3_REGION）。',
       );
     }
 
@@ -744,7 +755,13 @@ abstract final class S3Uploader {
       httpClient.close(force: true);
     }
 
-    return uri.toString();
+    final publicUri = _buildPublicUri(
+      publicBaseUrl: publicBaseUrl,
+      bucket: bucket,
+      encodedKey: encodedKey,
+      includeBucket: includeBucketInPublicUrl,
+    );
+    return publicUri.toString();
   }
 
   static List<int> _getSigningKey(String secretKey, String dateStamp, String region, String service) {
@@ -777,5 +794,37 @@ abstract final class S3Uploader {
     final min = t.minute.toString().padLeft(2, '0');
     final s = t.second.toString().padLeft(2, '0');
     return '${t.year}$m${d}T$h$min${s}Z';
+  }
+
+  static bool _parseBoolEnv(String? raw, {required bool fallback}) {
+    if (raw == null) return fallback;
+    final value = raw.trim().toLowerCase();
+    if (value == '1' || value == 'true' || value == 'yes' || value == 'y') return true;
+    if (value == '0' || value == 'false' || value == 'no' || value == 'n') return false;
+    return fallback;
+  }
+
+  static Uri _buildPublicUri({
+    required String publicBaseUrl,
+    required String bucket,
+    required String encodedKey,
+    required bool includeBucket,
+  }) {
+    final base = Uri.parse(publicBaseUrl);
+    final basePath = base.path.endsWith('/') ? base.path.substring(0, base.path.length - 1) : base.path;
+    final suffix = includeBucket ? '/$bucket/$encodedKey' : '/$encodedKey';
+    return base.replace(path: '$basePath$suffix');
+  }
+
+  static Future<String> _promptS3AccessKey() async {
+    const timeout = Duration(minutes: 10);
+    final value = await _ioPromptWithTimeout('请输入 S3_ACCESS_KEY', timeout);
+    return value == _TIMED_OUT ? '' : value.trim();
+  }
+
+  static Future<String> _promptS3SecretKey() async {
+    const timeout = Duration(minutes: 10);
+    final value = await _ioPromptWithTimeout('请输入 S3_SECRET_KEY', timeout);
+    return value == _TIMED_OUT ? '' : value.trim();
   }
 }

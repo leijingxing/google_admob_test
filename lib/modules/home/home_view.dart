@@ -10,7 +10,6 @@ class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
   @override
-  /// 构建开发指引页主体布局。
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FC),
