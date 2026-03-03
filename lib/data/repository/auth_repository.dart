@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import '../../core/http/http_service.dart';
 import '../../core/http/result.dart';
-import '../models/login_token_model.dart';
+import '../models/auth/login_token_model.dart';
 
 /// 登录模块仓库层，统一管理鉴权相关数据请求。
 class AuthRepository {

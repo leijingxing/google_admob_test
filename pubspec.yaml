@@ -32,8 +32,10 @@ dependencies:
   talker_flutter: ^5.1.14
   talker_dio_logger: ^5.1.14
   meta: ^1.17.0
-  crypto: ^3.0.6
+  crypto: ^3.0.7
   json_annotation: ^4.11.0
+  open_filex: ^4.7.0
+  path_provider: ^2.1.5
 
 
 dev_dependencies:
@@ -47,7 +49,6 @@ dev_dependencies:
   json_serializable: ^6.13.0
   flutter_gen_runner: ^5.12.0
   http_parser: any
-
 
 flutter_gen:
   output: lib/generated/

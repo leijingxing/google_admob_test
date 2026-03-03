@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import 'json_converters.dart';
+import '../json_converters.dart';
 
 part 'login_token_model.g.dart';
 

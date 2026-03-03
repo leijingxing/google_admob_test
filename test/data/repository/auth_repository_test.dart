@@ -1,5 +1,5 @@
 import 'package:flutter_base/core/http/result.dart';
-import 'package:flutter_base/data/models/login_token_model.dart';
+import 'package:flutter_base/data/models/auth/login_token_model.dart';
 import 'package:flutter_base/data/repository/auth_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
