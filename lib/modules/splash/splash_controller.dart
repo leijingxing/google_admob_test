@@ -8,7 +8,7 @@ class SplashController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    Future<void>.delayed(const Duration(milliseconds: 600), () {
+    Future<void>.delayed(const Duration(milliseconds: 100), () {
       final next = UserManager.isLogin ? Routes.home : Routes.authLogin;
       Get.offAllNamed(next);
     });

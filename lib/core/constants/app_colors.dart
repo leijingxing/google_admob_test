@@ -33,8 +33,6 @@ class AppColors {
   // 文本颜色
   static const Color textPrimary = Color(0xFF212529);
   static const Color textSecondary = Color(0xFF6C757D);
-  static const Color textLight = Colors.white;
-  static const Color fontColorGray = Color(0xFF949F9E);
 
   // 边框颜色
   static const Color border = Color(0xFFDEE2E6);
