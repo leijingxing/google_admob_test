@@ -1,20 +1,15 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
-import 'module_routes/auth_routes.dart';
-import 'module_routes/home_routes.dart';
 import 'module_routes/splash_routes.dart';
 
-/// 路由注册中心，维护初始路由与页面绑定关系。
+/// 路由入口（非命名路由）。
 class AppPages {
   AppPages._();
 
-  /// 应用初始路由。
-  static const initial = SplashRouteNames.splash;
+  /// 应用首页。
+  static Widget buildHome() => SplashRoutes.buildPage();
 
-  /// 所有页面定义。
-  static final routes  = <GetPage<dynamic>>[
-    ...SplashRoutes.routes,
-    ...AuthRoutes.routes,
-    ...HomeRoutes.routes,
-  ];
+  /// 应用首页依赖。
+  static Bindings buildInitialBinding() => SplashRoutes.buildBinding();
 }

@@ -44,6 +44,11 @@ ci/            # 构建与 CI 脚本
 - 状态管理：
   - 默认优先 `GetBuilder`
   - 局部高频刷新使用 `obs + Obx`
+- 路由跳转（特殊约束）：
+  - 本项目为“嵌入宿主项目”场景，禁止命名路由，避免 GetX 路由表冲突。
+  - 仅使用 `Get.to/Get.off/Get.offAll` + `Binding` 的页面实例跳转。
+  - 禁止 `Get.toNamed/Get.offNamed/Get.offAllNamed`、`GetPage` 路由表、`initialRoute/getPages`。
+  - 跨模块跳转统一通过 `lib/router/module_routes/*.dart` 的封装方法调用。
 - 依赖注入：通过 `Binding` 注入，禁止在 View 里直接创建页面级 Controller。
 - 网络访问：必须通过 `HttpService`，并经 `data/repository` 对外提供。
 - 模型解析：统一使用 `json_serializable`，并在 `repository` 请求时显式传 `parser`。
@@ -82,7 +87,7 @@ dart run ci/build_ci.dart
 
 1. 新建模块目录：`lib/modules/<feature>/`
 2. 新建页面、`*_controller.dart`、`*_binding.dart`（Binding 与 Controller 分文件）
-3. 配置路由：`lib/router/app_routes.dart`、`lib/router/app_pages.dart`
+3. 配置模块跳转封装：`lib/router/module_routes/*.dart`（仅页面实例跳转）
 4. 新增模型与仓库逻辑：`lib/data/models`、`lib/data/repository`
 5. 模型与接口解析按以下标准实现：
    - 模型使用 `json_serializable`（`@JsonSerializable + part '*.g.dart'`）

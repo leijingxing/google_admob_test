@@ -94,10 +94,8 @@ class AuthController extends GetxController {
               ? loginResult.accessToken
               : '${loginResult.tokenType} ${loginResult.accessToken}';
           await UserManager.saveToken(token);
-          if (!_isDisposed &&
-              !isClosed &&
-              Get.currentRoute != HomeRouteNames.home) {
-            await Get.offAllNamed(HomeRouteNames.home);
+          if (!_isDisposed && !isClosed) {
+            await HomeRoutes.offAll();
           }
         },
         failure: (error) async {
@@ -131,4 +129,3 @@ class AuthController extends GetxController {
     update();
   }
 }
-

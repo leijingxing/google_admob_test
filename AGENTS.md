@@ -20,8 +20,21 @@
 - `lib/core/`：基础能力（网络、环境、主题、工具），不放业务页面逻辑。
 - `lib/data/`：数据层（models、repository、datasource），负责数据获取与转换。
 - `lib/modules/`：业务模块（页面、控制器、模块内组件）。
-- `lib/router/`：路由常量与页面注册。
+- `lib/router/`：路由封装与页面跳转入口（非命名路由）。
 - `lib/generated/`：代码生成产物，禁止手改。
+
+## 路由跳转特例（嵌入场景）
+- 本项目会被嵌入到另一个宿主项目中运行，属于特殊场景。
+- 为避免与宿主项目的 GetX 命名路由表冲突，禁止使用命名路由。
+- 全局仅允许使用页面实例跳转：
+  - `Get.to(() => XxxView(), binding: XxxBinding())`
+  - `Get.off(() => XxxView(), binding: XxxBinding())`
+  - `Get.offAll(() => XxxView(), binding: XxxBinding())`
+- 禁止使用以下能力：
+  - `Get.toNamed / Get.offNamed / Get.offAllNamed`
+  - `GetPage` 路由表注册与 `initialRoute/getPages`
+  - 任意 `RouteNames` 字符串常量作为页面跳转入口
+- 跨模块跳转统一通过 `lib/router/module_routes/*.dart` 提供的方法封装，禁止在业务层硬编码路由字符串。
 
 ## GetX 约束（核心）
 - 控制器与对应 Binding 必须分文件维护：
