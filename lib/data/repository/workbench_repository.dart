@@ -1,4 +1,5 @@
 import '../../core/http/http_service.dart';
+import '../../core/http/paginated_parser.dart';
 import '../../core/http/result.dart';
 import '../models/workbench/appointment_approval_item_model.dart';
 
@@ -30,8 +31,7 @@ class WorkbenchRepository {
   /// 获取预约审批分页列表。
   ///
   /// [approvePageType]：2-园区待审批；3-园区已审批。
-  Future<Result<PaginatedResult<AppointmentApprovalItemModel>>>
-  getReservationApprovePage({
+  Future<Result<PaginatedResult<AppointmentApprovalItemModel>>> getReservationApprovePage({
     required int approvePageType,
     int current = 1,
     int size = 20,
@@ -60,11 +60,11 @@ class WorkbenchRepository {
     return _httpService.post<PaginatedResult<AppointmentApprovalItemModel>>(
       '/api/closed-off/reservation/reservationApprovePage',
       data: requestData,
-      parser: (json) => PaginatedResult<AppointmentApprovalItemModel>.fromJson(
-        Map<String, dynamic>.from(json as Map),
-        (itemJson) => AppointmentApprovalItemModel.fromJson(
-          Map<String, dynamic>.from(itemJson as Map),
-        ),
+      parser: (json) => parsePaginatedResult<AppointmentApprovalItemModel>(
+        json: json,
+        requestPageIndex: current,
+        requestPageSize: size,
+        itemParser: (itemJson) => AppointmentApprovalItemModel.fromJson(itemJson),
       ),
     );
   }

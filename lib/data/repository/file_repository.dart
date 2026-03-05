@@ -13,10 +13,7 @@ class _StartUploadResponseData {
   _StartUploadResponseData({required this.fileName, required this.id});
 
   factory _StartUploadResponseData.fromJson(Map<String, dynamic> json) {
-    return _StartUploadResponseData(
-      fileName: json['fileName'] as String? ?? '',
-      id: json['id'] as String? ?? '',
-    );
+    return _StartUploadResponseData(fileName: json['fileName'] as String? ?? '', id: json['id'] as String? ?? '');
   }
 
   final String fileName;
@@ -46,64 +43,32 @@ class FileRepository {
   final HttpService _httpService = HttpService();
 
   /// 分片上传文件，返回最终文件 ID。
-  Future<String> uploadFileByChunks({
-    required String filePath,
-    String? originalFileName,
-    String? tenantId,
-    int? maxFileSizeBytes,
-  }) async {
+  Future<String> uploadFileByChunks({required String filePath, String? originalFileName, String? tenantId, int? maxFileSizeBytes}) async {
     final file = File(filePath);
     if (!await file.exists()) {
       throw Exception('文件未找到，路径: $filePath');
     }
 
     final fileSize = await file.length();
-    if (maxFileSizeBytes != null &&
-        maxFileSizeBytes > 0 &&
-        fileSize > maxFileSizeBytes) {
-      throw Exception(
-        '文件过大，当前大小 ${_formatBytes(fileSize)}，限制 ${_formatBytes(maxFileSizeBytes)}',
-      );
+    if (maxFileSizeBytes != null && maxFileSizeBytes > 0 && fileSize > maxFileSizeBytes) {
+      throw Exception('文件过大，当前大小 ${_formatBytes(fileSize)}，限制 ${_formatBytes(maxFileSizeBytes)}');
     }
 
-    final effectiveOriginalFileName = _resolveOriginalFileName(
-      originalFileName,
-      file.path,
-    );
+    final effectiveOriginalFileName = _resolveOriginalFileName(originalFileName, file.path);
     final chunkCount = fileSize == 0 ? 1 : (fileSize / _chunkSize).ceil();
 
-    final startResponse = await _startUpload(
-      originalFileName: effectiveOriginalFileName,
-      chunkCount: chunkCount,
-      fileSize: fileSize,
-    );
+    final startResponse = await _startUpload(originalFileName: effectiveOriginalFileName, chunkCount: chunkCount, fileSize: fileSize);
 
-    await _uploadChunks(
-      file: file,
-      fileSize: fileSize,
-      chunkCount: chunkCount,
-      taskId: startResponse.id,
-      serverFileName: startResponse.fileName,
-    );
+    await _uploadChunks(file: file, fileSize: fileSize, chunkCount: chunkCount, taskId: startResponse.id, serverFileName: startResponse.fileName);
 
     return _completeUpload(taskId: startResponse.id, tenantId: tenantId);
   }
 
-  Future<_StartUploadResponseData> _startUpload({
-    required String originalFileName,
-    required int chunkCount,
-    required int fileSize,
-  }) async {
-    AppLog.verbose(
-      '[分片上传] 开始: $originalFileName, 大小: $fileSize, 分片数: $chunkCount',
-    );
+  Future<_StartUploadResponseData> _startUpload({required String originalFileName, required int chunkCount, required int fileSize}) async {
+    AppLog.verbose('[分片上传] 开始: $originalFileName, 大小: $fileSize, 分片数: $chunkCount');
     final startResult = await _httpService.post<Map<String, dynamic>>(
       _startUploadPath,
-      data: {
-        'originalFileName': originalFileName,
-        'chunks': chunkCount,
-        'appCode': Environment.currentEnv.appCode,
-      },
+      data: {'originalFileName': originalFileName, 'chunks': chunkCount, 'appCode': Environment.currentEnv.appCode},
       parser: (json) => Map<String, dynamic>.from(json as Map),
     );
 
@@ -113,9 +78,7 @@ class FileRepository {
         if (responseData.id.isEmpty || responseData.fileName.isEmpty) {
           throw Exception('[分片上传] 开始上传响应缺少 id 或 fileName');
         }
-        AppLog.verbose(
-          '[分片上传] 已开始。任务 ID: ${responseData.id}, 服务端文件名: ${responseData.fileName}',
-        );
+        AppLog.verbose('[分片上传] 已开始。任务 ID: ${responseData.id}, 服务端文件名: ${responseData.fileName}');
         return responseData;
       },
       failure: (error) => throw Exception('[分片上传] 开始上传失败: ${error.message}'),
@@ -156,14 +119,8 @@ class FileRepository {
         });
 
         AppLog.verbose('[分片上传] 正在上传分片 $i ($currentChunkSize 字节)');
-        final result = await _httpService.post<dynamic>(
-          _uploadChunkPath,
-          data: formData,
-        );
-        result.when(
-          success: (_) {},
-          failure: (error) => throw Exception('上传分片 $i 失败: ${error.message}'),
-        );
+        final result = await _httpService.post<dynamic>(_uploadChunkPath, data: formData);
+        result.when(success: (_) {}, failure: (error) => throw Exception('上传分片 $i 失败: ${error.message}'));
       }
       AppLog.verbose('[分片上传] 所有分片已成功上传');
     } finally {
@@ -172,10 +129,7 @@ class FileRepository {
     }
   }
 
-  Future<String> _completeUpload({
-    required String taskId,
-    String? tenantId,
-  }) async {
+  Future<String> _completeUpload({required String taskId, String? tenantId}) async {
     AppLog.verbose('[分片上传] 正在完成上传，任务 ID: $taskId');
     final completeData = {'id': taskId};
     final queryParams = _buildCompleteQueryParams(tenantId);
