@@ -1,312 +1,370 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../core/components/toast/toast_widget.dart';
 import '../../core/constants/app_colors.dart';
 import 'auth_controller.dart';
 
-/// 登录页视图。
+/// 登录页面。
 class AuthView extends GetView<AuthController> {
   const AuthView({super.key});
 
   @override
-  /// 构建账号密码登录表单。
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          const _AtmosphereBackground(),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: GetBuilder<AuthController>(
-                  builder: (logic) {
-                    return Container(
-                      constraints: BoxConstraints(maxWidth: 300),
-                      padding: EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.96),
-                            Colors.white.withValues(alpha: 0.9),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFF1C3760,
-                            ).withValues(alpha: 0.2),
-                            blurRadius: 36,
-                            spreadRadius: -2,
-                            offset: const Offset(0, 18),
-                          ),
-                        ],
-                      ),
-                      child: Form(
-                        key: logic.formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildBrandHeader(),
-                            SizedBox(height: 18),
-                            TextFormField(
-                              enabled: !logic.isLoading,
-                              controller: logic.usernameController,
-                              textInputAction: TextInputAction.next,
-                              validator: logic.validateUsername,
-                              decoration: _inputDecoration(
-                                label: '用户名',
-                                hint: '请输入账号',
-                                prefixIcon: Icons.person_outline,
-                              ),
-                            ),
-                            SizedBox(height: 14),
-                            TextFormField(
-                              enabled: !logic.isLoading,
-                              controller: logic.passwordController,
-                              obscureText: !logic.passwordVisible,
-                              textInputAction: TextInputAction.done,
-                              validator: logic.validatePassword,
-                              onFieldSubmitted: (_) => logic.onLogin(),
-                              decoration: _inputDecoration(
-                                label: '密码',
-                                hint: '请输入密码',
-                                prefixIcon: Icons.lock_outline,
-                                suffixIcon: IconButton(
-                                  onPressed: logic.togglePasswordVisible,
-                                  icon: Icon(
-                                    logic.passwordVisible
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 22),
-                            SizedBox(
-                              width: double.infinity,
-                              child: TweenAnimationBuilder<double>(
-                                duration: const Duration(milliseconds: 180),
-                                tween: Tween<double>(
-                                  begin: 1,
-                                  end: logic.isLoading ? 0.985 : 1,
-                                ),
-                                builder: (context, scale, child) {
-                                  return Transform.scale(
-                                    scale: scale,
-                                    child: child,
-                                  );
-                                },
-                                child: FilledButton(
-                                  onPressed: logic.isLoading
-                                      ? null
-                                      : logic.onLogin,
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: AppColors.primary,
-                                    disabledBackgroundColor: AppColors.primary
-                                        .withValues(alpha: 0.7),
-                                    elevation: 0,
-                                    padding: EdgeInsets.symmetric(vertical: 14),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 220),
-                                    switchInCurve: Curves.easeOut,
-                                    switchOutCurve: Curves.easeIn,
-                                    child: logic.isLoading
-                                        ? Row(
-                                            key: const ValueKey('loading'),
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              SizedBox(
-                                                width: 16,
-                                                height: 16,
-                                                child:
-                                                    const CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      color: Colors.white,
-                                                    ),
-                                              ),
-                                              SizedBox(width: 8),
-                                              Text(
-                                                '登录中...',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ],
-                                          )
-                                        : Text(
-                                            '进入系统',
-                                            key: const ValueKey('idle'),
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 0.3,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 12),
-                            Text(
-                              '提示：这是基础模板登录页，可直接替换为真实接口。',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+    return PopScope(
+      canPop: controller.isPopPage(),
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          controller.lastPressedAt = DateTime.now();
+          AppToast.showWarning('再次点击，立即退出App');
+          controller.update();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            _buildBackgroundDecor(),
+            Positioned(
+              left: 28.w,
+              top: 70.w,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '欢迎使用',
+                    style: TextStyle(
+                      fontSize: 30.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 10.h),
+                  Text(
+                    'Flutter 基础模板',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned.fill(
+              top: 178.h,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFFDFDFE), Color(0xFFEFF4FF)],
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(18.w),
+                    topRight: Radius.circular(18.w),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0D1B2A).withValues(alpha: 0.06),
+                      blurRadius: 20.w,
+                      offset: Offset(0, -6.w),
+                    ),
+                  ],
+                ),
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 30.w,
+                    vertical: 24.h,
+                  ),
+                  child: Column(
+                    children: [
+                      _userNameInput(),
+                      SizedBox(height: 20.h),
+                      _passwordInput(),
+                      SizedBox(height: 20.h),
+                      _verifyCodeInput(),
+                      SizedBox(height: 14.h),
+                      _rememberPwd(),
+                      SizedBox(height: 30.h),
+                      _loginButton(),
+                    ],
+                  ),
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackgroundDecor() {
+    return Positioned.fill(
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.primary, Color(0xFF0AB6F5)],
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -60.w,
+              left: -40.w,
+              child: _softCircle(
+                color: Colors.white.withValues(alpha: 0.15),
+                size: 220.w,
+              ),
+            ),
+            Positioned(
+              bottom: -80.w,
+              right: -30.w,
+              child: _softCircle(
+                color: Colors.white.withValues(alpha: 0.1),
+                size: 190.w,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _softCircle({required Color color, required double size}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.5),
+            blurRadius: size * 0.35,
+            spreadRadius: size * 0.08,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBrandHeader() {
+  Widget _userNameInput() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 54,
-          height: 54,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primary.withValues(alpha: 0.22),
-                AppColors.primary.withValues(alpha: 0.1),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Icon(
-            Icons.workspace_premium_outlined,
-            color: AppColors.primary,
-            size: 26,
-          ),
-        ),
-        SizedBox(height: 14),
         Text(
-          '欢迎登录',
+          '用户名',
           style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.6,
+            color: const Color(0xFF000000),
+            fontWeight: FontWeight.w400,
+            fontSize: 14.sp,
           ),
         ),
-        SizedBox(height: 6),
-        Text(
-          'Flutter 基础脚手架',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        SizedBox(height: 10.h),
+        Obx(
+          () => TextField(
+            focusNode: controller.usernameNode,
+            controller: controller.usernameController,
+            keyboardType: TextInputType.name,
+            decoration: _inputDecoration(
+              hintText: '请输入用户名',
+              suffixIcon: controller.userNameHasFocus.value
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: controller.usernameController.clear,
+                    )
+                  : null,
+            ),
+          ),
         ),
       ],
     );
   }
 
+  Widget _passwordInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '密码',
+          style: TextStyle(
+            color: const Color(0xFF000000),
+            fontWeight: FontWeight.w400,
+            fontSize: 14.sp,
+          ),
+        ),
+        SizedBox(height: 10.h),
+        Obx(
+          () => TextField(
+            focusNode: controller.passwordNode,
+            controller: controller.passwordController,
+            obscureText: controller.passwordObscure.value,
+            keyboardType: TextInputType.visiblePassword,
+            decoration: _inputDecoration(
+              hintText: '请输入登录密码',
+              suffixIcon: IconButton(
+                icon: controller.passwordObscure.value
+                    ? const Icon(Icons.visibility_off_outlined)
+                    : const Icon(Icons.visibility_outlined),
+                onPressed: controller.togglePasswordVisible,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _verifyCodeInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '验证码',
+          style: TextStyle(
+            color: const Color(0xFF000000),
+            fontWeight: FontWeight.w400,
+            fontSize: 14.sp,
+          ),
+        ),
+        SizedBox(height: 10.h),
+        TextField(
+          focusNode: controller.verifyCodeNode,
+          controller: controller.verifyCodeController,
+          keyboardType: TextInputType.number,
+          decoration: _inputDecoration(
+            hintText: '请输入验证码',
+            suffixIcon: Obx(() {
+              final code = controller.verifyCodeBase64.value;
+              return GestureDetector(
+                onTap: controller.refreshVerifyCode,
+                child: Container(
+                  width: 100.w,
+                  height: 40.w,
+                  margin: EdgeInsets.only(right: 10.w),
+                  color: Colors.white,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: Image.memory(
+                      base64Decode(code),
+                      key: ValueKey(code),
+                      width: 100.w,
+                      height: 40.w,
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _rememberPwd() {
+    return Row(
+      children: [
+        Obx(
+          () => Checkbox(
+            value: controller.rememberPwd.value,
+            onChanged: (value) {
+              controller.onRememberPwdChanged(value ?? false);
+            },
+            activeColor: const Color(0xFF3A78F2),
+            checkColor: Colors.white,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
+            controller.onRememberPwdChanged(!controller.rememberPwd.value);
+          },
+          child: Text(
+            '记住密码',
+            style: TextStyle(
+              height: 1.2,
+              color: const Color(0xFF4D5956),
+              fontSize: 12.sp,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _loginButton() {
+    return GestureDetector(
+      onTap: controller.loginDo,
+      child: RepaintBoundary(
+        child: Obx(() {
+          final loading = controller.isClick.value;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: loading ? 48.w : double.infinity,
+            height: 44.w,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: const Color(0xFF3A78F2),
+              borderRadius: BorderRadius.circular(8.w),
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, anim) =>
+                  FadeTransition(opacity: anim, child: child),
+              child: loading
+                  ? SizedBox(
+                      key: const ValueKey('spinner'),
+                      width: 24.w,
+                      height: 24.w,
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(Color(0xFFF5F5F5)),
+                      ),
+                    )
+                  : Text(
+                      '登录',
+                      key: const ValueKey('label'),
+                      style: TextStyle(
+                        color: const Color(0xFFF5F5F5),
+                        fontSize: 17.sp,
+                      ),
+                    ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
   InputDecoration _inputDecoration({
-    required String label,
-    required String hint,
-    required IconData prefixIcon,
+    required String hintText,
     Widget? suffixIcon,
   }) {
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.75)),
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: Color(0xFFC6CFE0), width: 1),
     );
     return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      prefixIcon: Icon(prefixIcon, size: 20),
-      suffixIcon: suffixIcon,
-      border: border,
+      hintText: hintText,
+      hintStyle: TextStyle(
+        color: const Color(0xFFA5BCDD),
+        fontWeight: FontWeight.w400,
+        fontSize: 14.sp,
+      ),
       enabledBorder: border,
       focusedBorder: border.copyWith(
-        borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
+        borderSide: const BorderSide(color: Colors.blue, width: 1),
       ),
+      suffixIcon: suffixIcon,
       filled: true,
-      fillColor: const Color(0xFFF9FBFF),
-      contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-    );
-  }
-}
-
-class _AtmosphereBackground extends StatelessWidget {
-  const _AtmosphereBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF113057), Color(0xFF1D4A85), Color(0xFF5A8BC8)],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: -120,
-            left: -50,
-            child: _GlowCircle(
-              size: 220,
-              color: Colors.white.withValues(alpha: 0.18),
-            ),
-          ),
-          Positioned(
-            bottom: -112,
-            right: -80,
-            child: _GlowCircle(
-              size: 256,
-              color: const Color(0xFF92C1FF).withValues(alpha: 0.24),
-            ),
-          ),
-          Positioned(
-            top: 128,
-            right: 30,
-            child: _GlowCircle(
-              size: 100,
-              color: Colors.white.withValues(alpha: 0.1),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GlowCircle extends StatelessWidget {
-  const _GlowCircle({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      fillColor: Colors.white,
     );
   }
 }

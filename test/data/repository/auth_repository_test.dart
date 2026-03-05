@@ -1,37 +1,40 @@
-import 'package:closed_off_app/core/http/result.dart';
-import 'package:closed_off_app/data/models/auth/login_token_model.dart';
 import 'package:closed_off_app/data/repository/auth_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('AuthRepository.login', () {
+  group('AuthRepository 参数校验', () {
     final repository = AuthRepository();
 
-    test('用户名为空时返回 Failure', () async {
-      final result = await repository.login(username: '', password: '123456');
-
-      expect(result, isA<Failure<LoginTokenModel>>());
-      result.when(
-        success: (_) => fail('预期失败，但返回了成功'),
-        failure: (error) {
-          expect(error.code, -1);
-          expect(error.message, '用户名或密码不能为空');
-        },
+    test('getAccessToken 授权码为空时抛出异常', () async {
+      await expectLater(
+        repository.getAccessToken(''),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('授权码不能为空'),
+          ),
+        ),
       );
     });
 
-    test('密码为空时返回 Failure', () async {
-      final result = await repository.login(username: 'admin', password: '');
-
-      expect(result, isA<Failure<LoginTokenModel>>());
-      result.when(
-        success: (_) => fail('预期失败，但返回了成功'),
-        failure: (error) {
-          expect(error.code, -1);
-          expect(error.message, '用户名或密码不能为空');
-        },
+    test('proxyLogin 关键参数为空时抛出异常', () async {
+      await expectLater(
+        repository.proxyLogin(
+          state: '',
+          authorizationUrl: '',
+          captcha: '',
+          username: '',
+          password: '',
+        ),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('登录状态参数缺失'),
+          ),
+        ),
       );
     });
   });
 }
-

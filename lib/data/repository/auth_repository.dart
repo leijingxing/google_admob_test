@@ -1,31 +1,88 @@
-import 'dart:convert';
-
+import '../../core/env/env.dart';
 import '../../core/http/http_service.dart';
 import '../../core/http/result.dart';
-import '../models/auth/login_token_model.dart';
 
 /// 登录模块仓库层，统一管理鉴权相关数据请求。
 class AuthRepository {
-  /// 账号登录，调用真实鉴权接口。
-  Future<Result<LoginTokenModel>> login({
+  final HttpService _httpService = HttpService();
+
+  /// 获取登录验证码。
+  Future<Result<Map<String, dynamic>>> getVerifyCode() {
+    return _httpService.get<Map<String, dynamic>>(
+      '/api/oauth2/proxy/captcha',
+      queryParameters: {'appCode': Environment.currentEnv.appCode},
+      parser: (json) => Map<String, dynamic>.from(json as Map),
+    );
+  }
+
+  /// 获取认证地址。
+  Future<String> getAuthorizationUrl() async {
+    final result = await _httpService.get<dynamic>(
+      '/api/oauth2/getAuthorizationUrl',
+      queryParameters: {'appCode': Environment.currentEnv.appCode},
+    );
+    return result.when(
+      success: (data) => data.toString(),
+      failure: (error) => throw Exception(error.message),
+    );
+  }
+
+  /// 代理登录获取授权码。
+  Future<String> proxyLogin({
+    required String state,
+    required String authorizationUrl,
+    required String captcha,
     required String username,
     required String password,
   }) async {
-    if (username.isEmpty || password.isEmpty) {
-      return Failure(AppError(code: -1, message: '用户名或密码不能为空'));
+    if (state.isEmpty || authorizationUrl.isEmpty) {
+      throw Exception('登录状态参数缺失');
+    }
+    if (captcha.isEmpty || username.isEmpty || password.isEmpty) {
+      throw Exception('用户名、密码或验证码不能为空');
     }
 
-    final encodedPassword = base64Encode(utf8.encode(password));
-    return HttpService().post<LoginTokenModel>(
-      '/auth/oauth/token',
+    final result = await _httpService.post<dynamic>(
+      '/api/oauth2/proxy/authCode',
       data: {
-        'type': 1,
-        'grant_type': 'password',
+        'appCode': Environment.currentEnv.appCode,
+        'state': state,
+        'authorizationUrl': authorizationUrl,
+        'captcha': captcha,
         'username': username,
-        'password': encodedPassword,
+        'password': password,
       },
-      parser: (json) =>
-          LoginTokenModel.fromJson(Map<String, dynamic>.from(json as Map)),
+    );
+    return result.when(
+      success: (data) => data.toString(),
+      failure: (error) => throw Exception(error.message),
+    );
+  }
+
+  /// 通过授权码换取 token。
+  Future<String> getAccessToken(String code) async {
+    if (code.isEmpty) {
+      throw Exception('授权码不能为空');
+    }
+
+    final result = await _httpService.get<Map<String, dynamic>>(
+      '/api/oauth2/getAccessToken',
+      queryParameters: {
+        'appCode': Environment.currentEnv.appCode,
+        'code': code,
+      },
+      parser: (json) => Map<String, dynamic>.from(json as Map),
+    );
+
+    return result.when(
+      success: (data) {
+        final tokenValue = data['tokenValue'];
+        if (tokenValue == null || tokenValue.toString().isEmpty) {
+          throw Exception('tokenValue 为空');
+        }
+        return tokenValue.toString();
+      },
+      failure: (error) => throw Exception(error.message),
     );
   }
 

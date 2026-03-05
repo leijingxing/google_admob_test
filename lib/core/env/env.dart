@@ -6,6 +6,9 @@ abstract class Env {
   /// 接口基础地址。
   String get apiBaseUrl;
 
+  /// 应用标识。
+  String get appCode;
+
   /// 是否调试模式。
   bool get debug;
 }
