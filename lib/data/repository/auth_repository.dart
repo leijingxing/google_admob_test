@@ -1,5 +1,3 @@
-import 'package:dio/dio.dart';
-
 import '../../core/env/env.dart';
 import '../../core/http/http_service.dart';
 import '../../core/http/result.dart';
@@ -12,7 +10,10 @@ class AuthRepository {
   Future<Result<Map<String, dynamic>>> getVerifyCode() {
     return _httpService.get<Map<String, dynamic>>(
       '/api/oauth2/proxy/captcha',
-      queryParameters: {'appCode': Environment.currentEnv.appCode},
+      queryParameters: {
+        'appCode': Environment.currentEnv.appCode,
+        'debug': true,
+      },
       parser: (json) => Map<String, dynamic>.from(json as Map),
     );
   }
@@ -21,7 +22,10 @@ class AuthRepository {
   Future<String> getAuthorizationUrl() async {
     final result = await _httpService.get<dynamic>(
       '/api/oauth2/getAuthorizationUrl',
-      queryParameters: {'appCode': Environment.currentEnv.appCode},
+      queryParameters: {
+        'appCode': Environment.currentEnv.appCode,
+        'web_redirect_uri': '',
+      },
     );
     return result.when(
       success: (data) => data.toString(),
@@ -46,13 +50,6 @@ class AuthRepository {
 
     final result = await _httpService.post<dynamic>(
       '/api/oauth2/proxy/authCode',
-      options: Options(
-        contentType: Headers.formUrlEncodedContentType,
-        headers: {
-          'Content-Type': Headers.formUrlEncodedContentType,
-          'content-type': Headers.formUrlEncodedContentType,
-        },
-      ),
       data: {
         'appCode': Environment.currentEnv.appCode,
         'state': state,

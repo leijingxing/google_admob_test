@@ -24,7 +24,6 @@ class HttpAuthStrategy {
     final token = await _getToken!();
     if (token == null || token.isEmpty) return;
     options.headers['Authorization'] = token;
-    options.headers['content-type'] = 'application/json';
   }
 
   /// 处理鉴权失败回调。

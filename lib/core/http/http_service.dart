@@ -56,9 +56,7 @@ class HttpService {
       baseUrl: Environment.currentEnv.apiBaseUrl,
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
-      headers: {
-        'authorization': 'Basic ZmFuOjEyMzQ1Ng==',
-      },
+      headers: {},
     );
     _dio = Dio(options);
 
