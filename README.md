@@ -51,6 +51,7 @@ ci/            # 构建与 CI 脚本
   - 跨模块跳转统一通过 `lib/router/module_routes/*.dart` 的封装方法调用。
 - 依赖注入：通过 `Binding` 注入，禁止在 View 里直接创建页面级 Controller。
 - 网络访问：必须通过 `HttpService`，并经 `data/repository` 对外提供。
+- 接口路径规范：Repository 中接口路径统一使用 `'/api/...'` 前缀，禁止混用无前缀路径。
 - 模型解析：统一使用 `json_serializable`，并在 `repository` 请求时显式传 `parser`。
 - 生成文件：`*.g.dart`、`*.freezed.dart`、`lib/generated/**` 严禁手改。
 - 注释规范：遵循 `COMMENT_STANDARD.md`。
@@ -104,13 +105,13 @@ dart run ci/build_ci.dart
 ```dart
 // 单对象
 final userRes = await HttpService().get<UserModel>(
-  '/user/info',
+  '/api/user/info',
   parser: (json) => UserModel.fromJson(Map<String, dynamic>.from(json as Map)),
 );
 
 // 列表
 final usersRes = await HttpService().get<List<UserModel>>(
-  '/user/list',
+  '/api/user/list',
   parser: (json) => (json as List)
       .map((e) => UserModel.fromJson(Map<String, dynamic>.from(e as Map)))
       .toList(),
@@ -155,7 +156,7 @@ class XxxModel {
 // 单对象接口
 Future<Result<XxxModel>> fetchDetail() {
   return HttpService().get<XxxModel>(
-    '/xxx/detail',
+    '/api/xxx/detail',
     parser: (json) => XxxModel.fromJson(Map<String, dynamic>.from(json as Map)),
   );
 }
@@ -163,7 +164,7 @@ Future<Result<XxxModel>> fetchDetail() {
 // 列表接口
 Future<Result<List<XxxModel>>> fetchList() {
   return HttpService().get<List<XxxModel>>(
-    '/xxx/list',
+    '/api/xxx/list',
     parser: (json) => (json as List)
         .map((e) => XxxModel.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList(),

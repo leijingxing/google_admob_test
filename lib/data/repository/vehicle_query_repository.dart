@@ -9,7 +9,7 @@ class VehicleQueryRepository {
   /// 顶部统计：按车辆分类汇总。
   Future<Result<List<VehicleCategoryCountModel>>> getVehicleCount() {
     return _httpService.post<List<VehicleCategoryCountModel>>(
-      '/closed-off/comprehensive/getVehicleCount',
+      '/api/closed-off/comprehensive/getVehicleCount',
       data: const <String, dynamic>{},
       parser: (json) => (json as List<dynamic>)
           .map(
@@ -57,7 +57,7 @@ class VehicleQueryRepository {
     String? idCard,
   }) {
     return _httpService.post<ComprehensiveDetailCountModel>(
-      '/closed-off/comprehensive/getComprehensiveDetailCount',
+      '/api/closed-off/comprehensive/getComprehensiveDetailCount',
       data: {'carNumb': carNumb, 'idCard': idCard}
         ..removeWhere((key, value) => value == null || value == ''),
       parser: (json) => ComprehensiveDetailCountModel.fromJson(
@@ -75,7 +75,7 @@ class VehicleQueryRepository {
     required String validityEndTime,
   }) async {
     final result = await _httpService.post<dynamic>(
-      '/closed-off/black',
+      '/api/closed-off/black',
       data: {
         'dto': {
           'carNumb': carNumb,
@@ -123,7 +123,7 @@ class VehicleQueryRepository {
       ..removeWhere((key, value) => value == null || value == '');
 
     return _httpService.post<PaginatedResult<VehicleAuthorizationRecordModel>>(
-      '/closed-off/comprehensive/getAuthorizationRecord',
+      '/api/closed-off/comprehensive/getAuthorizationRecord',
       data: payload,
       parser: (json) => _parsePage(
         json,
@@ -162,7 +162,7 @@ class VehicleQueryRepository {
       ..removeWhere((key, value) => value == null || value == '');
 
     return _httpService.post<PaginatedResult<VehicleAccessRecordModel>>(
-      '/closed-off/accessRecord/page',
+      '/api/closed-off/accessRecord/page',
       data: payload,
       parser: (json) => _parsePage(
         json,
@@ -193,7 +193,7 @@ class VehicleQueryRepository {
       ..removeWhere((key, value) => value == null || value == '');
 
     return _httpService.post<PaginatedResult<VehicleViolationRecordModel>>(
-      '/risk-warning/riskWarning/page',
+      '/api/risk-warning/riskWarning/page',
       data: payload,
       parser: (json) => _parsePage(
         json,
@@ -223,7 +223,7 @@ class VehicleQueryRepository {
       ..removeWhere((key, value) => value == null || value == '');
 
     return _httpService.post<PaginatedResult<VehicleBlackRecordModel>>(
-      '/closed-off/blackBook/page',
+      '/api/closed-off/blackBook/page',
       data: payload,
       parser: (json) => _parsePage(
         json,
