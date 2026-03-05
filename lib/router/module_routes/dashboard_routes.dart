@@ -5,6 +5,7 @@ import '../../modules/dashboard/modules/overview/overview_binding.dart';
 import '../../modules/dashboard/modules/overview/overview_view.dart';
 import '../../modules/dashboard/modules/personnel_query/personnel_query_view.dart';
 import '../../modules/dashboard/modules/vehicle_query/vehicle_query_view.dart';
+import '../../modules/dashboard/modules/workbench/workbench_binding.dart';
 import '../../modules/dashboard/modules/workbench/workbench_view.dart';
 
 /// Dashboard 模块子页面跳转封装（非命名路由）。
@@ -13,7 +14,7 @@ abstract class DashboardRoutes {
 
   /// 工作台。
   static Future<T?>? toWorkbench<T>() {
-    return Get.to<T>(() => const WorkbenchView());
+    return Get.to<T>(() => const WorkbenchView(), binding: WorkbenchBinding());
   }
 
   /// 车辆查询。

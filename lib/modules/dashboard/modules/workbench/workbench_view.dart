@@ -1,6 +1,7 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
-import '../common/module_placeholder_page.dart';
+import '../../../../core/constants/dimens.dart';
+import 'workbench_content_section.dart';
 
 /// 工作台页面。
 class WorkbenchView extends StatelessWidget {
@@ -8,9 +9,26 @@ class WorkbenchView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ModulePlaceholderPage(
-      title: '工作台',
-      subtitle: '工作台页面待接入真实业务数据。',
+    return Scaffold(
+      appBar: AppBar(title: const Text('工作台')),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF3F8FF), Color(0xFFEAF2FF)],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            AppDimens.dp16,
+            AppDimens.dp16,
+            AppDimens.dp16,
+            AppDimens.dp24,
+          ),
+          child: const WorkbenchContentSection(),
+        ),
+      ),
     );
   }
 }
