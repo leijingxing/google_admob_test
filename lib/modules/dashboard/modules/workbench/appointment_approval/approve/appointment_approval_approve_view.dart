@@ -229,6 +229,7 @@ class AppointmentApprovalApproveView
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: const Color(0xFFF6F8FC),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -264,7 +265,7 @@ class AppointmentApprovalApproveView
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
                   AppDimens.dp16,
-                  AppDimens.dp12,
+                  AppDimens.dp10,
                   AppDimens.dp16,
                   AppDimens.dp16,
                 ),
@@ -272,6 +273,17 @@ class AppointmentApprovalApproveView
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Center(
+                      child: Container(
+                        width: AppDimens.dp40,
+                        height: 4,
+                        margin: EdgeInsets.only(bottom: AppDimens.dp10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD0D8E6),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
                     Text(
                       isIn ? '授权入口' : '授权出口',
                       style: TextStyle(
@@ -280,69 +292,186 @@ class AppointmentApprovalApproveView
                         color: const Color(0xFF1E2A3A),
                       ),
                     ),
+                    SizedBox(height: AppDimens.dp4),
                     SizedBox(height: AppDimens.dp10),
-                    Text(
-                      '区域选择',
-                      style: TextStyle(
-                        fontSize: AppDimens.sp12,
-                        color: const Color(0xFF627182),
-                        fontWeight: FontWeight.w600,
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(AppDimens.dp10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(AppDimens.dp10),
+                        border: Border.all(color: const Color(0xFFE2E7F0)),
                       ),
-                    ),
-                    SizedBox(height: AppDimens.dp8),
-                    Wrap(
-                      spacing: AppDimens.dp8,
-                      runSpacing: AppDimens.dp8,
-                      children: options.map((area) {
-                        final selected = tempAreaIds.contains(area.districtId);
-                        return FilterChip(
-                          selected: selected,
-                          label: Text(area.districtName),
-                          onSelected: (_) => toggleArea(area.districtId),
-                        );
-                      }).toList(),
-                    ),
-                    SizedBox(height: AppDimens.dp12),
-                    Text(
-                      '设备选择',
-                      style: TextStyle(
-                        fontSize: AppDimens.sp12,
-                        color: const Color(0xFF627182),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(height: AppDimens.dp8),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: MediaQuery.of(context).size.height * 0.36,
-                      ),
-                      child: SingleChildScrollView(
-                        child: Wrap(
-                          spacing: AppDimens.dp8,
-                          runSpacing: AppDimens.dp8,
-                          children: devices.map((device) {
-                            final selected = tempDeviceCodes.contains(
-                              device.deviceCode,
-                            );
-                            return FilterChip(
-                              selected: selected,
-                              label: Text(
-                                device.deviceName.isEmpty
-                                    ? device.deviceCode
-                                    : device.deviceName,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                '区域选择',
+                                style: TextStyle(
+                                  fontSize: AppDimens.sp12,
+                                  color: const Color(0xFF2F3F53),
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                              onSelected: (_) {
-                                setModalState(() {
-                                  if (selected) {
-                                    tempDeviceCodes.remove(device.deviceCode);
-                                  } else {
-                                    tempDeviceCodes.add(device.deviceCode);
-                                  }
-                                });
-                              },
-                            );
-                          }).toList(),
-                        ),
+                              const Spacer(),
+                              TextButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    tempAreaIds = options
+                                        .map((e) => e.districtId)
+                                        .toSet();
+                                    tempDeviceCodes = logic
+                                        .allDeviceCodesForAreaIds(
+                                          isIn: isIn,
+                                          areaIds: tempAreaIds,
+                                        );
+                                  });
+                                },
+                                child: const Text('全选'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    tempAreaIds.clear();
+                                    tempDeviceCodes.clear();
+                                  });
+                                },
+                                child: const Text('清空'),
+                              ),
+                            ],
+                          ),
+                          Wrap(
+                            spacing: AppDimens.dp8,
+                            runSpacing: AppDimens.dp8,
+                            children: options.map((area) {
+                              final selected = tempAreaIds.contains(
+                                area.districtId,
+                              );
+                              return FilterChip(
+                                selected: selected,
+                                showCheckmark: false,
+                                selectedColor: const Color(0xFFE8F1FF),
+                                side: BorderSide(
+                                  color: selected
+                                      ? const Color(0xFF3A78F2)
+                                      : const Color(0xFFD8DFEA),
+                                ),
+                                label: Text(
+                                  area.districtName,
+                                  style: TextStyle(
+                                    color: selected
+                                        ? const Color(0xFF2D62D6)
+                                        : const Color(0xFF4A5A70),
+                                  ),
+                                ),
+                                onSelected: (_) => toggleArea(area.districtId),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: AppDimens.dp8),
+                    SizedBox(height: AppDimens.dp12),
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(AppDimens.dp10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(AppDimens.dp10),
+                        border: Border.all(color: const Color(0xFFE2E7F0)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '设备选择（${devices.length}）',
+                            style: TextStyle(
+                              fontSize: AppDimens.sp12,
+                              color: const Color(0xFF2F3F53),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: AppDimens.dp8),
+                          if (devices.isEmpty)
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: AppDimens.dp8,
+                              ),
+                              child: Text(
+                                '请先选择区域',
+                                style: TextStyle(
+                                  fontSize: AppDimens.sp12,
+                                  color: const Color(0xFF8A97A8),
+                                ),
+                              ),
+                            )
+                          else
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxHeight:
+                                    MediaQuery.of(context).size.height * 0.32,
+                              ),
+                              child: SingleChildScrollView(
+                                child: Wrap(
+                                  spacing: AppDimens.dp8,
+                                  runSpacing: AppDimens.dp8,
+                                  children: devices.map((device) {
+                                    final selected = tempDeviceCodes.contains(
+                                      device.deviceCode,
+                                    );
+                                    final name = device.deviceName.isEmpty
+                                        ? device.deviceCode
+                                        : device.deviceName;
+                                    return FilterChip(
+                                      selected: selected,
+                                      showCheckmark: false,
+                                      selectedColor: const Color(0xFFE8F1FF),
+                                      side: BorderSide(
+                                        color: selected
+                                            ? const Color(0xFF3A78F2)
+                                            : const Color(0xFFD8DFEA),
+                                      ),
+                                      avatar: Icon(
+                                        selected
+                                            ? Icons.check_box_rounded
+                                            : Icons
+                                                  .check_box_outline_blank_rounded,
+                                        size: 15,
+                                        color: selected
+                                            ? const Color(0xFF3A78F2)
+                                            : const Color(0xFF8EA0B8),
+                                      ),
+                                      label: ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 140,
+                                        ),
+                                        child: Text(
+                                          name,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      onSelected: (_) {
+                                        setModalState(() {
+                                          if (selected) {
+                                            tempDeviceCodes.remove(
+                                              device.deviceCode,
+                                            );
+                                          } else {
+                                            tempDeviceCodes.add(
+                                              device.deviceCode,
+                                            );
+                                          }
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     SizedBox(height: AppDimens.dp12),
@@ -400,6 +529,12 @@ class _GateSelectorField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final areaCount = areaNames.length;
+    final deviceCount = deviceNames.length;
+    final subtitle = areaCount == 0
+        ? '点击选择$title'
+        : '已选区域 $areaCount 个，设备 $deviceCount 个';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -429,40 +564,75 @@ class _GateSelectorField extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppDimens.dp8),
           child: Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(
-              horizontal: AppDimens.dp10,
-              vertical: AppDimens.dp10,
-            ),
+            padding: EdgeInsets.all(AppDimens.dp10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppDimens.dp8),
-              border: Border.all(color: const Color(0xFFDCE2EC)),
+              border: Border.all(color: const Color(0xFFD2DBE9)),
+              color: const Color(0xFFFAFBFE),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    areaNames.isEmpty ? '请选择$title' : areaNames.join('、'),
-                    style: TextStyle(
-                      color: areaNames.isEmpty
-                          ? const Color(0xFF9AA7B8)
-                          : const Color(0xFF314255),
-                      fontSize: AppDimens.sp12,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: areaCount == 0
+                              ? const Color(0xFF9AA7B8)
+                              : const Color(0xFF314255),
+                          fontSize: AppDimens.sp12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                    if (loading)
+                      const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: Color(0xFF8190A4),
+                      ),
+                  ],
                 ),
-                if (loading)
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: Color(0xFF8190A4),
+                if (areaNames.isNotEmpty) ...[
+                  SizedBox(height: AppDimens.dp8),
+                  Wrap(
+                    spacing: AppDimens.dp6,
+                    runSpacing: AppDimens.dp6,
+                    children: areaNames
+                        .take(4)
+                        .map(
+                          (name) => Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppDimens.dp6,
+                              vertical: AppDimens.dp3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF4FF),
+                              borderRadius: BorderRadius.circular(
+                                AppDimens.dp6,
+                              ),
+                            ),
+                            child: Text(
+                              name,
+                              style: TextStyle(
+                                color: const Color(0xFF3A78F2),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
                   ),
+                ],
               ],
             ),
           ),

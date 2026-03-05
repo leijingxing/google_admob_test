@@ -114,6 +114,70 @@ class WorkbenchRepository {
     );
   }
 
+  /// 获取预约进度时间线（基本信息模块）。
+  Future<Result<List<Map<String, dynamic>>>> getReservationProgressTimeline({
+    required String id,
+  }) {
+    return _httpService.get<List<Map<String, dynamic>>>(
+      '/api/closed-off/reservation/reservationProgressInfo/$id',
+      parser: (json) {
+        if (json is List) {
+          return json
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+        }
+        if (json is Map) {
+          return <Map<String, dynamic>>[Map<String, dynamic>.from(json)];
+        }
+        return const <Map<String, dynamic>>[];
+      },
+    );
+  }
+
+  /// 获取出入记录（出入记录模块）。
+  Future<Result<List<Map<String, dynamic>>>> getGateRecords({
+    required String id,
+    int idType = 1,
+  }) {
+    return _httpService.get<List<Map<String, dynamic>>>(
+      '/api/closed-off/accessRecord/getGateRecords',
+      queryParameters: {'id': id, 'idType': idType},
+      parser: (json) {
+        if (json is List) {
+          return json
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+        }
+        return const <Map<String, dynamic>>[];
+      },
+    );
+  }
+
+  /// 获取违规记录分页（违规记录模块）。
+  Future<Result<PaginatedResult<Map<String, dynamic>>>> getRiskWarningPage({
+    required int pageIndex,
+    required int pageSize,
+    required String relationId,
+    String? carNum,
+  }) {
+    final payload = buildPagePayload(pageIndex: pageIndex, pageSize: pageSize)
+      ..addAll({'relationId': relationId, 'carNum': carNum})
+      ..removeWhere((key, value) => value == null || value == '');
+
+    return _httpService.post<PaginatedResult<Map<String, dynamic>>>(
+      '/api/risk-warning/riskWarning/page',
+      data: payload,
+      parser: (json) => parsePaginatedResult<Map<String, dynamic>>(
+        json: json,
+        requestPageIndex: pageIndex,
+        requestPageSize: pageSize,
+        itemParser: (item) => Map<String, dynamic>.from(item),
+      ),
+    );
+  }
+
   /// 园区审批预约。
   Future<Result<void>> parkApproveReservation({
     required String id,

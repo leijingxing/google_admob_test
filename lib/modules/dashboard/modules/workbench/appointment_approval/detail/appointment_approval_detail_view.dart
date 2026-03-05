@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../../../core/components/app_standard_card.dart';
 import '../../../../../../core/constants/dimens.dart';
 import 'appointment_approval_detail_controller.dart';
+import 'basic_info_detail_section.dart';
+import 'record_detail_section.dart';
+import 'violation_detail_section.dart';
 
 /// 预约审批详情页。
 class AppointmentApprovalDetailView
@@ -16,50 +18,87 @@ class AppointmentApprovalDetailView
       builder: (logic) {
         return Scaffold(
           appBar: AppBar(title: const Text('预约详情')),
-          body: SingleChildScrollView(
-            padding: EdgeInsets.all(AppDimens.dp12),
-            child: AppStandardCard(
-              child: logic.loading
-                  ? const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24),
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  : Column(
-                      children: logic.buildDetailLines().map((line) {
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: AppDimens.dp10),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                width: AppDimens.dp92,
-                                child: Text(
-                                  '${line.label}：',
-                                  style: TextStyle(
-                                    color: const Color(0xFF7B8798),
-                                    fontSize: AppDimens.sp12,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  line.value,
-                                  style: TextStyle(
-                                    color: const Color(0xFF263547),
-                                    fontSize: AppDimens.sp12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-            ),
+          body: Column(
+            children: [
+              _SectionTabs(controller: logic),
+              Expanded(child: _SectionBody(controller: logic)),
+            ],
           ),
         );
       },
     );
+  }
+}
+
+class _SectionTabs extends StatelessWidget {
+  const _SectionTabs({required this.controller});
+
+  final AppointmentApprovalDetailController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    const labels = ['基本信息', '出入记录', '违规记录'];
+    return Container(
+      margin: EdgeInsets.fromLTRB(
+        AppDimens.dp12,
+        AppDimens.dp10,
+        AppDimens.dp12,
+        AppDimens.dp8,
+      ),
+      child: Row(
+        children: List.generate(labels.length, (index) {
+          final selected = controller.currentSection == index;
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                right: index == labels.length - 1 ? 0 : 8,
+              ),
+              child: OutlinedButton(
+                onPressed: () => controller.onSectionChanged(index),
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: selected
+                      ? const Color(0xFF3A78F2)
+                      : Colors.white,
+                  side: BorderSide(
+                    color: selected
+                        ? const Color(0xFF3A78F2)
+                        : const Color(0xFFBFD0EE),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimens.dp8),
+                  ),
+                ),
+                child: Text(
+                  labels[index],
+                  style: TextStyle(
+                    color: selected ? Colors.white : const Color(0xFF2E4F87),
+                    fontSize: AppDimens.sp12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _SectionBody extends StatelessWidget {
+  const _SectionBody({required this.controller});
+
+  final AppointmentApprovalDetailController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    switch (controller.currentSection) {
+      case 1:
+        return RecordDetailSection(controller: controller);
+      case 2:
+        return ViolationDetailSection(controller: controller);
+      default:
+        return BasicInfoDetailSection(controller: controller);
+    }
   }
 }

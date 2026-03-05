@@ -25,6 +25,7 @@ abstract class AppDimens {
   static double dp32 = 32.w;
   static double dp34 = 34.w;
   static double dp36 = 36.w;
+  static double dp38 = 38.w;
   static double dp40 = 40.w;
   static double dp44 = 44.w;
   static double dp48 = 48.w;
@@ -56,7 +57,9 @@ abstract class AppDimens {
   static double sp6 = 6.sp;
   static double sp8 = 8.sp;
   static double sp10 = 10.sp;
+  static double sp11 = 11.sp;
   static double sp12 = 12.sp;
+  static double sp13 = 13.sp;
   static double sp14 = 14.sp;
   static double sp16 = 16.sp;
   static double sp18 = 18.sp;
