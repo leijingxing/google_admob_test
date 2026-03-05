@@ -38,6 +38,22 @@ class DashboardController extends GetxController {
     ),
   ];
 
+  /// 化工安全小贴士（首页演示数据）。
+  final List<SafetyTipItem> safetyTips = const [
+    SafetyTipItem(
+      title: '入园车辆必须按指定线路行驶',
+      content: '危化车辆进园后请遵循电子围栏路线，严禁在禁停区长时间停留。',
+    ),
+    SafetyTipItem(
+      title: '危化品装卸前先核验作业票',
+      content: '确认作业票、人员资质和现场防护措施后，再执行装卸流程。',
+    ),
+    SafetyTipItem(
+      title: '遇到告警信息先确认再处置',
+      content: '接到异常告警后，先核对车辆与人员位置，再联动值守人员处理。',
+    ),
+  ];
+
   /// 点击模块入口。
   void onTapModule(int index) {
     switch (index) {
@@ -75,4 +91,12 @@ class DashboardModuleItem {
     required this.icon,
     required this.color,
   });
+}
+
+/// 首页小贴士数据。
+class SafetyTipItem {
+  final String title;
+  final String content;
+
+  const SafetyTipItem({required this.title, required this.content});
 }

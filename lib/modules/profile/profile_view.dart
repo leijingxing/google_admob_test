@@ -62,44 +62,14 @@ class ProfileView extends GetView<ProfileController> {
                                     value: _v(profile?.phone),
                                   ),
                                   _InfoTile(
-                                    icon: Icons.mail_outline_rounded,
-                                    label: '邮箱',
-                                    value: _v(profile?.mail),
-                                  ),
-                                  _InfoTile(
-                                    icon: Icons.business_outlined,
-                                    label: '企业',
-                                    value: _v(profile?.companyName),
-                                  ),
-                                  _InfoTile(
                                     icon: Icons.apartment_rounded,
                                     label: '部门',
                                     value: _v(profile?.departmentName),
                                   ),
                                   _InfoTile(
-                                    icon: Icons.domain_outlined,
-                                    label: '企业编码',
-                                    value: _v(profile?.companyCode),
-                                  ),
-                                  _InfoTile(
-                                    icon: Icons.perm_identity_outlined,
-                                    label: '用户ID',
-                                    value: _v(profile?.id),
-                                  ),
-                                  _InfoTile(
-                                    icon: Icons.wc_outlined,
-                                    label: '性别',
-                                    value: _sexText(profile?.sex),
-                                  ),
-                                  _InfoTile(
                                     icon: Icons.verified_user_outlined,
                                     label: '管理员',
                                     value: profile?.isAdmin == '1' ? '是' : '否',
-                                  ),
-                                  _InfoTile(
-                                    icon: Icons.key_outlined,
-                                    label: '租户ID',
-                                    value: _v(profile?.tenantId),
                                     showDivider: false,
                                   ),
                                 ],
@@ -177,12 +147,6 @@ class ProfileView extends GetView<ProfileController> {
   String _v(String? value) {
     if (value == null || value.trim().isEmpty) return '-';
     return value;
-  }
-
-  String _sexText(String? sex) {
-    if (sex == '1') return '女';
-    if (sex == '2') return '男';
-    return '-';
   }
 }
 
@@ -312,6 +276,24 @@ class _ProfileHeader extends StatelessWidget {
                     fontSize: AppDimens.sp12,
                   ),
                 ),
+                SizedBox(height: AppDimens.dp8),
+                Wrap(
+                  spacing: AppDimens.dp6,
+                  runSpacing: AppDimens.dp6,
+                  children: [
+                    _HeaderBadge(
+                      icon: Icons.phone_iphone_outlined,
+                      text: _shortText(profile?.phone, fallback: '未绑定手机号'),
+                    ),
+                    _HeaderBadge(
+                      icon: Icons.apartment_rounded,
+                      text: _shortText(
+                        profile?.departmentName,
+                        fallback: '未设置部门',
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -335,6 +317,49 @@ class _ProfileHeader extends StatelessWidget {
     if (raw.startsWith('/')) return '$base$raw';
     return '$base/$raw';
   }
+
+  String _shortText(String? value, {required String fallback}) {
+    final text = value?.trim();
+    if (text == null || text.isEmpty) return fallback;
+    return text;
+  }
+}
+
+class _HeaderBadge extends StatelessWidget {
+  const _HeaderBadge({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppDimens.dp6,
+        vertical: AppDimens.dp3,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(AppDimens.dp8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: AppDimens.sp10, color: Colors.white),
+          SizedBox(width: AppDimens.dp4),
+          Text(
+            text,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: AppDimens.sp10,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SectionCard extends StatelessWidget {
@@ -347,11 +372,18 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(AppDimens.dp14),
+      padding: EdgeInsets.all(AppDimens.dp16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimens.dp16),
+        borderRadius: BorderRadius.circular(AppDimens.dp18),
         border: Border.all(color: const Color(0xFFE2EAF6)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0E2A49).withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,10 +422,22 @@ class _InfoTile extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(vertical: AppDimens.dp10),
+          padding: EdgeInsets.symmetric(vertical: AppDimens.dp12),
           child: Row(
             children: [
-              Icon(icon, size: AppDimens.sp16, color: const Color(0xFF6D8098)),
+              Container(
+                width: AppDimens.dp26,
+                height: AppDimens.dp26,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEDF3FD),
+                  borderRadius: BorderRadius.circular(AppDimens.dp8),
+                ),
+                child: Icon(
+                  icon,
+                  size: AppDimens.sp14,
+                  color: const Color(0xFF5B6F86),
+                ),
+              ),
               SizedBox(width: AppDimens.dp10),
               Text(
                 label,
@@ -418,7 +462,7 @@ class _InfoTile extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Divider(height: 1, thickness: 1, color: Color(0xFFF0F3F8)),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFEEF2F8)),
       ],
     );
   }

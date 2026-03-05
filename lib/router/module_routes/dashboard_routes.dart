@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../../modules/dashboard/modules/logistics_query/logistics_query_view.dart';
+import '../../modules/dashboard/modules/overview/overview_binding.dart';
 import '../../modules/dashboard/modules/overview/overview_view.dart';
 import '../../modules/dashboard/modules/personnel_query/personnel_query_view.dart';
 import '../../modules/dashboard/modules/vehicle_query/vehicle_query_view.dart';
@@ -32,6 +33,6 @@ abstract class DashboardRoutes {
 
   /// 总览。
   static Future<T?>? toOverview<T>() {
-    return Get.to<T>(() => const OverviewView());
+    return Get.to<T>(() => const OverviewView(), binding: OverviewBinding());
   }
 }
