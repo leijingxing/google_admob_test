@@ -305,9 +305,8 @@ class AuthView extends GetView<AuthController> {
       child: RepaintBoundary(
         child: Obx(() {
           final loading = controller.isClick.value;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            width: loading ? 48.w : double.infinity,
+          return Container(
+            width: double.infinity,
             height: 44.w,
             alignment: Alignment.center,
             decoration: BoxDecoration(
