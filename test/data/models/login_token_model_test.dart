@@ -1,4 +1,4 @@
-import 'package:flutter_base/data/models/auth/login_token_model.dart';
+import 'package:closed_off_app/data/models/auth/login_token_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -42,3 +42,4 @@ void main() {
     });
   });
 }
+

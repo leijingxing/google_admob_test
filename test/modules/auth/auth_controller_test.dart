@@ -1,4 +1,4 @@
-import 'package:flutter_base/modules/auth/auth_controller.dart';
+import 'package:closed_off_app/modules/auth/auth_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -32,3 +32,4 @@ void main() {
     });
   });
 }
+

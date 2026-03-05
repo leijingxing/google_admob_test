@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_base/core/components/toast/toast_widget.dart';
+import 'package:closed_off_app/core/components/toast/toast_widget.dart';
 import 'package:get/get.dart';
 
 import '../../core/utils/user_manager.dart';
@@ -131,3 +131,4 @@ class AuthController extends GetxController {
     update();
   }
 }
+

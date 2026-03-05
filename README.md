@@ -1,4 +1,4 @@
-# flutter_base
+# closed_off_app
 
 Flutter 业务项目基础模板仓库。  
 目标是：团队成员 `clone` 后即可按统一规范快速启动开发。
@@ -185,3 +185,4 @@ Future<Result<List<XxxModel>>> fetchList() {
 - 不要提交密钥、证书、账号等敏感信息。
 - 不要在 Widget 中堆积业务逻辑，应下沉到 Controller/Repository。
 - 修改模型、资源或序列化后，务必重新生成代码并确认无脏产物。
+

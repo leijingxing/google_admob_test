@@ -1,4 +1,4 @@
-import 'package:flutter_base/data/models/json_converters.dart';
+import 'package:closed_off_app/data/models/json_converters.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -44,3 +44,4 @@ void main() {
     });
   });
 }
+

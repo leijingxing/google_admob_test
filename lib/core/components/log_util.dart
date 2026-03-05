@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_base/global.dart';
+import 'package:closed_off_app/global.dart';
 
 /// 日志级别枚举（保持不变，为了 API 兼容性）
 enum LogLevel {
@@ -98,3 +98,4 @@ class AppLog {
   }
   // endregion
 }
+

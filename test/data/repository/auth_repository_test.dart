@@ -1,6 +1,6 @@
-import 'package:flutter_base/core/http/result.dart';
-import 'package:flutter_base/data/models/auth/login_token_model.dart';
-import 'package:flutter_base/data/repository/auth_repository.dart';
+import 'package:closed_off_app/core/http/result.dart';
+import 'package:closed_off_app/data/models/auth/login_token_model.dart';
+import 'package:closed_off_app/data/repository/auth_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -34,3 +34,4 @@ void main() {
     });
   });
 }
+

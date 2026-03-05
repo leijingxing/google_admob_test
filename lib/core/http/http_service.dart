@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_base/core/env/env.dart';
-import 'package:flutter_base/core/http/result.dart';
+import 'package:closed_off_app/core/env/env.dart';
+import 'package:closed_off_app/core/http/result.dart';
 import 'package:http_cache_hive_store/http_cache_hive_store.dart';
 import 'package:talker_dio_logger/talker_dio_logger_interceptor.dart';
 import 'package:talker_dio_logger/talker_dio_logger_settings.dart';
@@ -375,3 +375,4 @@ class HttpService {
     return handler.next(err);
   }
 }
+

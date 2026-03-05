@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_base/core/env/prod_env.dart';
-import 'package:flutter_base/global.dart';
+import 'package:closed_off_app/core/env/prod_env.dart';
+import 'package:closed_off_app/global.dart';
 
 import 'my_app.dart';
 
@@ -9,3 +9,4 @@ Future<void> main() async {
   await Global.init(env: ProdEnv());
   runApp(const MyApp());
 }
+
