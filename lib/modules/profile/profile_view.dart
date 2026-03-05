@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/dimens.dart';
-import '../../core/env/env.dart';
+import '../../core/utils/file_service.dart';
 import '../../data/models/auth/login_entity.dart';
 import 'profile_controller.dart';
 
@@ -208,23 +208,28 @@ class _ProfileHeader extends StatelessWidget {
                         ),
                       ),
                     )
-                  : Image.network(
-                      avatarUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          alignment: Alignment.center,
-                          color: Colors.white.withValues(alpha: 0.15),
-                          child: Text(
-                            firstChar,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: AppDimens.sp24,
-                              fontWeight: FontWeight.w700,
+                  : GestureDetector(
+                      onTap: () =>
+                          FileService.openFile(avatarUrl, title: '头像预览'),
+                      child: Image.network(
+                        avatarUrl,
+                        headers: FileService.imageHeaders(),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            alignment: Alignment.center,
+                            color: Colors.white.withValues(alpha: 0.15),
+                            child: Text(
+                              firstChar,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: AppDimens.sp24,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
             ),
           ),
@@ -310,12 +315,7 @@ class _ProfileHeader extends StatelessWidget {
   }
 
   String? _buildAvatarUrl(String? headPortrait) {
-    final raw = headPortrait?.trim() ?? '';
-    if (raw.isEmpty) return null;
-    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-    final base = Environment.currentEnv.apiBaseUrl.trim();
-    if (raw.startsWith('/')) return '$base$raw';
-    return '$base/$raw';
+    return FileService.getFaceUrl(headPortrait);
   }
 
   String _shortText(String? value, {required String fallback}) {

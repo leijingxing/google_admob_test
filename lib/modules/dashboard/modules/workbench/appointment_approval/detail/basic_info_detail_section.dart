@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../../core/components/app_standard_card.dart';
 import '../../../../../../core/constants/dimens.dart';
-import '../../../../../../core/utils/image_file_util.dart';
+import '../../../../../../core/utils/file_service.dart';
 import 'appointment_approval_detail_controller.dart';
 
 class BasicInfoDetailSection extends StatelessWidget {
@@ -171,7 +171,7 @@ class BasicInfoDetailSection extends StatelessWidget {
       spacing: AppDimens.dp8,
       runSpacing: AppDimens.dp8,
       children: urls.map((url) {
-        final fullUrl = ImageFileUtil.buildImageUrl(url);
+        final fullUrl = FileService.getFaceUrl(url);
         if (fullUrl == null) {
           return Container(
             width: AppDimens.dp88,
@@ -190,12 +190,15 @@ class BasicInfoDetailSection extends StatelessWidget {
             width: AppDimens.dp88,
             height: AppDimens.dp56,
             color: const Color(0xFFF0F4FA),
-            child: Image.network(
-              fullUrl,
-              headers: ImageFileUtil.imageHeaders(),
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Center(
-                child: Icon(Icons.broken_image_outlined, size: 18),
+            child: InkWell(
+              onTap: () => FileService.openFile(fullUrl, title: line.label),
+              child: Image.network(
+                fullUrl,
+                headers: FileService.imageHeaders(),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const Center(
+                  child: Icon(Icons.broken_image_outlined, size: 18),
+                ),
               ),
             ),
           ),

@@ -11,6 +11,8 @@ import 'package:path_provider/path_provider.dart';
 import '../components/image/image_viewer_page.dart';
 import '../components/toast/app_loading_dialog.dart';
 import '../components/toast/toast_widget.dart';
+import '../env/env.dart';
+import 'user_manager.dart';
 
 /// 文件服务：统一处理文件打开、下载与删除。
 class FileService {
@@ -21,11 +23,13 @@ class FileService {
   static const Map<String, String> _mimeTypeMap = {
     'pdf': 'application/pdf',
     'doc': 'application/msword',
-    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'docx':
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'xls': 'application/vnd.ms-excel',
     'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'ppt': 'application/vnd.ms-powerpoint',
-    'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'pptx':
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     'txt': 'text/plain',
     'apk': 'application/vnd.android.package-archive',
   };
@@ -41,6 +45,50 @@ class FileService {
   };
 
   static const Set<String> _videoExtensions = {'mp4', 'avi', 'mov', 'mkv'};
+
+  /// 图片地址拼接（兼容文件ID与相对路径）。
+  static String? getFaceUrl(String? rawValue) {
+    final raw = (rawValue ?? '').trim();
+    if (raw.isEmpty || raw == '-' || raw.toLowerCase() == 'null') return null;
+
+    final base = Environment.currentEnv.apiBaseUrl.trim();
+    if (base.isEmpty) return null;
+
+    // 修正后端偶发返回的粘连地址：baseUrl + 文件名（缺少 /）
+    if ((raw.startsWith('http://') || raw.startsWith('https://')) &&
+        raw.startsWith(base) &&
+        raw.length > base.length &&
+        !raw.substring(base.length).startsWith('/')) {
+      return '$base/${raw.substring(base.length)}';
+    }
+
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+
+    // Web 默认拼接规则：/api/system/file/download/{id}
+    // 只要是单段标识（不含 /），不管是否带扩展名，都按下载接口拼接。
+    if (!raw.contains('/')) {
+      return '$base/api/system/file/download/$raw';
+    }
+
+    // 已包含 /api 前缀，直接拼接。
+    if (raw.startsWith('/api/')) return '$base$raw';
+    if (raw.startsWith('api/')) return '$base/$raw';
+
+    // system 开头路径，自动补 /api 前缀。
+    if (raw.startsWith('/system/')) return '$base/api$raw';
+    if (raw.startsWith('system/')) return '$base/api/$raw';
+
+    // 其他绝对/相对路径兜底。
+    if (raw.startsWith('/')) return '$base$raw';
+    return '$base/$raw';
+  }
+
+  /// 图片请求鉴权头。
+  static Map<String, String>? imageHeaders() {
+    final token = (UserManager.token ?? '').trim();
+    if (token.isEmpty) return null;
+    return {'Authorization': token};
+  }
 
   static bool _isRemotePath(String path) =>
       path.startsWith('http://') || path.startsWith('https://');
@@ -89,7 +137,12 @@ class FileService {
 
     if (_imageExtensions.contains(type)) {
       Get.to(
-        () => ImageViewerPage(imageUrl: path, title: title, appBarColor: color),
+        () => ImageViewerPage(
+          imageUrl: path,
+          headers: imageHeaders(),
+          title: title,
+          appBarColor: color,
+        ),
       );
       return;
     }

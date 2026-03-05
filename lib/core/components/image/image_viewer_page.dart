@@ -7,11 +7,13 @@ class ImageViewerPage extends StatelessWidget {
   const ImageViewerPage({
     required this.imageUrl,
     super.key,
+    this.headers,
     this.title,
     this.appBarColor,
   });
 
   final String imageUrl;
+  final Map<String, String>? headers;
   final String? title;
   final Color? appBarColor;
 
@@ -21,7 +23,7 @@ class ImageViewerPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final widget = _isNetworkImage
-        ? Image.network(imageUrl, fit: BoxFit.contain)
+        ? Image.network(imageUrl, headers: headers, fit: BoxFit.contain)
         : Image.file(File(imageUrl), fit: BoxFit.contain);
 
     return Scaffold(
