@@ -11,10 +11,32 @@
 
 import 'package:flutter/widgets.dart';
 
+class $AssetsImagesGen {
+  const $AssetsImagesGen();
+
+  /// File path: assets/images/.gitkeep
+  String get aGitkeep => 'assets/images/.gitkeep';
+
+  /// List of all assets
+  List<String> get values => [aGitkeep];
+}
+
+class $AssetsSvgGen {
+  const $AssetsSvgGen();
+
+  /// File path: assets/svg/.gitkeep
+  String get aGitkeep => 'assets/svg/.gitkeep';
+
+  /// List of all assets
+  List<String> get values => [aGitkeep];
+}
+
 class Assets {
   const Assets._();
 
   static const AssetGenImage appLogo = AssetGenImage('assets/app-logo.png');
+  static const $AssetsImagesGen images = $AssetsImagesGen();
+  static const $AssetsSvgGen svg = $AssetsSvgGen();
 
   /// List of all assets
   static List<AssetGenImage> get values => [appLogo];

@@ -179,6 +179,11 @@ class AuthController extends GetxController {
       );
       final token = await _authRepository.getAccessToken(code);
       await UserManager.saveToken('Bearer $token');
+      final userProfileResult = await _authRepository.getUserProfile();
+      await userProfileResult.when(
+        success: (data) => UserManager.saveUser(data),
+        failure: (error) => throw Exception(error.message),
+      );
 
       if (rememberPwd.value) {
         await StorageUtil.setString(StorageConstants.loginUsername, username);

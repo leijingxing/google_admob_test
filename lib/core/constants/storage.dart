@@ -6,6 +6,9 @@ abstract class StorageConstants {
   /// 用户 token。
   static const token = 'token';
 
+  /// 用户信息缓存。
+  static const userProfile = 'user_profile';
+
   /// 登录页是否记住密码。
   static const rememberLoginCredential = 'remember_login_credential';
 

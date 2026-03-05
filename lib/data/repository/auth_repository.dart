@@ -1,6 +1,7 @@
 import '../../core/env/env.dart';
 import '../../core/http/http_service.dart';
 import '../../core/http/result.dart';
+import '../models/auth/login_entity.dart';
 
 /// 登录模块仓库层，统一管理鉴权相关数据请求。
 class AuthRepository {
@@ -89,6 +90,14 @@ class AuthRepository {
         return tokenValue.toString();
       },
       failure: (error) => throw Exception(error.message),
+    );
+  }
+
+  /// 获取当前登录用户信息。
+  Future<Result<LoginEntity>> getUserProfile() {
+    return _httpService.get<LoginEntity>(
+      '/api/system/user/getUserInfo',
+      parser: (json) => LoginEntity.fromJson(Map<String, dynamic>.from(json as Map)),
     );
   }
 
