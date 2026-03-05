@@ -12,7 +12,7 @@ class AppPages {
   static const initial = SplashRouteNames.splash;
 
   /// 所有页面定义。
-  static final routes = <GetPage<dynamic>>[
+  static final routes  = <GetPage<dynamic>>[
     ...SplashRoutes.routes,
     ...AuthRoutes.routes,
     ...HomeRoutes.routes,
