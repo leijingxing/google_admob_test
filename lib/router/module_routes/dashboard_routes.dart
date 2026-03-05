@@ -4,6 +4,7 @@ import '../../modules/dashboard/modules/logistics_query/logistics_query_view.dar
 import '../../modules/dashboard/modules/overview/overview_binding.dart';
 import '../../modules/dashboard/modules/overview/overview_view.dart';
 import '../../modules/dashboard/modules/personnel_query/personnel_query_view.dart';
+import '../../modules/dashboard/modules/vehicle_query/vehicle_query_binding.dart';
 import '../../modules/dashboard/modules/vehicle_query/vehicle_query_view.dart';
 import '../../modules/dashboard/modules/workbench/workbench_binding.dart';
 import '../../modules/dashboard/modules/workbench/workbench_view.dart';
@@ -19,7 +20,7 @@ abstract class DashboardRoutes {
 
   /// 车辆查询。
   static Future<T?>? toVehicleQuery<T>() {
-    return Get.to<T>(() => const VehicleQueryView());
+    return Get.to<T>(() => const VehicleQueryView(), binding: VehicleQueryBinding());
   }
 
   /// 人员查询。
