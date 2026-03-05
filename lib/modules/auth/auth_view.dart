@@ -44,7 +44,7 @@ class AuthView extends GetView<AuthController> {
                   ),
                   SizedBox(height: 10.h),
                   Text(
-                    'Flutter 基础模板',
+                    '封闭化',
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w400,

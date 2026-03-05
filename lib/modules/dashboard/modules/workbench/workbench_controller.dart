@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/components/toast/toast_widget.dart';
+import '../../../../data/repository/workbench_repository.dart';
+
 /// 工作台页面控制器。
 class WorkbenchController extends GetxController {
+  final WorkbenchRepository _workbenchRepository = WorkbenchRepository();
+
+  /// 任务进度百分比（0~100），用于展示文案与进度圈。
+  double taskProgressPercent = 0;
+
   /// 工作台快捷入口（演示数据）。
   final List<WorkbenchQuickAction> quickActions = const [
     WorkbenchQuickAction(
@@ -24,6 +32,27 @@ class WorkbenchController extends GetxController {
       color: Color(0xFF2E7D32),
     ),
   ];
+
+  @override
+  void onInit() {
+    super.onInit();
+    fetchTaskProgress();
+  }
+
+  /// 获取任务进度跟踪百分比。
+  Future<void> fetchTaskProgress() async {
+    final result = await _workbenchRepository.getTaskProgressPercent();
+    result.when(
+      success: (percent) {
+        // 接口返回值按百分比语义处理，这里统一限制在 0~100。
+        taskProgressPercent = percent.clamp(0, 100).toDouble();
+        update();
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
+      },
+    );
+  }
 }
 
 /// 工作台快捷入口卡片数据。

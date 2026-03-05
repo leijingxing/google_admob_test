@@ -1,22 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../../../core/constants/dimens.dart';
+import '../../../../router/module_routes/workbench_routes.dart';
+import 'workbench_controller.dart';
 
 /// 工作台业务内容区。
 class WorkbenchContentSection extends StatelessWidget {
   const WorkbenchContentSection({super.key});
 
-  static const double _progress = 0.6;
   static const List<_WorkbenchEntry> _entries = [
-    _WorkbenchEntry(title: '白名单审批', count: 12),
-    _WorkbenchEntry(title: '黑名单审批', count: 12),
-    _WorkbenchEntry(title: '车辆抽检', count: 12),
-    _WorkbenchEntry(title: '园区巡检', count: 12),
-    _WorkbenchEntry(title: '隐患治理', count: 12),
-    _WorkbenchEntry(title: '异常确认', count: 12),
-    _WorkbenchEntry(title: '申诉回复', count: 12),
-    _WorkbenchEntry(title: '报警处置', count: 12),
-    _WorkbenchEntry(title: '预警处置', count: 12),
+    _WorkbenchEntry(
+      title: '白名单审批',
+      count: 12,
+      icon: Icons.verified_user_outlined,
+    ),
+    _WorkbenchEntry(title: '黑名单审批', count: 12, icon: Icons.gpp_bad_outlined),
+    _WorkbenchEntry(
+      title: '车辆抽检',
+      count: 12,
+      icon: Icons.directions_car_filled_outlined,
+    ),
+    _WorkbenchEntry(
+      title: '园区巡检',
+      count: 12,
+      icon: Icons.camera_outdoor_outlined,
+    ),
+    _WorkbenchEntry(
+      title: '隐患治理',
+      count: 12,
+      icon: Icons.build_circle_outlined,
+    ),
+    _WorkbenchEntry(
+      title: '异常确认',
+      count: 12,
+      icon: Icons.report_problem_outlined,
+    ),
+    _WorkbenchEntry(title: '申诉回复', count: 12, icon: Icons.message_outlined),
+    _WorkbenchEntry(
+      title: '报警处置',
+      count: 12,
+      icon: Icons.notifications_active_outlined,
+    ),
+    _WorkbenchEntry(
+      title: '预警处置',
+      count: 12,
+      icon: Icons.warning_amber_rounded,
+    ),
   ];
 
   static const List<Color> _entryColors = [
@@ -33,185 +63,185 @@ class WorkbenchContentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(bottom: AppDimens.dp10),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            const Color(0xFFF8FCFF),
-            const Color(0xFFF1F7FF),
-            const Color(0xFFF8FCFF),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppDimens.dp18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _TaskProgressCard(progress: _progress),
-          SizedBox(height: AppDimens.dp12),
-          const _PrimaryApprovalCard(title: '预约审批', count: 12),
-          SizedBox(height: AppDimens.dp12),
-          IgnorePointer(
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _entries.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: AppDimens.dp10,
-                crossAxisSpacing: AppDimens.dp10,
-                childAspectRatio: 1.02,
-              ),
-              itemBuilder: (context, index) {
-                final entry = _entries[index];
-                final color = _entryColors[index % _entryColors.length];
-                return _GridActionCard(
-                  title: entry.title,
-                  count: entry.count,
-                  color: color,
-                );
-              },
+    return GetBuilder<WorkbenchController>(
+      init: Get.isRegistered<WorkbenchController>()
+          ? Get.find<WorkbenchController>()
+          : WorkbenchController(),
+      builder: (controller) => SingleChildScrollView(
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.only(bottom: AppDimens.dp10),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFF8FCFF), Color(0xFFF1F7FF), Color(0xFFF8FCFF)],
             ),
+            borderRadius: BorderRadius.circular(AppDimens.dp18),
           ),
-        ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _TaskProgressCard(
+                progressPercent: controller.taskProgressPercent,
+              ),
+              SizedBox(height: AppDimens.dp16),
+              _PrimaryApprovalCard(
+                title: '预约审批',
+                count: 12,
+                onTap: WorkbenchRoutes.toAppointmentApproval,
+              ),
+              SizedBox(height: AppDimens.dp16),
+              GridView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _entries.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: AppDimens.dp12,
+                  crossAxisSpacing: AppDimens.dp12,
+                  childAspectRatio: 0.95,
+                ),
+                itemBuilder: (context, index) {
+                  final entry = _entries[index];
+                  final color = _entryColors[index % _entryColors.length];
+                  return _GridActionCard(
+                    title: entry.title,
+                    count: entry.count,
+                    color: color,
+                    icon: entry.icon,
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
 class _TaskProgressCard extends StatelessWidget {
-  const _TaskProgressCard({required this.progress});
+  const _TaskProgressCard({required this.progressPercent});
 
-  final double progress;
+  /// 接口返回百分比值（0~100）。
+  final double progressPercent;
 
   @override
   Widget build(BuildContext context) {
+    // CircularProgressIndicator 需要 0~1，因此由百分比转换为归一化进度值。
+    final progress = (progressPercent / 100).clamp(0, 1).toDouble();
+
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(AppDimens.dp14),
+      padding: EdgeInsets.all(AppDimens.dp16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFEAF3FF), Color(0xFFDDEBFF)],
+          colors: [Color(0xFFFFFFFF), Color(0xFFE6F0FF)],
         ),
         borderRadius: BorderRadius.circular(AppDimens.dp16),
-        border: Border.all(color: const Color(0xFFBDD6FC)),
+        border: Border.all(color: const Color(0xFFC7DEFF), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4A8CFA).withValues(alpha: 0.09),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
+            color: const Color(0xFF4A8CFA).withValues(alpha: 0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Text(
-                '任务进度跟踪',
-                style: TextStyle(
-                  color: const Color(0xFF1E3858),
-                  fontSize: AppDimens.sp16,
-                  fontWeight: FontWeight.w700,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 3,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3B84F6),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    SizedBox(width: AppDimens.dp6),
+                    Text(
+                      '任务进度跟踪',
+                      style: TextStyle(
+                        color: const Color(0xFF1E3858),
+                        fontSize: AppDimens.sp16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const Spacer(),
-              IgnorePointer(
-                child: Container(
+                SizedBox(height: AppDimens.dp8),
+                SizedBox(height: AppDimens.dp12),
+                Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: AppDimens.dp10,
+                    horizontal: AppDimens.dp12,
                     vertical: AppDimens.dp4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(AppDimens.dp8),
-                    border: Border.all(color: const Color(0xFFC3D8FA)),
+                    color: const Color(0xFF3B84F6).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppDimens.dp20),
                   ),
                   child: Text(
-                    '更多 >',
+                    '查看详情 >',
                     style: TextStyle(
-                      color: const Color(0xFF3A73D9),
+                      color: const Color(0xFF3B84F6),
                       fontSize: AppDimens.sp10,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: AppDimens.dp6),
-          Text(
-            '本周审批任务完成率',
-            style: TextStyle(
-              color: const Color(0xFF5E7B9D),
-              fontSize: AppDimens.sp10,
+              ],
             ),
           ),
-          SizedBox(height: AppDimens.dp16),
-          Center(
-            child: SizedBox(
-              width: AppDimens.dp150,
-              height: AppDimens.dp150,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: AppDimens.dp150,
-                    height: AppDimens.dp150,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          Colors.white,
-                          const Color(0xFFCFE3FF).withValues(alpha: 0.45),
-                        ],
+          SizedBox(
+            width: AppDimens.dp92,
+            height: AppDimens.dp92,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: AppDimens.dp80,
+                  height: AppDimens.dp80,
+                  child: CircularProgressIndicator(
+                    value: progress,
+                    strokeWidth: AppDimens.dp10,
+                    strokeCap: StrokeCap.round,
+                    backgroundColor: const Color(0xFFE1EDFF),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Color(0xFF3B84F6),
+                    ),
+                  ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${progressPercent.toInt()}%',
+                      style: TextStyle(
+                        color: const Color(0xFF1E3652),
+                        fontSize: AppDimens.sp18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  SizedBox(
-                    width: AppDimens.dp140,
-                    height: AppDimens.dp140,
-                    child: CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: AppDimens.dp12,
-                      strokeCap: StrokeCap.round,
-                      backgroundColor: const Color(0xFFD9E6FA),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF3B84F6),
+                    Text(
+                      '完成度',
+                      style: TextStyle(
+                        color: const Color(0xFF4D6F96),
+                        fontSize: AppDimens.sp8,
                       ),
                     ),
-                  ),
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '${(progress * 100).toInt()}',
-                          style: TextStyle(
-                            color: const Color(0xFF1E3652),
-                            fontSize: AppDimens.sp30,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '%',
-                          style: TextStyle(
-                            color: const Color(0xFF4D6F96),
-                            fontSize: AppDimens.sp16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -221,54 +251,107 @@ class _TaskProgressCard extends StatelessWidget {
 }
 
 class _PrimaryApprovalCard extends StatelessWidget {
-  const _PrimaryApprovalCard({required this.title, required this.count});
+  const _PrimaryApprovalCard({
+    required this.title,
+    required this.count,
+    required this.onTap,
+  });
 
   final String title;
   final int count;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: double.infinity,
-        height: AppDimens.dp84,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFF8FCFF), Color(0xFFF1F7FF)],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppDimens.dp14),
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          height: AppDimens.dp64,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [Color(0xFF3B84F6), Color(0xFF5DA3FF)],
+            ),
+            borderRadius: BorderRadius.circular(AppDimens.dp14),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF3B84F6).withValues(alpha: 0.25),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          borderRadius: BorderRadius.circular(AppDimens.dp12),
-          border: Border.all(color: const Color(0xFFD8E7FC)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF4A8CFA).withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                color: const Color(0xFF334D6A),
-                fontSize: AppDimens.sp14,
-                fontWeight: FontWeight.w700,
+          child: Stack(
+            children: [
+              Positioned(
+                right: -10,
+                top: -10,
+                child: Icon(
+                  Icons.assignment_turned_in_rounded,
+                  size: 80,
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
               ),
-            ),
-            SizedBox(height: AppDimens.dp4),
-            Text(
-              '$count',
-              style: TextStyle(
-                color: const Color(0xFF3A73D9),
-                fontSize: AppDimens.sp16,
-                fontWeight: FontWeight.w700,
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppDimens.dp20),
+                child: Row(
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: AppDimens.sp16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '待处理审批任务',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: AppDimens.sp10,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppDimens.dp12,
+                        vertical: AppDimens.dp4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(AppDimens.dp8),
+                      ),
+                      child: Text(
+                        '$count',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: AppDimens.sp20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: AppDimens.dp8),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -280,63 +363,67 @@ class _GridActionCard extends StatelessWidget {
     required this.title,
     required this.count,
     required this.color,
+    required this.icon,
   });
 
   final String title;
   final int count;
   final Color color;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: 0.98,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: AppDimens.dp6,
-          vertical: AppDimens.dp10,
-        ),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              color.withValues(alpha: 0.14),
-              color.withValues(alpha: 0.04),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimens.dp14),
+        border: Border.all(color: const Color(0xFFE8F1FF), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF000000).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {},
+          borderRadius: BorderRadius.circular(AppDimens.dp14),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.all(AppDimens.dp8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: AppDimens.dp22),
+              ),
+              SizedBox(height: AppDimens.dp8),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: const Color(0xFF334D6A),
+                  fontSize: AppDimens.sp12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: AppDimens.dp2),
+              Text(
+                '$count',
+                style: TextStyle(
+                  color: color,
+                  fontSize: AppDimens.sp14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
-          borderRadius: BorderRadius.circular(AppDimens.dp14),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: const Color(0xFF304B69),
-                fontSize: AppDimens.sp12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: AppDimens.dp6),
-            Text(
-              '$count',
-              style: TextStyle(
-                color: color,
-                fontSize: AppDimens.sp16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -344,8 +431,13 @@ class _GridActionCard extends StatelessWidget {
 }
 
 class _WorkbenchEntry {
-  const _WorkbenchEntry({required this.title, required this.count});
+  const _WorkbenchEntry({
+    required this.title,
+    required this.count,
+    required this.icon,
+  });
 
   final String title;
   final int count;
+  final IconData icon;
 }
