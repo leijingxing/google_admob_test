@@ -7,6 +7,7 @@ import '../../../../../core/components/custom_sliding_tab_bar.dart';
 import '../../../../../core/components/date_picker/custom_date_range_picker.dart';
 import '../../../../../core/constants/dimens.dart';
 import '../../../../../data/models/workbench/appointment_approval_item_model.dart';
+import '../../../../../router/module_routes/workbench_routes.dart';
 import 'appointment_approval_controller.dart';
 
 /// 预约审批页面。
@@ -382,30 +383,77 @@ class _ApprovalCard extends StatelessWidget {
           ),
         ],
       ),
-      trailingAction: item.parkCheckStatus == 0
-          ? SizedBox(
-              width: AppDimens.dp56,
-              height: AppDimens.dp26,
-              child: OutlinedButton(
-                onPressed: () {},
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFF1F7BFF)),
-                  padding: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimens.dp4),
-                  ),
-                ),
-                child: Text(
-                  '审批',
-                  style: TextStyle(
-                    color: const Color(0xFF1F7BFF),
-                    fontSize: AppDimens.sp12,
-                  ),
-                ),
-              ),
-            )
-          : null,
+      trailingAction: _buildActionButtons(controller, item),
     );
+  }
+
+  Widget _buildActionButtons(
+    AppointmentApprovalController controller,
+    AppointmentApprovalItemModel item,
+  ) {
+    final buttons = <Widget>[
+      SizedBox(
+        width: AppDimens.dp56,
+        height: AppDimens.dp26,
+        child: OutlinedButton(
+          onPressed: () =>
+              WorkbenchRoutes.toAppointmentApprovalDetail(item: item),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFF8DA0B8)),
+            padding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimens.dp4),
+            ),
+          ),
+          child: Text(
+            '查看',
+            style: TextStyle(
+              color: const Color(0xFF5D7189),
+              fontSize: AppDimens.sp12,
+            ),
+          ),
+        ),
+      ),
+    ];
+
+    if (item.parkCheckStatus == 0) {
+      buttons.add(SizedBox(width: AppDimens.dp8));
+      buttons.add(
+        SizedBox(
+          width: AppDimens.dp56,
+          height: AppDimens.dp26,
+          child: OutlinedButton(
+            onPressed: () async {
+              final id = item.id ?? '';
+              if (id.isEmpty) return;
+              final approved =
+                  await WorkbenchRoutes.toAppointmentApprovalApprove(
+                    item: item,
+                  );
+              if (approved == true) {
+                controller.refreshCurrentList();
+              }
+            },
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFF1F7BFF)),
+              padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimens.dp4),
+              ),
+            ),
+            child: Text(
+              '审批',
+              style: TextStyle(
+                color: const Color(0xFF1F7BFF),
+                fontSize: AppDimens.sp12,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(mainAxisSize: MainAxisSize.min, children: buttons);
   }
 
   AppCardStatusStyle _statusStyle(int status) {

@@ -311,7 +311,16 @@ class HttpService {
       final responseData = _responseProtocol.unwrap(response.data);
 
       if (parser != null) {
-        return Success(parser(responseData));
+        try {
+          return Success(parser(responseData));
+        } catch (e, st) {
+          talker.error(
+            '响应解析失败 [$method $path], dataType=${responseData.runtimeType}',
+            e,
+            st,
+          );
+          return Failure(AppError(code: -1, message: '数据解析失败: $e'));
+        }
       }
 
       if (responseData is T) {
@@ -324,10 +333,13 @@ class HttpService {
         AppError(code: -1, message: '未提供解析器(parser)，无法将响应转换为 ${T.toString()}'),
       );
     } on DioException catch (e) {
+      talker.error('请求异常 [$method $path]', e, e.stackTrace);
       return Failure(_errorMapper.map(e));
     } on AppError catch (e) {
+      talker.error('业务异常 [$method $path]', e, StackTrace.current);
       return Failure(e);
     } catch (e) {
+      talker.error('未知异常 [$method $path]', e, StackTrace.current);
       return Failure(AppError(code: -1, message: '未知错误: $e'));
     }
   }
@@ -371,4 +383,3 @@ class HttpService {
     return handler.next(err);
   }
 }
-

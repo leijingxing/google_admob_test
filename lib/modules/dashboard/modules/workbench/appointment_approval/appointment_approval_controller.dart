@@ -183,6 +183,11 @@ class AppointmentApprovalController extends GetxController {
   void _triggerRefresh() {
     refreshTrigger.value++;
   }
+
+  /// 刷新当前列表。
+  void refreshCurrentList() {
+    _triggerRefresh();
+  }
 }
 
 class WorkbenchFilterOption<T> {

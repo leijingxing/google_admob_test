@@ -42,7 +42,24 @@ class HttpResponseProtocol {
   /// 从响应中提取业务数据。
   dynamic unwrap(dynamic responseBody) {
     if (responseBody is Map && responseBody.containsKey('data')) {
-      return responseBody['data'];
+      final data = responseBody['data'];
+      final hasPaginationMeta =
+          responseBody.containsKey('totalCount') ||
+          responseBody.containsKey('totalPages') ||
+          responseBody.containsKey('pageIndex') ||
+          responseBody.containsKey('pageSize') ||
+          responseBody.containsKey('total') ||
+          responseBody.containsKey('pages') ||
+          responseBody.containsKey('current') ||
+          responseBody.containsKey('pageNum') ||
+          responseBody.containsKey('pageNo') ||
+          responseBody.containsKey('size');
+
+      // 分页响应保留外层，避免丢失 total/page 信息。
+      if (hasPaginationMeta && data is List) {
+        return responseBody;
+      }
+      return data;
     }
     return responseBody;
   }
