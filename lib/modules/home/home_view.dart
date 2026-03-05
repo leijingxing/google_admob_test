@@ -7,7 +7,7 @@ import '../profile/profile_view.dart';
 import '../refresh_test/refresh_test_view.dart';
 import 'home_controller.dart';
 
-/// 首页：底部 Tab（主页 / 测试 / 个人）。
+/// 首页：底部 Tab（主页 / 消息 / 个人）。
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
@@ -21,27 +21,52 @@ class HomeView extends GetView<HomeController> {
             index: logic.currentIndex,
             children: const [DashboardView(), RefreshTestView(), ProfileView()],
           ),
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: logic.currentIndex,
-            onTap: logic.switchTab,
-            selectedItemColor: AppColors.primary,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home_rounded),
-                label: '主页',
+          bottomNavigationBar: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.science_outlined),
-                activeIcon: Icon(Icons.science_rounded),
-                label: '测试',
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF103A6F).withValues(alpha: 0.08),
+                  blurRadius: 18,
+                  offset: const Offset(0, -6),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline_rounded),
-                activeIcon: Icon(Icons.person_rounded),
-                label: '个人',
+              child: BottomNavigationBar(
+                currentIndex: logic.currentIndex,
+                onTap: logic.switchTab,
+                backgroundColor: Colors.white,
+                selectedItemColor: AppColors.primary,
+                unselectedItemColor: const Color(0xFF8191A8),
+                type: BottomNavigationBarType.fixed,
+                selectedFontSize: 12,
+                unselectedFontSize: 12,
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.home_filled),
+                    activeIcon: Icon(Icons.home_filled),
+                    label: '主页',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.forum_rounded),
+                    activeIcon: Icon(Icons.forum_rounded),
+                    label: '消息',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.account_circle_rounded),
+                    activeIcon: Icon(Icons.account_circle_rounded),
+                    label: '个人',
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },

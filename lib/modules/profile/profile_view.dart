@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/dimens.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/dimens.dart';
+import '../../core/env/env.dart';
+import '../../data/models/auth/login_entity.dart';
 import 'profile_controller.dart';
 
 /// 个人页 Tab 页面。
@@ -13,129 +15,194 @@ class ProfileView extends GetView<ProfileController> {
   Widget build(BuildContext context) {
     return GetBuilder<ProfileController>(
       builder: (logic) {
-        return SafeArea(
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFF3F8FF), Color(0xFFEAF2FF)],
-              ),
-            ),
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      AppDimens.dp16,
-                      AppDimens.dp16,
-                      AppDimens.dp16,
-                      AppDimens.dp24,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _ProfileHeader(profile: logic.profile),
-                        SizedBox(height: AppDimens.dp12),
-                        _SectionCard(
-                          title: '常用功能',
-                          child: const _QuickActions(),
+        final profile = logic.profile;
+        return Scaffold(
+          backgroundColor: const Color(0xFFF1F6FF),
+          body: Stack(
+            children: [
+              _buildBackground(),
+              SafeArea(
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          AppDimens.dp16,
+                          AppDimens.dp12,
+                          AppDimens.dp16,
+                          AppDimens.dp24,
                         ),
-                        SizedBox(height: AppDimens.dp12),
-                        _SectionCard(
-                          title: '账号信息',
-                          child: Column(
-                            children: [
-                              _InfoTile(
-                                icon: Icons.badge_outlined,
-                                label: '账号',
-                                value: logic.profile.account,
-                              ),
-                              _InfoTile(
-                                icon: Icons.phone_iphone_outlined,
-                                label: '手机号',
-                                value: logic.profile.phone,
-                              ),
-                              _InfoTile(
-                                icon: Icons.mail_outline_rounded,
-                                label: '邮箱',
-                                value: logic.profile.email,
-                              ),
-                              _InfoTile(
-                                icon: Icons.apartment_rounded,
-                                label: '部门',
-                                value: logic.profile.dept,
-                                showDivider: false,
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: AppDimens.dp20),
-                        Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: SizedBox(
-                                height: AppDimens.dp44,
-                                child: OutlinedButton.icon(
-                                  onPressed: () {},
-                                  icon: const Icon(Icons.settings_outlined),
-                                  label: const Text('设置'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: const Color(0xFF1F5FAE),
-                                    side: const BorderSide(
-                                      color: Color(0xFFD8E4F4),
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                        AppDimens.dp12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                            Text(
+                              '个人中心',
+                              style: TextStyle(
+                                color: const Color(0xFF0F2E54),
+                                fontSize: AppDimens.sp22,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                            SizedBox(width: AppDimens.dp10),
-                            Expanded(
-                              child: SizedBox(
-                                height: AppDimens.dp44,
-                                child: FilledButton(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: const Color(0xFFE55252),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                        AppDimens.dp12,
-                                      ),
+                            SizedBox(height: AppDimens.dp12),
+                            _ProfileHeader(profile: profile),
+                            SizedBox(height: AppDimens.dp12),
+                            _SectionCard(
+                              title: '账号信息',
+                              child: Column(
+                                children: [
+                                  _InfoTile(
+                                    icon: Icons.badge_outlined,
+                                    label: '账号',
+                                    value: _v(profile?.userAccount),
+                                  ),
+                                  _InfoTile(
+                                    icon: Icons.phone_iphone_outlined,
+                                    label: '手机号',
+                                    value: _v(profile?.phone),
+                                  ),
+                                  _InfoTile(
+                                    icon: Icons.mail_outline_rounded,
+                                    label: '邮箱',
+                                    value: _v(profile?.mail),
+                                  ),
+                                  _InfoTile(
+                                    icon: Icons.business_outlined,
+                                    label: '企业',
+                                    value: _v(profile?.companyName),
+                                  ),
+                                  _InfoTile(
+                                    icon: Icons.apartment_rounded,
+                                    label: '部门',
+                                    value: _v(profile?.departmentName),
+                                  ),
+                                  _InfoTile(
+                                    icon: Icons.domain_outlined,
+                                    label: '企业编码',
+                                    value: _v(profile?.companyCode),
+                                  ),
+                                  _InfoTile(
+                                    icon: Icons.perm_identity_outlined,
+                                    label: '用户ID',
+                                    value: _v(profile?.id),
+                                  ),
+                                  _InfoTile(
+                                    icon: Icons.wc_outlined,
+                                    label: '性别',
+                                    value: _sexText(profile?.sex),
+                                  ),
+                                  _InfoTile(
+                                    icon: Icons.verified_user_outlined,
+                                    label: '管理员',
+                                    value: profile?.isAdmin == '1' ? '是' : '否',
+                                  ),
+                                  _InfoTile(
+                                    icon: Icons.key_outlined,
+                                    label: '租户ID',
+                                    value: _v(profile?.tenantId),
+                                    showDivider: false,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: AppDimens.dp20),
+                            SizedBox(
+                              width: double.infinity,
+                              height: AppDimens.dp44,
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xFFE55252),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppDimens.dp12,
                                     ),
                                   ),
-                                  onPressed: logic.logout,
-                                  child: const Text('退出登录'),
                                 ),
+                                onPressed: logic.logout,
+                                child: const Text('退出登录'),
                               ),
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
     );
+  }
+
+  Widget _buildBackground() {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFDCE9FF), Color(0xFFF1F6FF), Color(0xFFF7FAFF)],
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -120,
+            right: -40,
+            child: _blurCircle(size: 240, color: const Color(0xFF8DB2FF)),
+          ),
+          Positioned(
+            top: 120,
+            left: -60,
+            child: _blurCircle(size: 180, color: const Color(0xFFA9C6FF)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _blurCircle({required double size, required Color color}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.22),
+      ),
+    );
+  }
+
+  String _v(String? value) {
+    if (value == null || value.trim().isEmpty) return '-';
+    return value;
+  }
+
+  String _sexText(String? sex) {
+    if (sex == '1') return '女';
+    if (sex == '2') return '男';
+    return '-';
   }
 }
 
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({required this.profile});
 
-  final UserProfile profile;
+  final LoginEntity? profile;
 
   @override
   Widget build(BuildContext context) {
+    final name = profile?.userName?.trim();
+    final nameText = (name == null || name.isEmpty) ? '未设置姓名' : name;
+    final companyText = profile?.companyName?.trim();
+    final company = (companyText == null || companyText.isEmpty)
+        ? '未设置企业'
+        : companyText;
+    final firstChar = nameText.characters.first;
+    final avatarUrl = _buildAvatarUrl(profile?.headPortrait);
+    final title = _buildTitle(profile);
+
     return Container(
       padding: EdgeInsets.all(AppDimens.dp16),
       decoration: BoxDecoration(
@@ -143,141 +210,130 @@ class _ProfileHeader extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF11498E), Color(0xFF2F81CF)],
+          colors: [Color(0xFF1B4F9F), Color(0xFF3B78E7)],
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0E2A49).withValues(alpha: 0.16),
-            blurRadius: AppDimens.dp16,
-            offset: Offset(0, AppDimens.dp8),
+            color: const Color(0xFF1B4F9F).withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                width: AppDimens.dp60,
-                height: AppDimens.dp60,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.35),
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  profile.name.substring(0, 1),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: AppDimens.sp24,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              SizedBox(width: AppDimens.dp12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          Container(
+            width: AppDimens.dp64,
+            height: AppDimens.dp64,
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+            ),
+            child: ClipOval(
+              child: avatarUrl == null
+                  ? Container(
+                      alignment: Alignment.center,
+                      color: Colors.white.withValues(alpha: 0.15),
+                      child: Text(
+                        firstChar,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: AppDimens.sp24,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    )
+                  : Image.network(
+                      avatarUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          alignment: Alignment.center,
+                          color: Colors.white.withValues(alpha: 0.15),
+                          child: Text(
+                            firstChar,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: AppDimens.sp24,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ),
+          SizedBox(width: AppDimens.dp12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      profile.name,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: AppDimens.sp18,
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Text(
+                        nameText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: AppDimens.sp18,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                    SizedBox(height: AppDimens.dp4),
-                    Text(
-                      profile.role,
-                      style: TextStyle(
-                        color: const Color(0xFFDCEEFF),
-                        fontSize: AppDimens.sp12,
+                    SizedBox(width: AppDimens.dp6),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppDimens.dp6,
+                        vertical: AppDimens.dp2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(AppDimens.dp8),
+                      ),
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: AppDimens.sp10,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppDimens.dp8,
-                  vertical: AppDimens.dp5,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(AppDimens.dp20),
-                ),
-                child: Text(
-                  '在线',
+                SizedBox(height: AppDimens.dp4),
+                Text(
+                  company,
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: AppDimens.sp10,
-                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFDCEEFF),
+                    fontSize: AppDimens.sp12,
                   ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: AppDimens.dp14),
-          Row(
-            children: const [
-              Expanded(
-                child: _HeaderStat(label: '活跃天数', value: '128'),
-              ),
-              Expanded(
-                child: _HeaderStat(label: '完成任务', value: '42'),
-              ),
-              Expanded(
-                child: _HeaderStat(label: '协作项目', value: '6'),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
-}
 
-class _HeaderStat extends StatelessWidget {
-  const _HeaderStat({required this.label, required this.value});
+  String _buildTitle(LoginEntity? user) {
+    if (user?.isAdmin == '1') return '管理员';
+    if (user?.enterprisesOrGovernments == 1) return '政府人员';
+    if (user?.enterprisesOrGovernments == 2) return '企业人员';
+    return '正式员工';
+  }
 
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: AppDimens.dp4),
-      padding: EdgeInsets.symmetric(vertical: AppDimens.dp10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppDimens.dp12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: AppDimens.sp14,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(height: AppDimens.dp4),
-          Text(
-            label,
-            style: TextStyle(
-              color: const Color(0xFFDCEEFF),
-              fontSize: AppDimens.sp10,
-            ),
-          ),
-        ],
-      ),
-    );
+  String? _buildAvatarUrl(String? headPortrait) {
+    final raw = headPortrait?.trim() ?? '';
+    if (raw.isEmpty) return null;
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+    final base = Environment.currentEnv.apiBaseUrl.trim();
+    if (raw.startsWith('/')) return '$base$raw';
+    return '$base/$raw';
   }
 }
 
@@ -312,73 +368,6 @@ class _SectionCard extends StatelessWidget {
           child,
         ],
       ),
-    );
-  }
-}
-
-class _QuickActions extends StatelessWidget {
-  const _QuickActions();
-
-  @override
-  Widget build(BuildContext context) {
-    const items = [
-      (Icons.edit_note_rounded, '编辑资料'),
-      (Icons.verified_user_outlined, '认证中心'),
-      (Icons.history_rounded, '登录记录'),
-      (Icons.help_outline_rounded, '帮助反馈'),
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = (constraints.maxWidth - AppDimens.dp10) / 2;
-        return Wrap(
-          spacing: AppDimens.dp10,
-          runSpacing: AppDimens.dp10,
-          children: items.map((item) {
-            return SizedBox(
-              width: width,
-              child: Container(
-                padding: EdgeInsets.all(AppDimens.dp12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF7FAFF),
-                  borderRadius: BorderRadius.circular(AppDimens.dp12),
-                  border: Border.all(color: const Color(0xFFE6EDF8)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: AppDimens.dp28,
-                      height: AppDimens.dp28,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1F5FAE).withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(AppDimens.dp8),
-                      ),
-                      child: Icon(
-                        item.$1,
-                        size: AppDimens.sp14,
-                        color: const Color(0xFF1F5FAE),
-                      ),
-                    ),
-                    SizedBox(width: AppDimens.dp8),
-                    Expanded(
-                      child: Text(
-                        item.$2,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: AppDimens.sp12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        );
-      },
     );
   }
 }
