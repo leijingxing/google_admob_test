@@ -37,17 +37,11 @@ class PaginatedResult<T> {
 
     return PaginatedResult<T>(
       items: parsedItems,
-      total: json['total'] as int? ?? 0,
-      currentPage: json['current'] as int? ?? 1,
-      pageSize: json['size'] as int? ?? 10,
-      pageCount: json['pages'] as int? ?? 0,
+      total: json['totalPages'] as int? ?? 0,
+      currentPage: json['pageIndex'] as int? ?? 1,
+      pageSize: json['pageSize'] as int? ?? 10,
+      pageCount: json['totalCount'] as int? ?? 0,
     );
   }
 
-  /// 判断 map 是否为分页结构，根据接口响应结构来调整
-  static bool isPaginationStructure(Map<dynamic, dynamic> data) {
-    final bool isPagination =
-        data.containsKey('records') && data.containsKey('total');
-    return isPagination;
-  }
 }

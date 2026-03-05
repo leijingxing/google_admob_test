@@ -31,7 +31,8 @@ class WorkbenchRepository {
   /// 获取预约审批分页列表。
   ///
   /// [approvePageType]：2-园区待审批；3-园区已审批。
-  Future<Result<PaginatedResult<AppointmentApprovalItemModel>>> getReservationApprovePage({
+  Future<Result<PaginatedResult<AppointmentApprovalItemModel>>>
+  getReservationApprovePage({
     required int approvePageType,
     int current = 1,
     int size = 20,
@@ -40,11 +41,11 @@ class WorkbenchRepository {
     String? keywords,
     String? beginTime,
     String? endTime,
-  }) {
+  }) async {
     final requestData = <String, dynamic>{
       'approvePageType': approvePageType,
-      'current': current,
-      'size': size,
+      'pageIndex': current,
+      'pageSize': size,
       'reservationType': reservationType,
       'parkCheckStatus': parkCheckStatus,
       'keywords': keywords,
@@ -57,14 +58,39 @@ class WorkbenchRepository {
       return false;
     });
 
-    return _httpService.post<PaginatedResult<AppointmentApprovalItemModel>>(
+    final postResult = await _httpService
+        .post<PaginatedResult<AppointmentApprovalItemModel>>(
+          '/api/closed-off/reservation/reservationApprovePage',
+          data: requestData,
+          parser: (json) => parsePaginatedResult<AppointmentApprovalItemModel>(
+            json: json,
+            requestPageIndex: current,
+            requestPageSize: size,
+            itemParser: (itemJson) =>
+                AppointmentApprovalItemModel.fromJson(itemJson),
+          ),
+        );
+
+    if (postResult is Success<PaginatedResult<AppointmentApprovalItemModel>>) {
+      return postResult;
+    }
+
+    final error =
+        (postResult as Failure<PaginatedResult<AppointmentApprovalItemModel>>)
+            .error;
+    if (error.code != 405) {
+      return postResult;
+    }
+
+    return _httpService.get<PaginatedResult<AppointmentApprovalItemModel>>(
       '/api/closed-off/reservation/reservationApprovePage',
-      data: requestData,
+      queryParameters: requestData,
       parser: (json) => parsePaginatedResult<AppointmentApprovalItemModel>(
         json: json,
         requestPageIndex: current,
         requestPageSize: size,
-        itemParser: (itemJson) => AppointmentApprovalItemModel.fromJson(itemJson),
+        itemParser: (itemJson) =>
+            AppointmentApprovalItemModel.fromJson(itemJson),
       ),
     );
   }

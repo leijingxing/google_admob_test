@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 /// @description 一个美观、易用的日期范围选择组件
 /// 点击后会从底部弹出 iOS 风格的选择器
@@ -14,11 +13,15 @@ class CustomDateRangePicker extends StatelessWidget {
   /// 日期范围选择后的回调
   final Function(DateTime? start, DateTime? end) onDateRangeSelected;
 
+  /// 是否使用紧凑模式（更小的高度与字号）
+  final bool compact;
+
   const CustomDateRangePicker({
     super.key,
     this.startDate,
     this.endDate,
     required this.onDateRangeSelected,
+    this.compact = false,
   });
 
   @override
@@ -47,6 +50,13 @@ class CustomDateRangePicker extends StatelessWidget {
     );
   }
 
+  static String _displayDate(DateTime date) {
+    final year = date.year.toString();
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year年$month月$day日';
+  }
+
   /// 构建单个日期显示框
   Widget _buildDateDisplay({
     required BuildContext context,
@@ -54,22 +64,28 @@ class CustomDateRangePicker extends StatelessWidget {
     DateTime? date,
   }) {
     final bool hasValue = date != null;
-    final String displayText = hasValue ? DateFormat('yyyy-MM-dd').format(date) : label;
+    final DateTime safeDate = date ?? DateTime.now();
+    final String displayText = hasValue ? _displayDate(safeDate) : label;
 
     return InkWell(
       onTap: () => _showDatePickerSheet(context),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(compact ? 6 : 8),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: EdgeInsets.symmetric(
+          vertical: compact ? 8 : 12,
+          horizontal: compact ? 6 : 8,
+        ),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(compact ? 6 : 8),
+          color: compact ? const Color(0xFFF8FAFD) : null,
         ),
         child: Text(
           displayText,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: hasValue ? Colors.black87 : Colors.grey.shade600,
+            fontSize: compact ? 12 : 14,
           ),
         ),
       ),
@@ -231,7 +247,7 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
             Text(label, style: TextStyle(color: color, fontSize: 14)),
             const SizedBox(height: 4),
             Text(
-              date != null ? DateFormat('yyyy-MM-dd').format(date) : '未设置',
+              date != null ? CustomDateRangePicker._displayDate(date) : '未设置',
               style: TextStyle(
                 color: isSelected ? theme.primaryColor : Colors.black87,
                 fontSize: 16,

@@ -9,6 +9,7 @@ import '../widgets/workbench_segment_tabs.dart';
 /// 预约审批控制器。
 class AppointmentApprovalController extends GetxController {
   final WorkbenchRepository _workbenchRepository = WorkbenchRepository();
+  final ValueNotifier<int> refreshTrigger = ValueNotifier<int>(0);
 
   /// 顶部 Tab：待审批 / 已审批。
   final List<WorkbenchSegmentTabItem> tabItems = const [
@@ -31,12 +32,6 @@ class AppointmentApprovalController extends GetxController {
   /// 关键字筛选。
   String keywords = '';
 
-  /// 列表数据。
-  List<AppointmentApprovalItemModel> items = const [];
-
-  /// 列表加载中。
-  bool isLoading = false;
-
   /// 预约类型选项。
   final List<WorkbenchFilterOption<int?>> reservationTypeOptions = const [
     WorkbenchFilterOption(label: '预约类型', value: null),
@@ -57,9 +52,9 @@ class AppointmentApprovalController extends GetxController {
   ];
 
   @override
-  void onInit() {
-    super.onInit();
-    fetchList();
+  void onClose() {
+    refreshTrigger.dispose();
+    super.onClose();
   }
 
   /// 切换顶部 Tab 并刷新列表。
@@ -67,48 +62,53 @@ class AppointmentApprovalController extends GetxController {
     if (currentTabIndex == index) return;
     currentTabIndex = index;
     update();
-    await fetchList();
   }
 
-  /// 更新预约类型筛选并刷新列表。
-  Future<void> onReservationTypeChanged(int? value) async {
-    reservationType = value;
+  /// 应用筛选条件并刷新列表。
+  void applyFilters({
+    required int? nextReservationType,
+    required int? nextStatus,
+  }) {
+    reservationType = nextReservationType;
+    parkCheckStatus = nextStatus;
     update();
-    await fetchList();
-  }
-
-  /// 更新状态筛选并刷新列表。
-  Future<void> onStatusChanged(int? value) async {
-    parkCheckStatus = value;
-    update();
-    await fetchList();
+    _triggerRefresh();
   }
 
   /// 选择时间区间并刷新列表。
-  Future<void> pickDateRange(BuildContext context) async {
-    final now = DateTime.now();
-    final result = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(now.year - 2),
-      lastDate: DateTime(now.year + 1),
-      initialDateRange: dateRange,
-      helpText: '选择开始日期-结束日期',
-    );
-    if (result == null) return;
-    dateRange = result;
+  void onDateRangeSelected(DateTime? start, DateTime? end) {
+    if (start == null && end == null) {
+      dateRange = null;
+    } else if (start != null && end != null) {
+      final sortedStart = start.isBefore(end) ? start : end;
+      final sortedEnd = start.isBefore(end) ? end : start;
+      dateRange = DateTimeRange(start: sortedStart, end: sortedEnd);
+    } else {
+      final date = start ?? end!;
+      dateRange = DateTimeRange(start: date, end: date);
+    }
     update();
-    await fetchList();
+    _triggerRefresh();
   }
 
-  /// 拉取预约审批列表。
-  Future<void> fetchList() async {
-    isLoading = true;
-    update();
+  /// 分页加载预约审批列表。
+  Future<List<AppointmentApprovalItemModel>> loadPage(
+    int pageIndex,
+    int pageSize,
+  ) async {
+    return loadPageByTab(currentTabIndex, pageIndex, pageSize);
+  }
 
+  /// 按指定 Tab 分页加载预约审批列表。
+  Future<List<AppointmentApprovalItemModel>> loadPageByTab(
+    int tabIndex,
+    int pageIndex,
+    int pageSize,
+  ) async {
     final result = await _workbenchRepository.getReservationApprovePage(
-      approvePageType: currentTabIndex == 0 ? 2 : 3,
-      current: 1,
-      size: 20,
+      approvePageType: tabIndex == 0 ? 2 : 3,
+      current: pageIndex,
+      size: pageSize,
       reservationType: reservationType,
       parkCheckStatus: parkCheckStatus,
       keywords: keywords,
@@ -116,18 +116,13 @@ class AppointmentApprovalController extends GetxController {
       endTime: dateRange == null ? null : _formatDateTime(dateRange!.end),
     );
 
-    result.when(
-      success: (pageData) {
-        items = pageData.items;
-      },
+    return result.when(
+      success: (pageData) => pageData.items,
       failure: (error) {
-        items = const [];
         AppToast.showError(error.message);
+        throw Exception(error.message);
       },
     );
-
-    isLoading = false;
-    update();
   }
 
   /// 时间范围显示文案。
@@ -184,6 +179,10 @@ class AppointmentApprovalController extends GetxController {
   }
 
   String _pad2(int value) => value.toString().padLeft(2, '0');
+
+  void _triggerRefresh() {
+    refreshTrigger.value++;
+  }
 }
 
 class WorkbenchFilterOption<T> {
