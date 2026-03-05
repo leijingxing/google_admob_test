@@ -57,8 +57,6 @@ class HttpService {
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
       headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'content-type': 'application/x-www-form-urlencoded',
         'authorization': 'Basic ZmFuOjEyMzQ1Ng==',
       },
     );

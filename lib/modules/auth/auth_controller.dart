@@ -58,9 +58,9 @@ class AuthController extends GetxController {
   void onInit() {
     super.onInit();
     usernameController.text =
-        StorageUtil.getString(StorageConstants.loginUsername) ?? '';
+        StorageUtil.getString(StorageConstants.loginUsername) ?? '000000';
     passwordController.text =
-        StorageUtil.getString(StorageConstants.loginPassword) ?? '';
+        StorageUtil.getString(StorageConstants.loginPassword) ?? '000000';
     rememberPwd.value =
         StorageUtil.getBool(StorageConstants.rememberLoginCredential) ?? false;
     if (!rememberPwd.value) {

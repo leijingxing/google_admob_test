@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../../core/env/env.dart';
 import '../../core/http/http_service.dart';
 import '../../core/http/result.dart';
@@ -44,6 +46,13 @@ class AuthRepository {
 
     final result = await _httpService.post<dynamic>(
       '/api/oauth2/proxy/authCode',
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+        headers: {
+          'Content-Type': Headers.formUrlEncodedContentType,
+          'content-type': Headers.formUrlEncodedContentType,
+        },
+      ),
       data: {
         'appCode': Environment.currentEnv.appCode,
         'state': state,
