@@ -11,12 +11,19 @@ class VehicleQueryRepository {
     return _httpService.post<List<VehicleCategoryCountModel>>(
       '/closed-off/comprehensive/getVehicleCount',
       data: const <String, dynamic>{},
-      parser: (json) => (json as List<dynamic>).map((item) => VehicleCategoryCountModel.fromJson(Map<String, dynamic>.from(item as Map))).toList(),
+      parser: (json) => (json as List<dynamic>)
+          .map(
+            (item) => VehicleCategoryCountModel.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList(),
     );
   }
 
   /// 主列表分页。
-  Future<Result<PaginatedResult<VehicleComprehensiveItemModel>>> getVehicleComprehensivePage({
+  Future<Result<PaginatedResult<VehicleComprehensiveItemModel>>>
+  getVehicleComprehensivePage({
     required int pageIndex,
     required int pageSize,
     String? keyword,
@@ -25,39 +32,72 @@ class VehicleQueryRepository {
     String? endTime,
   }) {
     final payload = _buildPagePayload(pageIndex: pageIndex, pageSize: pageSize)
-      ..addAll({'keyword': keyword, 'carCategory': carCategory, 'startTime': startTime, 'endTime': endTime})
+      ..addAll({
+        'keyword': keyword,
+        'carCategory': carCategory,
+        'startTime': startTime,
+        'endTime': endTime,
+      })
       ..removeWhere((key, value) => value == null || value == '');
     return _httpService.post<PaginatedResult<VehicleComprehensiveItemModel>>(
       '/api/closed-off/comprehensive/getVehicleComprehensivePage',
       data: payload,
-      parser: (json) => _parsePage(json, (item) => VehicleComprehensiveItemModel.fromJson(item)),
+      parser: (json) => _parsePage(
+        json,
+        requestPageIndex: pageIndex,
+        requestPageSize: pageSize,
+        itemParser: (item) => VehicleComprehensiveItemModel.fromJson(item),
+      ),
     );
   }
 
   /// 详情抽屉顶部统计。
-  Future<Result<ComprehensiveDetailCountModel>> getComprehensiveDetailCount({required String carNumb, String? idCard}) {
+  Future<Result<ComprehensiveDetailCountModel>> getComprehensiveDetailCount({
+    required String carNumb,
+    String? idCard,
+  }) {
     return _httpService.post<ComprehensiveDetailCountModel>(
       '/closed-off/comprehensive/getComprehensiveDetailCount',
-      data: {'carNumb': carNumb, 'idCard': idCard}..removeWhere((key, value) => value == null || value == ''),
-      parser: (json) => ComprehensiveDetailCountModel.fromJson(Map<String, dynamic>.from(json as Map)),
+      data: {'carNumb': carNumb, 'idCard': idCard}
+        ..removeWhere((key, value) => value == null || value == ''),
+      parser: (json) => ComprehensiveDetailCountModel.fromJson(
+        Map<String, dynamic>.from(json as Map),
+      ),
     );
   }
 
   /// 拉黑。
-  Future<Result<void>> addBlackRecord({required String carNumb, required int carCategory, required String parkCheckDesc, required String validityBeginTime, required String validityEndTime}) async {
+  Future<Result<void>> addBlackRecord({
+    required String carNumb,
+    required int carCategory,
+    required String parkCheckDesc,
+    required String validityBeginTime,
+    required String validityEndTime,
+  }) async {
     final result = await _httpService.post<dynamic>(
       '/closed-off/black',
       data: {
-        'dto': {'carNumb': carNumb, 'carCategory': carCategory, 'parkCheckDesc': parkCheckDesc, 'validityBeginTime': validityBeginTime, 'validityEndTime': validityEndTime, 'type': 2},
+        'dto': {
+          'carNumb': carNumb,
+          'carCategory': carCategory,
+          'parkCheckDesc': parkCheckDesc,
+          'validityBeginTime': validityBeginTime,
+          'validityEndTime': validityEndTime,
+          'type': 2,
+        },
         'extends': <String, dynamic>{},
       },
     );
 
-    return result.when(success: (_) => const Success<void>(null), failure: (error) => Failure<void>(error));
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
+    );
   }
 
   /// 详情-授权记录分页。
-  Future<Result<PaginatedResult<VehicleAuthorizationRecordModel>>> getAuthorizationRecordPage({
+  Future<Result<PaginatedResult<VehicleAuthorizationRecordModel>>>
+  getAuthorizationRecordPage({
     required int pageIndex,
     required int pageSize,
     String? keyWords,
@@ -85,12 +125,18 @@ class VehicleQueryRepository {
     return _httpService.post<PaginatedResult<VehicleAuthorizationRecordModel>>(
       '/closed-off/comprehensive/getAuthorizationRecord',
       data: payload,
-      parser: (json) => _parsePage(json, (item) => VehicleAuthorizationRecordModel.fromJson(item)),
+      parser: (json) => _parsePage(
+        json,
+        requestPageIndex: pageIndex,
+        requestPageSize: pageSize,
+        itemParser: (item) => VehicleAuthorizationRecordModel.fromJson(item),
+      ),
     );
   }
 
   /// 详情-出入记录分页。
-  Future<Result<PaginatedResult<VehicleAccessRecordModel>>> getAccessRecordPage({
+  Future<Result<PaginatedResult<VehicleAccessRecordModel>>>
+  getAccessRecordPage({
     required int pageIndex,
     required int pageSize,
     String? keyWords,
@@ -103,18 +149,33 @@ class VehicleQueryRepository {
     Object? type,
   }) {
     final payload = _buildPagePayload(pageIndex: pageIndex, pageSize: pageSize)
-      ..addAll({'keyWords': keyWords, 'inDateBegin': inDateBegin, 'inDateEnd': inDateEnd, 'outDateBegin': outDateBegin, 'outDateEnd': outDateEnd, 'carNumb': carNumb, 'idCard': idCard, 'type': type})
+      ..addAll({
+        'keyWords': keyWords,
+        'inDateBegin': inDateBegin,
+        'inDateEnd': inDateEnd,
+        'outDateBegin': outDateBegin,
+        'outDateEnd': outDateEnd,
+        'carNumb': carNumb,
+        'idCard': idCard,
+        'type': type,
+      })
       ..removeWhere((key, value) => value == null || value == '');
 
     return _httpService.post<PaginatedResult<VehicleAccessRecordModel>>(
       '/closed-off/accessRecord/page',
       data: payload,
-      parser: (json) => _parsePage(json, (item) => VehicleAccessRecordModel.fromJson(item)),
+      parser: (json) => _parsePage(
+        json,
+        requestPageIndex: pageIndex,
+        requestPageSize: pageSize,
+        itemParser: (item) => VehicleAccessRecordModel.fromJson(item),
+      ),
     );
   }
 
   /// 详情-违规记录分页。
-  Future<Result<PaginatedResult<VehicleViolationRecordModel>>> getViolationRecordPage({
+  Future<Result<PaginatedResult<VehicleViolationRecordModel>>>
+  getViolationRecordPage({
     required int pageIndex,
     required int pageSize,
     String? keyword,
@@ -123,46 +184,118 @@ class VehicleQueryRepository {
     String? carNum,
   }) {
     final payload = _buildPagePayload(pageIndex: pageIndex, pageSize: pageSize)
-      ..addAll({'keyword': keyword, 'warningStartTimeBegin': warningStartTimeBegin, 'warningStartTimeEnd': warningStartTimeEnd, 'carNum': carNum})
+      ..addAll({
+        'keyword': keyword,
+        'warningStartTimeBegin': warningStartTimeBegin,
+        'warningStartTimeEnd': warningStartTimeEnd,
+        'carNum': carNum,
+      })
       ..removeWhere((key, value) => value == null || value == '');
 
     return _httpService.post<PaginatedResult<VehicleViolationRecordModel>>(
       '/risk-warning/riskWarning/page',
       data: payload,
-      parser: (json) => _parsePage(json, (item) => VehicleViolationRecordModel.fromJson(item)),
+      parser: (json) => _parsePage(
+        json,
+        requestPageIndex: pageIndex,
+        requestPageSize: pageSize,
+        itemParser: (item) => VehicleViolationRecordModel.fromJson(item),
+      ),
     );
   }
 
   /// 详情-拉黑记录分页。
-  Future<Result<PaginatedResult<VehicleBlackRecordModel>>> getBlackRecordPage({required int pageIndex, required int pageSize, String? keyword, String? carNumb, String? realName, Object? type}) {
+  Future<Result<PaginatedResult<VehicleBlackRecordModel>>> getBlackRecordPage({
+    required int pageIndex,
+    required int pageSize,
+    String? keyword,
+    String? carNumb,
+    String? realName,
+    Object? type,
+  }) {
     final payload = _buildPagePayload(pageIndex: pageIndex, pageSize: pageSize)
-      ..addAll({'keyword': keyword, 'carNumb': carNumb, 'realName': realName, 'type': type})
+      ..addAll({
+        'keyword': keyword,
+        'carNumb': carNumb,
+        'realName': realName,
+        'type': type,
+      })
       ..removeWhere((key, value) => value == null || value == '');
 
     return _httpService.post<PaginatedResult<VehicleBlackRecordModel>>(
       '/closed-off/blackBook/page',
       data: payload,
-      parser: (json) => _parsePage(json, (item) => VehicleBlackRecordModel.fromJson(item)),
+      parser: (json) => _parsePage(
+        json,
+        requestPageIndex: pageIndex,
+        requestPageSize: pageSize,
+        itemParser: (item) => VehicleBlackRecordModel.fromJson(item),
+      ),
     );
   }
 
-  Map<String, dynamic> _buildPagePayload({required int pageIndex, required int pageSize}) {
-    return {'current': pageIndex, 'size': pageSize, 'pageNum': pageIndex, 'pageNo': pageIndex, 'pageSize': pageSize};
+  Map<String, dynamic> _buildPagePayload({
+    required int pageIndex,
+    required int pageSize,
+  }) {
+    return {
+      'current': pageIndex,
+      'size': pageSize,
+      'pageNum': pageIndex,
+      'pageNo': pageIndex,
+      'pageSize': pageSize,
+    };
   }
 
-  PaginatedResult<T> _parsePage<T>(dynamic json, T Function(Map<String, dynamic> item) itemParser) {
-    final map = Map<String, dynamic>.from(json as Map);
-
-    if (!PaginatedResult.isPaginationStructure(map)) {
-      final records = (map['list'] ?? map['rows'] ?? <dynamic>[]) as List<dynamic>;
-      final current = _toInt(map['current'] ?? map['pageNum'] ?? map['pageNo'], 1);
-      final size = _toInt(map['size'] ?? map['pageSize'], 10);
-      final total = _toInt(map['total'], records.length);
-      final pages = _toInt(map['pages'] ?? map['pageCount'], 1);
-      return PaginatedResult<T>(items: records.map((item) => itemParser(Map<String, dynamic>.from(item as Map))).toList(), total: total, currentPage: current, pageSize: size, pageCount: pages);
+  PaginatedResult<T> _parsePage<T>(
+    dynamic json, {
+    required int requestPageIndex,
+    required int requestPageSize,
+    required T Function(Map<String, dynamic> item) itemParser,
+  }) {
+    if (json is List) {
+      final items = json
+          .map((item) => itemParser(Map<String, dynamic>.from(item as Map)))
+          .toList();
+      return PaginatedResult<T>(
+        items: items,
+        total: items.length,
+        currentPage: requestPageIndex,
+        pageSize: requestPageSize,
+        pageCount: requestPageIndex + (items.length < requestPageSize ? 0 : 1),
+      );
     }
 
-    return PaginatedResult<T>.fromJson(map, (itemJson) => itemParser(Map<String, dynamic>.from(itemJson as Map)));
+    final map = Map<String, dynamic>.from(json as Map);
+    final records =
+        (map['records'] ??
+                map['list'] ??
+                map['rows'] ??
+                map['data'] ??
+                <dynamic>[])
+            as List<dynamic>;
+    final items = records
+        .map((item) => itemParser(Map<String, dynamic>.from(item as Map)))
+        .toList();
+
+    final current = _toInt(
+      map['current'] ?? map['pageIndex'] ?? map['pageNum'] ?? map['pageNo'],
+      requestPageIndex,
+    );
+    final size = _toInt(map['size'] ?? map['pageSize'], requestPageSize);
+    final total = _toInt(map['total'] ?? map['totalCount'], items.length);
+    final pages = _toInt(
+      map['pages'] ?? map['totalPages'] ?? map['pageCount'],
+      current + (items.length < size ? 0 : 1),
+    );
+
+    return PaginatedResult<T>(
+      items: items,
+      total: total,
+      currentPage: current,
+      pageSize: size,
+      pageCount: pages,
+    );
   }
 
   int _toInt(Object? value, int fallback) {
