@@ -77,61 +77,36 @@ class SpotInspectionController extends GetxController {
     int pageIndex,
     int pageSize,
   ) async {
-    final expectedStartIndex = (pageIndex - 1) * pageSize;
-    final matched = <SpotInspectionItemModel>[];
-    var sourcePage = 1;
-    var lastPage = 1;
+    final result = await _repository.getSpotInspectionPage(
+      current: pageIndex,
+      size: pageSize,
+      keyword: keywordController.text.trim(),
+      strCheckTime: dateRange == null
+          ? null
+          : _formatDateTime(dateRange!.start, startOfDay: true),
+      endCheckTime: dateRange == null
+          ? null
+          : _formatDateTime(dateRange!.end, startOfDay: false),
+      checkType: tabIndex == 0 ? '0' : '1',
+    );
 
-    do {
-      final result = await _repository.getSpotInspectionPage(
-        current: sourcePage,
-        size: pageSize,
-        keyword: keywordController.text.trim(),
-        strSecurityCheckTime: dateRange == null
-            ? null
-            : _formatDateTime(dateRange!.start, startOfDay: true),
-        endSecurityCheckTime: dateRange == null
-            ? null
-            : _formatDateTime(dateRange!.end, startOfDay: false),
-      );
-
-      final pageData = result.when(
-        success: (data) => data,
-        failure: (error) {
-          AppToast.showError(error.message);
-          throw Exception(error.message);
-        },
-      );
-      lastPage = pageData.pageCount;
-      matched.addAll(
-        pageData.items.where((item) => _matchesTab(tabIndex, item)),
-      );
-      sourcePage++;
-    } while (matched.length < expectedStartIndex + pageSize &&
-        sourcePage <= lastPage);
-
-    if (expectedStartIndex >= matched.length) {
-      return const <SpotInspectionItemModel>[];
-    }
-    return matched.skip(expectedStartIndex).take(pageSize).toList();
-  }
-
-  bool _matchesTab(int tabIndex, SpotInspectionItemModel item) {
-    final result = (item.securityCheckResults ?? '').trim();
-    final checked = result == '0' || result == '1';
-    return tabIndex == 0 ? !checked : checked;
+    return result.when(
+      success: (data) => data.items,
+      failure: (error) {
+        AppToast.showError(error.message);
+        throw Exception(error.message);
+      },
+    );
   }
 
   String vehicleStatusText(SpotInspectionItemModel item) {
     final custom = (item.parkStatusName ?? '').trim();
     if (custom.isNotEmpty) return custom;
-    switch ((item.parkStatus ?? '').trim()) {
+    switch ((item.enter ?? item.parkStatus ?? '').trim()) {
       case '0':
         return '待入园';
       case '1':
         return '已入园';
-      case '2':
-        return '已出园';
       default:
         return currentTabIndex == 0 ? '待抽检' : '已抽检';
     }
@@ -143,6 +118,8 @@ class SpotInspectionController extends GetxController {
 
   String reservationTimeText(SpotInspectionItemModel item) {
     return _firstNonEmpty(
+      item.validityBeginTime,
+      item.validityEndTime,
       item.estimatedInTime,
       item.reservationTime,
       item.securityCheckTime,
@@ -171,8 +148,14 @@ class SpotInspectionController extends GetxController {
     return int.tryParse((value ?? '').toString()) ?? 0;
   }
 
-  String _firstNonEmpty([Object? a, Object? b, Object? c]) {
-    for (final value in <Object?>[a, b, c]) {
+  String _firstNonEmpty([
+    Object? a,
+    Object? b,
+    Object? c,
+    Object? d,
+    Object? e,
+  ]) {
+    for (final value in <Object?>[a, b, c, d, e]) {
       final text = value?.toString().trim() ?? '';
       if (text.isNotEmpty && text.toLowerCase() != 'null') return text;
     }

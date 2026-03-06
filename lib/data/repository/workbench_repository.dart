@@ -468,15 +468,19 @@ class WorkbenchRepository {
     int current = 1,
     int size = 20,
     String? keyword,
-    String? strSecurityCheckTime,
-    String? endSecurityCheckTime,
+    String? strCheckTime,
+    String? endCheckTime,
+    String? checkType,
+    String? enter,
     String? securityCheckResults,
   }) {
     final payload = <String, dynamic>{
       ...buildPagePayload(pageIndex: current, pageSize: size),
-      'keyWords': keyword,
-      'strSecurityCheckTime': strSecurityCheckTime,
-      'endSecurityCheckTime': endSecurityCheckTime,
+      'keywords': keyword,
+      'strCheckTime': strCheckTime,
+      'endCheckTime': endCheckTime,
+      'checkType': checkType,
+      'enter': enter,
       'securityCheckResults': securityCheckResults,
     };
     payload.removeWhere((_, value) {
@@ -486,7 +490,7 @@ class WorkbenchRepository {
     });
 
     return _httpService.post<PaginatedResult<SpotInspectionItemModel>>(
-      '/api/closed-off/securityCheckResult/selSamplingLedgerPage',
+      '/api/closed-off/securityCheckList/getToBeCheckedList',
       data: payload,
       parser: (json) => parsePaginatedResult<SpotInspectionItemModel>(
         json: json,
@@ -540,6 +544,55 @@ class WorkbenchRepository {
             ),
           )
           .toList(),
+    );
+  }
+
+  /// 获取抽检员待抽检检查项列表。
+  Future<Result<List<SpotInspectionCheckItemModel>>>
+  getWaitingInspectorCheckItemList({required String reservationId}) {
+    return _httpService.get<List<SpotInspectionCheckItemModel>>(
+      '/api/closed-off/templateCheckItem/selWaitingInspectorCheckItem',
+      queryParameters: {'reservationId': reservationId},
+      parser: (json) => (json is List ? json : const <dynamic>[])
+          .map(
+            (item) => SpotInspectionCheckItemModel.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  /// 获取检查项详情。
+  Future<Result<SpotInspectionCheckItemModel>> getCheckItemDetail({
+    required String id,
+  }) {
+    return _httpService.get<SpotInspectionCheckItemModel>(
+      '/api/closed-off/templateCheckItem/one',
+      queryParameters: {'id': id},
+      parser: (json) {
+        if (json is Map) {
+          return SpotInspectionCheckItemModel.fromJson(
+            Map<String, dynamic>.from(json),
+          );
+        }
+        throw StateError('检查项详情解析失败，期望 Map，实际为 ${json.runtimeType}');
+      },
+    );
+  }
+
+  /// 提交抽检结果。
+  Future<Result<void>> submitSelfCheckList({
+    required Map<String, dynamic> payload,
+  }) async {
+    final result = await _httpService.post<dynamic>(
+      '/api/closed-off/securityCheckList/add',
+      data: payload,
+    );
+
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
     );
   }
 

@@ -11,13 +11,37 @@ class SpotInspectionCheckItemModel {
   final String? id;
 
   @NullableStringSafeConverter()
+  final String? companyId;
+
+  @NullableStringSafeConverter()
+  final String? companyName;
+
+  @NullableStringSafeConverter()
+  final String? securityTemplateId;
+
+  @NullableStringSafeConverter()
   final String? checkItemId;
 
   @NullableStringSafeConverter()
   final String? checkItemName;
 
   @NullableStringSafeConverter()
+  final String? checkItem;
+
+  @NullableStringSafeConverter()
   final String? checkDescribe;
+
+  @NullableStringSafeConverter()
+  final String? checkMethod;
+
+  @NullableStringSafeConverter()
+  final String? selfCheckingStatus;
+
+  @NullableStringSafeConverter()
+  final String? spotCheckStatus;
+
+  @NullableStringSafeConverter()
+  final String? checkItemStatus;
 
   @NullableStringSafeConverter()
   final String? createDate;
@@ -26,7 +50,13 @@ class SpotInspectionCheckItemModel {
   final String? checkFile;
 
   @NullableStringSafeConverter()
+  final String? checkResult;
+
+  @NullableStringSafeConverter()
   final String? remark;
+
+  @NullableStringSafeConverter()
+  final String? remarks;
 
   @NullableStringSafeConverter()
   final String? checkStatus;
@@ -36,12 +66,22 @@ class SpotInspectionCheckItemModel {
 
   const SpotInspectionCheckItemModel({
     this.id,
+    this.companyId,
+    this.companyName,
+    this.securityTemplateId,
     this.checkItemId,
     this.checkItemName,
+    this.checkItem,
     this.checkDescribe,
+    this.checkMethod,
+    this.selfCheckingStatus,
+    this.spotCheckStatus,
+    this.checkItemStatus,
     this.createDate,
     this.checkFile,
+    this.checkResult,
     this.remark,
+    this.remarks,
     this.checkStatus,
     this.isConformity,
   });

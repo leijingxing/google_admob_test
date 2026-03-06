@@ -73,7 +73,10 @@ class SpotInspectionDetailController extends GetxController {
 
   String resultText(int value) => value == 1 ? '通过' : '不通过';
   String itemResultText(SpotInspectionCheckItemModel model) {
-    final value = _toInt(model.checkStatus ?? model.isConformity, fallback: 1);
+    final value = _toInt(
+      model.checkResult ?? model.checkStatus ?? model.isConformity,
+      fallback: 1,
+    );
     return value == 1 ? '是' : '否';
   }
 

@@ -10,13 +10,18 @@ import '../toast/toast_widget.dart';
 /// 通用图片选择上传组件。
 ///
 /// 功能：
-/// - 从相册选择图片
+/// - 从相册选择图片或视频
 /// - 调用 [FileRepository] 分片上传
-/// - 展示已选图片
+/// - 展示已选媒体
 /// - 支持预览与删除
+enum CustomPickerMediaType { image, video }
+
 class CustomPickerPhoto extends StatefulWidget {
   /// 默认图片大小上限（10MB）。
   static const int defaultMaxImageSizeBytes = 10 * 1024 * 1024;
+
+  /// 默认视频大小上限（100MB）。
+  static const int defaultMaxVideoSizeBytes = 100 * 1024 * 1024;
 
   const CustomPickerPhoto({
     super.key,
@@ -30,6 +35,7 @@ class CustomPickerPhoto extends StatefulWidget {
     this.isShowTitle = true,
     this.maxFileSizeBytes = defaultMaxImageSizeBytes,
     this.titleTextStyle,
+    this.mediaType = CustomPickerMediaType.image,
   });
 
   final String title;
@@ -42,6 +48,7 @@ class CustomPickerPhoto extends StatefulWidget {
   final bool isShowTitle;
   final int? maxFileSizeBytes;
   final TextStyle? titleTextStyle;
+  final CustomPickerMediaType mediaType;
 
   @override
   State<CustomPickerPhoto> createState() => _CustomPickerPhotoState();
@@ -77,9 +84,11 @@ class _CustomPickerPhotoState extends State<CustomPickerPhoto> {
     }
 
     try {
-      final files = await _picker.pickMultiImage(limit: remainingCount);
+      final files = await _pickFiles(remainingCount);
       if (files.isEmpty) {
-        AppToast.showInfo('未选择图片');
+        AppToast.showInfo(
+          widget.mediaType == CustomPickerMediaType.video ? '未选择视频' : '未选择图片',
+        );
         return;
       }
 
@@ -113,6 +122,15 @@ class _CustomPickerPhotoState extends State<CustomPickerPhoto> {
       _uploading = false;
       if (mounted) setState(() {});
     }
+  }
+
+  Future<List<XFile>> _pickFiles(int remainingCount) async {
+    if (widget.mediaType == CustomPickerMediaType.video) {
+      final file = await _picker.pickVideo(source: ImageSource.gallery);
+      if (file == null) return const <XFile>[];
+      return <XFile>[file];
+    }
+    return _picker.pickMultiImage(limit: remainingCount);
   }
 
   void _removeAt(String item) {
@@ -187,6 +205,7 @@ class _CustomPickerPhotoState extends State<CustomPickerPhoto> {
 
   Widget _buildImageTile(String item) {
     final imageUrl = FileService.getFaceUrl(item);
+    final isVideo = _isVideoItem(item);
     return Stack(
       children: [
         InkWell(
@@ -204,6 +223,8 @@ class _CustomPickerPhotoState extends State<CustomPickerPhoto> {
             ),
             child: imageUrl == null
                 ? const Icon(Icons.image_not_supported_outlined)
+                : isVideo
+                ? _buildVideoTile()
                 : ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
@@ -241,6 +262,36 @@ class _CustomPickerPhotoState extends State<CustomPickerPhoto> {
     );
   }
 
+  bool _isVideoItem(String item) {
+    final url = FileService.getFaceUrl(item) ?? item;
+    final lower = url.toLowerCase();
+    return lower.endsWith('.mp4') ||
+        lower.endsWith('.avi') ||
+        lower.endsWith('.mov') ||
+        lower.endsWith('.mkv');
+  }
+
+  Widget _buildVideoTile() {
+    return Container(
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: const Color(0xFFEEF5FF),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.videocam_outlined, color: Color(0xFF4B6BFB), size: 24),
+          SizedBox(height: 6),
+          Text(
+            '点击查看',
+            style: TextStyle(color: Color(0xFF4B6BFB), fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAddTile() {
     return InkWell(
       onTap: _pickFromGallery,
@@ -261,18 +312,25 @@ class _CustomPickerPhotoState extends State<CustomPickerPhoto> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               )
-            : const Column(
+            : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.photo_camera_outlined,
-                    color: Color(0xFF8D95A3),
+                    widget.mediaType == CustomPickerMediaType.video
+                        ? Icons.video_library_outlined
+                        : Icons.photo_camera_outlined,
+                    color: const Color(0xFF8D95A3),
                     size: 24,
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   Text(
-                    '点击上传',
-                    style: TextStyle(color: Color(0xFF8D95A3), fontSize: 12),
+                    widget.mediaType == CustomPickerMediaType.video
+                        ? '选择视频'
+                        : '点击上传',
+                    style: const TextStyle(
+                      color: Color(0xFF8D95A3),
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),

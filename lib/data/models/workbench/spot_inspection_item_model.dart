@@ -17,7 +17,13 @@ class SpotInspectionItemModel {
   final String? carNumb;
 
   @NullableStringSafeConverter()
+  final String? companyName;
+
+  @NullableStringSafeConverter()
   final String? checkTemplateName;
+
+  @NullableStringSafeConverter()
+  final String? checkTemplateId;
 
   @NullableStringSafeConverter()
   final String? securityCheckTime;
@@ -36,6 +42,15 @@ class SpotInspectionItemModel {
   final String? goodsName;
 
   @NullableStringSafeConverter()
+  final String? validityBeginTime;
+
+  @NullableStringSafeConverter()
+  final String? validityEndTime;
+
+  @NullableStringSafeConverter()
+  final String? enter;
+
+  @NullableStringSafeConverter()
   final String? estimatedInTime;
 
   @NullableStringSafeConverter()
@@ -51,12 +66,17 @@ class SpotInspectionItemModel {
     this.id,
     this.reservationId,
     this.carNumb,
+    this.companyName,
     this.checkTemplateName,
+    this.checkTemplateId,
     this.securityCheckTime,
     this.createBy,
     this.securityCheckResults,
     this.goodsTypeName,
     this.goodsName,
+    this.validityBeginTime,
+    this.validityEndTime,
+    this.enter,
     this.estimatedInTime,
     this.reservationTime,
     this.parkStatus,

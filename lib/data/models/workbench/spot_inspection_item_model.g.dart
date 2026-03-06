@@ -14,8 +14,14 @@ SpotInspectionItemModel _$SpotInspectionItemModelFromJson(
     json['reservationId'],
   ),
   carNumb: const NullableStringSafeConverter().fromJson(json['carNumb']),
+  companyName: const NullableStringSafeConverter().fromJson(
+    json['companyName'],
+  ),
   checkTemplateName: const NullableStringSafeConverter().fromJson(
     json['checkTemplateName'],
+  ),
+  checkTemplateId: const NullableStringSafeConverter().fromJson(
+    json['checkTemplateId'],
   ),
   securityCheckTime: const NullableStringSafeConverter().fromJson(
     json['securityCheckTime'],
@@ -28,6 +34,13 @@ SpotInspectionItemModel _$SpotInspectionItemModelFromJson(
     json['goodsTypeName'],
   ),
   goodsName: const NullableStringSafeConverter().fromJson(json['goodsName']),
+  validityBeginTime: const NullableStringSafeConverter().fromJson(
+    json['validityBeginTime'],
+  ),
+  validityEndTime: const NullableStringSafeConverter().fromJson(
+    json['validityEndTime'],
+  ),
+  enter: const NullableStringSafeConverter().fromJson(json['enter']),
   estimatedInTime: const NullableStringSafeConverter().fromJson(
     json['estimatedInTime'],
   ),
@@ -48,8 +61,14 @@ Map<String, dynamic> _$SpotInspectionItemModelToJson(
     instance.reservationId,
   ),
   'carNumb': const NullableStringSafeConverter().toJson(instance.carNumb),
+  'companyName': const NullableStringSafeConverter().toJson(
+    instance.companyName,
+  ),
   'checkTemplateName': const NullableStringSafeConverter().toJson(
     instance.checkTemplateName,
+  ),
+  'checkTemplateId': const NullableStringSafeConverter().toJson(
+    instance.checkTemplateId,
   ),
   'securityCheckTime': const NullableStringSafeConverter().toJson(
     instance.securityCheckTime,
@@ -62,6 +81,13 @@ Map<String, dynamic> _$SpotInspectionItemModelToJson(
     instance.goodsTypeName,
   ),
   'goodsName': const NullableStringSafeConverter().toJson(instance.goodsName),
+  'validityBeginTime': const NullableStringSafeConverter().toJson(
+    instance.validityBeginTime,
+  ),
+  'validityEndTime': const NullableStringSafeConverter().toJson(
+    instance.validityEndTime,
+  ),
+  'enter': const NullableStringSafeConverter().toJson(instance.enter),
   'estimatedInTime': const NullableStringSafeConverter().toJson(
     instance.estimatedInTime,
   ),

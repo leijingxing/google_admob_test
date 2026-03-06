@@ -32,6 +32,10 @@ class FileService {
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     'txt': 'text/plain',
     'apk': 'application/vnd.android.package-archive',
+    'mp4': 'video/mp4',
+    'avi': 'video/x-msvideo',
+    'mov': 'video/quicktime',
+    'mkv': 'video/x-matroska',
   };
 
   static const Set<String> _imageExtensions = {
@@ -148,7 +152,12 @@ class FileService {
     }
 
     if (_videoExtensions.contains(type)) {
-      AppToast.showWarning('暂不支持播放此文件!');
+      if (_isRemotePath(path)) {
+        await downloadFile(path, type: _mimeTypeMap[type]);
+        return;
+      }
+
+      await OpenFilex.open(path, type: _mimeTypeMap[type]);
       return;
     }
 
