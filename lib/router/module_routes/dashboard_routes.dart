@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../modules/dashboard/modules/logistics_query/logistics_query_view.dart';
 import '../../modules/dashboard/modules/overview/overview_binding.dart';
 import '../../modules/dashboard/modules/overview/overview_view.dart';
+import '../../modules/dashboard/modules/personnel_query/personnel_query_binding.dart';
 import '../../modules/dashboard/modules/personnel_query/personnel_query_view.dart';
 import '../../modules/dashboard/modules/vehicle_query/vehicle_query_binding.dart';
 import '../../modules/dashboard/modules/vehicle_query/vehicle_query_view.dart';
@@ -25,7 +26,7 @@ abstract class DashboardRoutes {
 
   /// 人员查询。
   static Future<T?>? toPersonnelQuery<T>() {
-    return Get.to<T>(() => const PersonnelQueryView());
+    return Get.to<T>(() => const PersonnelQueryView(), binding: PersonnelQueryBinding());
   }
 
   /// 物流查询。
