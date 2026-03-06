@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../../../../../core/utils/dict_field_query_tool.dart';
 import '../../../../../data/models/vehicle_query/vehicle_query_models.dart';
 import '../vehicle_query_statistics_controller.dart';
 
@@ -12,6 +13,17 @@ class VehicleQueryDetailController extends GetxController {
 
   final VehicleQueryStatisticsController statisticsController;
   final VehicleComprehensiveItemModel row;
+
+  static const Map<int, String> recordTypeLabelMap = {
+    0: '白名单',
+    1: '预约',
+    2: '黑名单',
+  };
+
+  static const Map<int, String> blackRecordStatusLabelMap = {
+    0: '解除',
+    1: '拉黑',
+  };
 
   late Future<ComprehensiveDetailCountModel> detailCountFuture;
 
@@ -28,5 +40,20 @@ class VehicleQueryDetailController extends GetxController {
       idCard: row.idCard,
     );
     update();
+  }
+
+  /// 准入类别文案。
+  static String recordTypeText(int? type) {
+    if (type == null) return '未知';
+    return DictFieldQueryTool.validityStatusLabel(
+      type,
+      fallback: recordTypeLabelMap[type] ?? '未知',
+    );
+  }
+
+  /// 拉黑记录操作状态文案。
+  static String blackRecordStatusText(int? status) {
+    if (status == null) return '未知';
+    return blackRecordStatusLabelMap[status] ?? '未知';
   }
 }

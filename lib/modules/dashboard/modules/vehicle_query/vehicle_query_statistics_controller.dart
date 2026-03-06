@@ -1,14 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/components/log_util.dart';
 import '../../../../core/components/toast/toast_widget.dart';
+import '../../../../core/utils/dict_field_query_tool.dart';
 import '../../../../data/models/vehicle_query/vehicle_query_models.dart';
 import '../../../../data/repository/vehicle_query_repository.dart';
 
 /// 车辆查询控制器：维护筛选条件、统计数据与列表查询。
 class VehicleQueryStatisticsController extends GetxController {
   final VehicleQueryRepository _repository = VehicleQueryRepository();
+  static const List<String> _pageDictTypes = <String>[DictFieldQueryTool.carType, DictFieldQueryTool.validityStatus];
 
   /// 主列表关键字。
   final TextEditingController mainKeywordController = TextEditingController();
@@ -31,38 +35,22 @@ class VehicleQueryStatisticsController extends GetxController {
   /// 顶部统计卡片。
   List<VehicleCountCardData> countCards = _defaultCountCards();
 
-  static const Map<int, String> carCategoryLabelMap = {
-    1: '危化车',
-    2: '危废车',
-    3: '普通车',
-    4: '普货车',
-  };
+  /// 车辆类型文案（统一由字典工具提供）。
+  static String carCategoryText(int? carCategory) {
+    if (carCategory == null) return '--';
+    return DictFieldQueryTool.carTypeLabel(carCategory, fallback: '$carCategory');
+  }
 
-  static const Map<int, String> carNumbColourLabelMap = {
-    1: '蓝牌',
-    2: '黄牌',
-    3: '黑牌',
-    4: '白牌',
-    5: '绿牌',
-  };
-
-  static const Map<int, String> validityStatusLabelMap = {
-    0: '未知',
-    1: '白名单',
-    2: '黑名单',
-  };
-
-  static const Map<int, String> recordTypeLabelMap = {
-    0: '白名单',
-    1: '预约',
-    2: '黑名单',
-  };
-
-  static const Map<int, String> blackRecordStatusLabelMap = {0: '解除', 1: '拉黑'};
+  /// 有效状态文案（统一由字典工具提供）。
+  static String validityStatusText(int? validityStatus) {
+    if (validityStatus == null) return '--';
+    return DictFieldQueryTool.validityStatusLabel(validityStatus, fallback: '$validityStatus');
+  }
 
   @override
   void onInit() {
     super.onInit();
+    _preloadDictItems();
     loadVehicleCountCards();
   }
 
@@ -77,6 +65,15 @@ class VehicleQueryStatisticsController extends GetxController {
   void onSearchMainList() {
     mainRefreshTrigger.value++;
     update();
+  }
+
+  void _preloadDictItems() {
+    unawaited(
+      DictFieldQueryTool.ensureLoaded(dictTypes: _pageDictTypes).then((loaded) {
+        if (!loaded) return;
+        update();
+      }),
+    );
   }
 
   /// 重置主列表筛选。
@@ -101,10 +98,7 @@ class VehicleQueryStatisticsController extends GetxController {
   }
 
   /// 主列表分页加载。
-  Future<List<VehicleComprehensiveItemModel>> loadMainList(
-    int pageIndex,
-    int pageSize,
-  ) async {
+  Future<List<VehicleComprehensiveItemModel>> loadMainList(int pageIndex, int pageSize) async {
     final result = await _repository.getVehicleComprehensivePage(
       pageIndex: pageIndex,
       pageSize: pageSize,
@@ -131,27 +125,16 @@ class VehicleQueryStatisticsController extends GetxController {
     final result = await _repository.getVehicleCount();
     result.when(
       success: (data) {
-        final map = <int, VehicleCategoryCountModel>{
-          for (final item in data) item.carCategory: item,
-        };
+        final map = <int, VehicleCategoryCountModel>{for (final item in data) item.carCategory: item};
         countCards = _defaultCountCards().map((card) {
           final source = map[card.type];
           if (source == null) return card;
           return card.copyWith(
             metrics: [
               VehicleCountMetricData(label: '总数', value: source.totalCount),
-              VehicleCountMetricData(
-                label: '黑名单',
-                value: source.blackListCount,
-              ),
-              VehicleCountMetricData(
-                label: '白名单',
-                value: source.whiteListCount,
-              ),
-              VehicleCountMetricData(
-                label: '预约',
-                value: source.reservationCount,
-              ),
+              VehicleCountMetricData(label: '黑名单', value: source.blackListCount),
+              VehicleCountMetricData(label: '白名单', value: source.whiteListCount),
+              VehicleCountMetricData(label: '预约', value: source.reservationCount),
             ],
           );
         }).toList();
@@ -167,11 +150,7 @@ class VehicleQueryStatisticsController extends GetxController {
   }
 
   /// 拉黑提交。
-  Future<bool> addBlackRecord({
-    required VehicleComprehensiveItemModel row,
-    required String parkCheckDesc,
-    required DateTimeRange validityDateRange,
-  }) async {
+  Future<bool> addBlackRecord({required VehicleComprehensiveItemModel row, required String parkCheckDesc, required DateTimeRange validityDateRange}) async {
     blackSubmitting = true;
     update();
 
@@ -204,14 +183,8 @@ class VehicleQueryStatisticsController extends GetxController {
   }
 
   /// 详情抽屉统计。
-  Future<ComprehensiveDetailCountModel> loadDetailCount({
-    required String carNumb,
-    String? idCard,
-  }) async {
-    final result = await _repository.getComprehensiveDetailCount(
-      carNumb: carNumb,
-      idCard: idCard,
-    );
+  Future<ComprehensiveDetailCountModel> loadDetailCount({required String carNumb, String? idCard}) async {
+    final result = await _repository.getComprehensiveDetailCount(carNumb: carNumb, idCard: idCard);
     return result.when(
       success: (data) => data,
       failure: (error) {
@@ -286,13 +259,7 @@ class VehicleQueryStatisticsController extends GetxController {
   }
 
   /// 详情-违规记录分页。
-  Future<List<VehicleViolationRecordModel>> loadViolationRecords(
-    int pageIndex,
-    int pageSize, {
-    String? keyword,
-    DateTimeRange? warningStartTime,
-    String? carNum,
-  }) async {
+  Future<List<VehicleViolationRecordModel>> loadViolationRecords(int pageIndex, int pageSize, {String? keyword, DateTimeRange? warningStartTime, String? carNum}) async {
     final result = await _repository.getViolationRecordPage(
       pageIndex: pageIndex,
       pageSize: pageSize,
@@ -311,22 +278,8 @@ class VehicleQueryStatisticsController extends GetxController {
   }
 
   /// 详情-拉黑记录分页。
-  Future<List<VehicleBlackRecordModel>> loadBlackRecords(
-    int pageIndex,
-    int pageSize, {
-    String? keyword,
-    String? carNumb,
-    String? realName,
-    Object? type,
-  }) async {
-    final result = await _repository.getBlackRecordPage(
-      pageIndex: pageIndex,
-      pageSize: pageSize,
-      keyword: keyword,
-      carNumb: carNumb,
-      realName: realName,
-      type: type,
-    );
+  Future<List<VehicleBlackRecordModel>> loadBlackRecords(int pageIndex, int pageSize, {String? keyword, String? carNumb, String? realName, Object? type}) async {
+    final result = await _repository.getBlackRecordPage(pageIndex: pageIndex, pageSize: pageSize, keyword: keyword, carNumb: carNumb, realName: realName, type: type);
     return result.when(
       success: (data) => data.items,
       failure: (error) {
@@ -339,17 +292,13 @@ class VehicleQueryStatisticsController extends GetxController {
   /// 格式化日期范围开始时间。
   String? rangeStartTime(DateTimeRange? range) {
     if (range == null) return null;
-    return formatDateTime(
-      DateTime(range.start.year, range.start.month, range.start.day, 0, 0, 0),
-    );
+    return formatDateTime(DateTime(range.start.year, range.start.month, range.start.day, 0, 0, 0));
   }
 
   /// 格式化日期范围结束时间。
   String? rangeEndTime(DateTimeRange? range) {
     if (range == null) return null;
-    return formatDateTime(
-      DateTime(range.end.year, range.end.month, range.end.day, 23, 59, 59),
-    );
+    return formatDateTime(DateTime(range.end.year, range.end.month, range.end.day, 23, 59, 59));
   }
 
   /// 格式化时间。
@@ -365,26 +314,10 @@ class VehicleQueryStatisticsController extends GetxController {
 
   static List<VehicleCountCardData> _defaultCountCards() {
     return const [
-      VehicleCountCardData(
-        name: '危化车',
-        type: 1,
-        accentColor: Color(0xFFEC5858),
-      ),
-      VehicleCountCardData(
-        name: '危废车',
-        type: 2,
-        accentColor: Color(0xFFFFA126),
-      ),
-      VehicleCountCardData(
-        name: '普通车',
-        type: 3,
-        accentColor: Color(0xFF26A4FF),
-      ),
-      VehicleCountCardData(
-        name: '普货车',
-        type: 4,
-        accentColor: Color(0xFF37B6FF),
-      ),
+      VehicleCountCardData(name: '危化车', type: 1, accentColor: Color(0xFFEC5858)),
+      VehicleCountCardData(name: '危废车', type: 2, accentColor: Color(0xFFFFA126)),
+      VehicleCountCardData(name: '普通车', type: 3, accentColor: Color(0xFF26A4FF)),
+      VehicleCountCardData(name: '普货车', type: 4, accentColor: Color(0xFF37B6FF)),
     ];
   }
 }
@@ -408,18 +341,8 @@ class VehicleCountCardData {
     ],
   });
 
-  VehicleCountCardData copyWith({
-    String? name,
-    int? type,
-    Color? accentColor,
-    List<VehicleCountMetricData>? metrics,
-  }) {
-    return VehicleCountCardData(
-      name: name ?? this.name,
-      type: type ?? this.type,
-      accentColor: accentColor ?? this.accentColor,
-      metrics: metrics ?? this.metrics,
-    );
+  VehicleCountCardData copyWith({String? name, int? type, Color? accentColor, List<VehicleCountMetricData>? metrics}) {
+    return VehicleCountCardData(name: name ?? this.name, type: type ?? this.type, accentColor: accentColor ?? this.accentColor, metrics: metrics ?? this.metrics);
   }
 }
 

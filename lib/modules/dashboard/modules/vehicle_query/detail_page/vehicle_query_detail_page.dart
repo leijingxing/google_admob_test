@@ -1,11 +1,14 @@
+import 'package:closed_off_app/core/utils/file_service.dart';
+import 'package:closed_off_app/router/module_routes/workbench_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import 'package:closed_off_app/core/components/custom_refresh.dart';
+import 'package:closed_off_app/core/components/date_picker/custom_date_range_picker.dart';
 import 'package:closed_off_app/core/components/toast/toast_widget.dart';
 import 'package:closed_off_app/core/constants/app_colors.dart';
 import 'package:closed_off_app/core/constants/dimens.dart';
 import 'package:closed_off_app/data/models/vehicle_query/vehicle_query_models.dart';
+import 'package:closed_off_app/data/models/workbench/appointment_approval_item_model.dart';
 import 'package:closed_off_app/modules/dashboard/modules/vehicle_query/detail_page/vehicle_query_detail_controller.dart';
 import 'package:closed_off_app/modules/dashboard/modules/vehicle_query/vehicle_query_statistics_controller.dart';
 
@@ -275,22 +278,15 @@ class _AuthorizationRecordTabState extends State<_AuthorizationRecordTab> {
     setState(() {});
   }
 
-  Future<void> _pickRange(bool parkCheck) async {
-    final now = DateTime.now();
-    final range = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(now.year - 2),
-      lastDate: DateTime(now.year + 1),
-      initialDateRange: parkCheck ? _parkCheckRange : _inDateRange,
-      helpText: parkCheck ? '选择审批时间' : '选择入园时间',
-    );
-    if (range == null) return;
+  void _onParkCheckRangeSelected(DateTime? start, DateTime? end) {
     setState(() {
-      if (parkCheck) {
-        _parkCheckRange = range;
-      } else {
-        _inDateRange = range;
-      }
+      _parkCheckRange = _buildDateRange(start, end);
+    });
+  }
+
+  void _onInDateRangeSelected(DateTime? start, DateTime? end) {
+    setState(() {
+      _inDateRange = _buildDateRange(start, end);
     });
   }
 
@@ -302,10 +298,12 @@ class _AuthorizationRecordTabState extends State<_AuthorizationRecordTab> {
         children: [
           _SubSearchBar(
             keywordController: _keywordController,
-            firstRangeText: _rangeText(_parkCheckRange, '审批时间'),
-            secondRangeText: _rangeText(_inDateRange, '入园时间'),
-            onFirstRangeTap: () => _pickRange(true),
-            onSecondRangeTap: () => _pickRange(false),
+            primaryRange: _parkCheckRange,
+            primaryRangeTitle: '审批时间',
+            onPrimaryRangeSelected: _onParkCheckRangeSelected,
+            secondaryRange: _inDateRange,
+            secondaryRangeTitle: '入园时间',
+            onSecondaryRangeSelected: _onInDateRangeSelected,
             onSearch: _search,
             onReset: _reset,
           ),
@@ -330,12 +328,20 @@ class _AuthorizationRecordTabState extends State<_AuthorizationRecordTab> {
                   title: '审批时间：${_emptyDash(item.approvalTime)}',
                   rows: [
                     '授权期限：${_emptyDash(item.validityBeginTime)} / ${_emptyDash(item.validityEndTime)}',
-                    '准入类别：${VehicleQueryStatisticsController.recordTypeLabelMap[item.recordType] ?? '未知'}',
+                    '准入类别：${VehicleQueryDetailController.recordTypeText(item.recordType)}',
                     '联系电话：${_emptyDash(item.userPhone)}',
                     '目的地：${_emptyDash(item.destination)}',
                     '入园时间：${_emptyDash(item.inDate)}',
                   ],
-                  actions: [TextButton(onPressed: () => AppToast.showInfo('移动端暂未接入详情跳转'), child: const Text('详情'))],
+                  actions: [
+                    TextButton(
+                      onPressed: () => _openAppointmentApprovalDetail(
+                        id: item.id,
+                        carNumb: widget.row.carNumb,
+                      ),
+                      child: const Text('详情'),
+                    ),
+                  ],
                 );
               },
             ),
@@ -379,22 +385,15 @@ class _AccessRecordTabState extends State<_AccessRecordTab> {
     setState(() {});
   }
 
-  Future<void> _pickRange(bool inDate) async {
-    final now = DateTime.now();
-    final range = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(now.year - 2),
-      lastDate: DateTime(now.year + 1),
-      initialDateRange: inDate ? _inDateRange : _outDateRange,
-      helpText: inDate ? '选择入园时间' : '选择出园时间',
-    );
-    if (range == null) return;
+  void _onInDateRangeSelected(DateTime? start, DateTime? end) {
     setState(() {
-      if (inDate) {
-        _inDateRange = range;
-      } else {
-        _outDateRange = range;
-      }
+      _inDateRange = _buildDateRange(start, end);
+    });
+  }
+
+  void _onOutDateRangeSelected(DateTime? start, DateTime? end) {
+    setState(() {
+      _outDateRange = _buildDateRange(start, end);
     });
   }
 
@@ -406,10 +405,12 @@ class _AccessRecordTabState extends State<_AccessRecordTab> {
         children: [
           _SubSearchBar(
             keywordController: _keywordController,
-            firstRangeText: _rangeText(_inDateRange, '入园时间'),
-            secondRangeText: _rangeText(_outDateRange, '出园时间'),
-            onFirstRangeTap: () => _pickRange(true),
-            onSecondRangeTap: () => _pickRange(false),
+            primaryRange: _inDateRange,
+            primaryRangeTitle: '入园时间',
+            onPrimaryRangeSelected: _onInDateRangeSelected,
+            secondaryRange: _outDateRange,
+            secondaryRangeTitle: '出园时间',
+            onSecondaryRangeSelected: _onOutDateRangeSelected,
             onSearch: _search,
             onReset: _reset,
           ),
@@ -434,12 +435,20 @@ class _AccessRecordTabState extends State<_AccessRecordTab> {
                   title: '联系电话：${_emptyDash(item.userPhone)}',
                   rows: [
                     '目的地：${_emptyDash(item.destination)}',
-                    '准入类别：${VehicleQueryStatisticsController.recordTypeLabelMap[item.recordType] ?? '未知'}',
+                    '准入类别：${VehicleQueryDetailController.recordTypeText(item.recordType)}',
                     '入园时间/闸机：${_emptyDash(item.inDate)} / ${_emptyDash(item.inDeviceName)}',
                     '出园时间/闸机：${_emptyDash(item.outDate)} / ${_emptyDash(item.outDeviceName)}',
                     '违规次数：${item.violationCount}',
                   ],
-                  actions: [TextButton(onPressed: () => AppToast.showInfo('移动端暂未接入详情跳转'), child: const Text('详情'))],
+                  actions: [
+                    TextButton(
+                      onPressed: () => _openAppointmentApprovalDetail(
+                        id: item.reservationOrWhileId,
+                        carNumb: widget.row.carNumb,
+                      ),
+                      child: const Text('详情'),
+                    ),
+                  ],
                 );
               },
             ),
@@ -481,11 +490,10 @@ class _ViolationRecordTabState extends State<_ViolationRecordTab> {
     setState(() {});
   }
 
-  Future<void> _pickRange() async {
-    final now = DateTime.now();
-    final range = await showDateRangePicker(context: context, firstDate: DateTime(now.year - 2), lastDate: DateTime(now.year + 1), initialDateRange: _warningRange, helpText: '选择违规时间');
-    if (range == null) return;
-    setState(() => _warningRange = range);
+  void _onWarningRangeSelected(DateTime? start, DateTime? end) {
+    setState(() {
+      _warningRange = _buildDateRange(start, end);
+    });
   }
 
   @override
@@ -496,10 +504,9 @@ class _ViolationRecordTabState extends State<_ViolationRecordTab> {
         children: [
           _SubSearchBar(
             keywordController: _keywordController,
-            firstRangeText: _rangeText(_warningRange, '违规时间'),
-            secondRangeText: null,
-            onFirstRangeTap: _pickRange,
-            onSecondRangeTap: null,
+            primaryRange: _warningRange,
+            primaryRangeTitle: '违规时间',
+            onPrimaryRangeSelected: _onWarningRangeSelected,
             onSearch: _search,
             onReset: _reset,
           ),
@@ -511,17 +518,18 @@ class _ViolationRecordTabState extends State<_ViolationRecordTab> {
                 return widget.controller.loadViolationRecords(pageIndex, pageSize, keyword: _keywordController.text.trim(), warningStartTime: _warningRange, carNum: widget.row.carNumb);
               },
               itemBuilder: (context, item, index) {
+                final fullUrl = FileService.getFaceUrl(item.warningFileUrl);
                 return _RecordCard(
                   title: '违规类型：${_emptyDash(item.subModuleTypeName)}',
                   rows: ['违规描述：${_emptyDash(item.description)}', '违规时间：${_emptyDash(item.warningStartTime)}', '违规地点：${_emptyDash(item.position)}'],
-                  footer: item.warningFileUrl == null || item.warningFileUrl!.isEmpty
+                  footer: fullUrl == null || fullUrl.isEmpty
                       ? null
                       : Padding(
                           padding: EdgeInsets.only(top: AppDimens.dp8),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(AppDimens.dp8),
                             child: Image.network(
-                              item.warningFileUrl!,
+                              fullUrl,
                               height: AppDimens.dp120,
                               width: double.infinity,
                               fit: BoxFit.cover,
@@ -583,7 +591,7 @@ class _BlackRecordTabState extends State<_BlackRecordTab> {
       padding: EdgeInsets.fromLTRB(AppDimens.dp12, AppDimens.dp10, AppDimens.dp12, 0),
       child: Column(
         children: [
-          _SubSearchBar(keywordController: _keywordController, firstRangeText: null, secondRangeText: null, onFirstRangeTap: null, onSecondRangeTap: null, onSearch: _search, onReset: _reset),
+          _SubSearchBar(keywordController: _keywordController, onSearch: _search, onReset: _reset),
           SizedBox(height: AppDimens.dp8),
           Expanded(
             child: CustomEasyRefreshList<VehicleBlackRecordModel>(
@@ -595,7 +603,7 @@ class _BlackRecordTabState extends State<_BlackRecordTab> {
                 return _RecordCard(
                   title: '联系电话：${_emptyDash(item.userPhone)}',
                   rows: [
-                    '操作类型：${VehicleQueryStatisticsController.blackRecordStatusLabelMap[item.status] ?? '未知'}',
+                    '操作类型：${VehicleQueryDetailController.blackRecordStatusText(item.status)}',
                     '操作人：${_emptyDash(item.createBy)}',
                     '操作时间：${_emptyDash(item.createDate)}',
                     '描述：${_emptyDash(item.remark)}',
@@ -685,13 +693,25 @@ class _RecordCard extends StatelessWidget {
 }
 
 class _SubSearchBar extends StatelessWidget {
-  const _SubSearchBar({required this.keywordController, required this.onSearch, required this.onReset, this.firstRangeText, this.secondRangeText, this.onFirstRangeTap, this.onSecondRangeTap});
+  const _SubSearchBar({
+    required this.keywordController,
+    required this.onSearch,
+    required this.onReset,
+    this.primaryRange,
+    this.primaryRangeTitle,
+    this.onPrimaryRangeSelected,
+    this.secondaryRange,
+    this.secondaryRangeTitle,
+    this.onSecondaryRangeSelected,
+  });
 
   final TextEditingController keywordController;
-  final String? firstRangeText;
-  final String? secondRangeText;
-  final VoidCallback? onFirstRangeTap;
-  final VoidCallback? onSecondRangeTap;
+  final DateTimeRange? primaryRange;
+  final String? primaryRangeTitle;
+  final Function(DateTime? start, DateTime? end)? onPrimaryRangeSelected;
+  final DateTimeRange? secondaryRange;
+  final String? secondaryRangeTitle;
+  final Function(DateTime? start, DateTime? end)? onSecondaryRangeSelected;
   final VoidCallback onSearch;
   final VoidCallback onReset;
 
@@ -699,119 +719,228 @@ class _SubSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(AppDimens.dp8),
+      padding: EdgeInsets.all(AppDimens.dp10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppDimens.dp12),
         border: Border.all(color: const Color(0xFFE1E6EF)),
         boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 2))],
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            SizedBox(
-              width: AppDimens.dp150,
-              child: TextField(
-                controller: keywordController,
-                textInputAction: TextInputAction.search,
-                onSubmitted: (_) => onSearch(),
-                decoration: InputDecoration(
-                  isDense: true,
-                  hintText: '请输入查询关键词',
-                  hintStyle: TextStyle(color: const Color(0xFF8A9AB2), fontSize: AppDimens.sp10),
-                  prefixIcon: Icon(Icons.search_rounded, color: const Color(0xFF5D738F), size: AppDimens.sp14),
-                  filled: true,
-                  fillColor: const Color(0xFFF6FAFF),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDimens.dp10), borderSide: BorderSide.none),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDimens.dp10), borderSide: BorderSide.none),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppDimens.dp10),
-                    borderSide: const BorderSide(color: Color(0xFF2D6FDB)),
-                  ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: keywordController,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => onSearch(),
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: '请输入查询关键词',
+                hintStyle: TextStyle(color: const Color(0xFF8A9AB2), fontSize: AppDimens.sp12),
+                prefixIcon: Icon(Icons.search_rounded, color: const Color(0xFF5D738F), size: AppDimens.sp16),
+                filled: true,
+                fillColor: const Color(0xFFF6FAFF),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDimens.dp10), borderSide: BorderSide.none),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDimens.dp10), borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppDimens.dp10),
+                  borderSide: const BorderSide(color: Color(0xFF2D6FDB)),
                 ),
               ),
             ),
-            if (firstRangeText != null) ...[SizedBox(width: AppDimens.dp8), _RangeButton(text: firstRangeText!, onTap: onFirstRangeTap)],
-            if (secondRangeText != null) ...[SizedBox(width: AppDimens.dp8), _RangeButton(text: secondRangeText!, onTap: onSecondRangeTap)],
-            SizedBox(width: AppDimens.dp8),
-            FilledButton(
-              onPressed: onSearch,
+          ),
+          SizedBox(width: AppDimens.dp8),
+          SizedBox(
+            width: AppDimens.dp34,
+            height: AppDimens.dp34,
+            child: FilledButton(
+              onPressed: () => _showFilterBottomSheet(context),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF2D6FDB),
+                backgroundColor: const Color(0xFF1F7BFF),
                 foregroundColor: Colors.white,
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.symmetric(horizontal: AppDimens.dp12, vertical: AppDimens.dp8),
+                padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.dp10)),
               ),
-              child: const Text('搜索'),
+              child: const Icon(Icons.tune, size: 16),
             ),
-            SizedBox(width: AppDimens.dp6),
-            OutlinedButton(
-              onPressed: onReset,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF4E6280),
-                backgroundColor: const Color(0xFFF9FBFF),
-                side: const BorderSide(color: Color(0xFFD5DFEE)),
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.symmetric(horizontal: AppDimens.dp12, vertical: AppDimens.dp8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.dp10)),
-              ),
-              child: const Text('重置'),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+
+  Future<void> _showFilterBottomSheet(BuildContext context) async {
+    DateTimeRange? tempPrimaryRange = primaryRange;
+    DateTimeRange? tempSecondaryRange = secondaryRange;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (bottomSheetContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(AppDimens.dp16, AppDimens.dp12, AppDimens.dp16, AppDimens.dp16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '筛选条件',
+                      style: TextStyle(fontSize: AppDimens.sp16, fontWeight: FontWeight.w700, color: const Color(0xFF1E2A3A)),
+                    ),
+                    SizedBox(height: AppDimens.dp12),
+                    if (primaryRangeTitle != null && onPrimaryRangeSelected != null) ...[
+                      _FilterDateRangeField(
+                        title: primaryRangeTitle!,
+                        range: tempPrimaryRange,
+                        onChanged: (value) {
+                          setModalState(() => tempPrimaryRange = value);
+                        },
+                      ),
+                    ],
+                    if (secondaryRangeTitle != null && onSecondaryRangeSelected != null) ...[
+                      SizedBox(height: AppDimens.dp10),
+                      _FilterDateRangeField(
+                        title: secondaryRangeTitle!,
+                        range: tempSecondaryRange,
+                        onChanged: (value) {
+                          setModalState(() => tempSecondaryRange = value);
+                        },
+                      ),
+                    ],
+                    if (primaryRangeTitle == null && secondaryRangeTitle == null) _FilterPreviewField(text: '暂无额外筛选条件'),
+                    SizedBox(height: AppDimens.dp14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              onReset();
+                              Navigator.of(bottomSheetContext).pop();
+                            },
+                            child: const Text('重置'),
+                          ),
+                        ),
+                        SizedBox(width: AppDimens.dp10),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              _applyFilters(tempPrimaryRange, tempSecondaryRange);
+                              Navigator.of(bottomSheetContext).pop();
+                            },
+                            child: const Text('确定'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _applyFilters(DateTimeRange? primaryDateRange, DateTimeRange? secondaryDateRange) {
+    if (onPrimaryRangeSelected != null) {
+      onPrimaryRangeSelected!.call(primaryDateRange?.start, primaryDateRange?.end);
+    }
+    if (onSecondaryRangeSelected != null) {
+      onSecondaryRangeSelected!.call(secondaryDateRange?.start, secondaryDateRange?.end);
+    }
+    onSearch();
+  }
 }
 
-class _RangeButton extends StatelessWidget {
-  const _RangeButton({required this.text, this.onTap});
+class _FilterDateRangeField extends StatelessWidget {
+  const _FilterDateRangeField({required this.title, required this.range, required this.onChanged});
 
-  final String text;
-  final VoidCallback? onTap;
+  final String title;
+  final DateTimeRange? range;
+  final ValueChanged<DateTimeRange?> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppDimens.dp10),
-      child: Container(
-        height: AppDimens.dp40,
-        constraints: BoxConstraints(minWidth: AppDimens.dp120, maxWidth: AppDimens.dp200),
-        padding: EdgeInsets.symmetric(horizontal: AppDimens.dp10, vertical: AppDimens.dp8),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF6FAFF),
-          borderRadius: BorderRadius.circular(AppDimens.dp10),
-          border: Border.all(color: const Color(0xFFDCE6F5)),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.date_range_rounded, size: AppDimens.sp12, color: const Color(0xFF5F738D)),
-            SizedBox(width: AppDimens.dp4),
-            Expanded(
-              child: Text(
-                text,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: const Color(0xFF4A607C), fontSize: AppDimens.sp10),
-              ),
-            ),
-            SizedBox(width: AppDimens.dp2),
-            Icon(Icons.expand_more_rounded, size: AppDimens.sp12, color: const Color(0xFF6B7F99)),
-          ],
-        ),
+    return Container(
+      padding: EdgeInsets.fromLTRB(AppDimens.dp10, AppDimens.dp9, AppDimens.dp10, AppDimens.dp10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6F8FC),
+        borderRadius: BorderRadius.circular(AppDimens.dp10),
+        border: Border.all(color: const Color(0xFFDFE4ED)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(color: const Color(0xFF7D8A9A), fontSize: AppDimens.sp12),
+          ),
+          SizedBox(height: AppDimens.dp8),
+          CustomDateRangePicker(
+            startDate: range?.start,
+            endDate: range?.end,
+            compact: true,
+            onDateRangeSelected: (start, end) {
+              onChanged(_buildDateRange(start, end));
+            },
+          ),
+        ],
       ),
     );
   }
 }
 
-String _rangeText(DateTimeRange? range, String placeholder) {
-  if (range == null) return placeholder;
-  final s = '${range.start.year}-${range.start.month}-${range.start.day}';
-  final e = '${range.end.year}-${range.end.month}-${range.end.day}';
-  return '$s ~ $e';
+class _FilterPreviewField extends StatelessWidget {
+  const _FilterPreviewField({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: AppDimens.dp34,
+      alignment: Alignment.centerLeft,
+      padding: EdgeInsets.symmetric(horizontal: AppDimens.dp8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFD),
+        borderRadius: BorderRadius.circular(AppDimens.dp6),
+        border: Border.all(color: const Color(0xFFDCE2ED)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(color: const Color(0xFF7D8A9A), fontSize: AppDimens.sp12),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+DateTimeRange? _buildDateRange(DateTime? start, DateTime? end) {
+  if (start == null && end == null) return null;
+  if (start != null && end != null) {
+    final sortedStart = start.isBefore(end) ? start : end;
+    final sortedEnd = start.isBefore(end) ? end : start;
+    return DateTimeRange(start: sortedStart, end: sortedEnd);
+  }
+  final singleDay = start ?? end!;
+  return DateTimeRange(start: singleDay, end: singleDay);
+}
+
+void _openAppointmentApprovalDetail({String? id, String? carNumb}) {
+  final detailId = (id ?? '').trim();
+  if (detailId.isEmpty) {
+    AppToast.showWarning('当前记录缺少详情ID');
+    return;
+  }
+  WorkbenchRoutes.toAppointmentApprovalDetail(
+    item: AppointmentApprovalItemModel(id: detailId, carNumb: carNumb),
+  );
 }
 
 String _emptyDash(String? text) {

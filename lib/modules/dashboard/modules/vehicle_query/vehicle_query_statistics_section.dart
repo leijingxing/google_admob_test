@@ -383,7 +383,7 @@ class _MainVehicleCard extends StatelessWidget {
                       padding: EdgeInsets.symmetric(horizontal: AppDimens.dp8, vertical: AppDimens.dp4),
                       decoration: BoxDecoration(color: _categoryColor(item.carCategory).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppDimens.dp12)),
                       child: Text(
-                        VehicleQueryStatisticsController.carCategoryLabelMap[item.carCategory] ?? '${item.carCategory}',
+                        VehicleQueryStatisticsController.carCategoryText(item.carCategory),
                         style: TextStyle(color: _categoryColor(item.carCategory), fontSize: AppDimens.sp12, fontWeight: FontWeight.w700),
                       ),
                     ),
@@ -423,15 +423,13 @@ class _MainVehicleCard extends StatelessWidget {
   }
 
   String _blackWhiteStatusText(int validityStatus) {
-    if (validityStatus == 1 || validityStatus == 2) {
-      return '是';
-    }
-    return '否';
+    return VehicleQueryStatisticsController.validityStatusText(validityStatus);
   }
 
   Color _statusColor(int validityStatus) {
     if (validityStatus == 2) return const Color(0xFFE85D5D);
-    if (validityStatus == 1) return const Color(0xFF1FA56E);
+    if (validityStatus == 0) return const Color(0xFF1FA56E);
+    if (validityStatus == 1) return const Color(0xFF2C9BFF);
     return const Color(0xFF8898AE);
   }
 
