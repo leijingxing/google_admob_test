@@ -122,6 +122,9 @@ class WorkbenchContentSection extends StatelessWidget {
                         case '车辆抽检':
                           WorkbenchRoutes.toSpotInspection();
                           break;
+                        case '园区巡检':
+                          WorkbenchRoutes.toParkInspection();
+                          break;
                         case '隐患治理':
                           WorkbenchRoutes.toHiddenDangerGovernance();
                           break;

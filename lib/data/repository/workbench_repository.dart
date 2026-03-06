@@ -8,6 +8,12 @@ import '../models/workbench/checkpoint_area_option_model.dart';
 import '../models/workbench/inspection_abnormal_item_model.dart';
 import '../models/workbench/inspection_rectification_item_model.dart';
 import '../models/workbench/risk_warning_disposal_item_model.dart';
+import '../models/workbench/park_inspection_plan_item_model.dart';
+import '../models/workbench/park_inspection_point_item_model.dart';
+import '../models/workbench/park_inspection_record_detail_item_model.dart';
+import '../models/workbench/park_inspection_rule_item_model.dart';
+import '../models/workbench/park_inspection_task_item_model.dart';
+import '../models/workbench/park_inspection_task_record_model.dart';
 import '../models/workbench/spot_inspection_check_item_model.dart';
 import '../models/workbench/spot_inspection_item_model.dart';
 import '../models/workbench/system_department_tree_model.dart';
@@ -959,6 +965,357 @@ class WorkbenchRepository {
     return result.when(
       success: (_) => const Success<void>(null),
       failure: (error) => Failure<void>(error),
+    );
+  }
+
+  /// 获取园区巡检任务分页列表。
+  Future<Result<PaginatedResult<ParkInspectionTaskItemModel>>>
+  getParkInspectionTaskPage({
+    int current = 1,
+    int size = 20,
+    String? taskCode,
+    String? taskStatus,
+    String? typeCode,
+    String? dispatchType,
+    String? personnelName,
+    String? taskDateBegin,
+    String? taskDateEnd,
+  }) {
+    final payload = <String, dynamic>{
+      ...buildPagePayload(pageIndex: current, pageSize: size),
+      'taskCode': taskCode,
+      'taskStatus': taskStatus,
+      'typeCode': typeCode,
+      'dispatchType': dispatchType,
+      'personnelName': personnelName,
+      'taskDateBegin': taskDateBegin,
+      'taskDateEnd': taskDateEnd,
+    };
+    payload.removeWhere((_, value) {
+      if (value == null) return true;
+      if (value is String && value.trim().isEmpty) return true;
+      return false;
+    });
+
+    return _httpService.post<PaginatedResult<ParkInspectionTaskItemModel>>(
+      '/api/closed-off/inspectionTask/page',
+      data: payload,
+      parser: (json) => parsePaginatedResult<ParkInspectionTaskItemModel>(
+        json: json,
+        requestPageIndex: current,
+        requestPageSize: size,
+        itemParser: (itemJson) =>
+            ParkInspectionTaskItemModel.fromJson(itemJson),
+      ),
+    );
+  }
+
+  /// 手动派发园区巡检任务。
+  Future<Result<void>> dispatchParkInspectionTask({
+    required String planId,
+    required String taskDate,
+    String dispatchType = 'MANUAL_APP',
+  }) async {
+    final result = await _httpService.post<dynamic>(
+      '/api/closed-off/inspectionTask/dispatch',
+      data: {
+        'planId': planId,
+        'taskDate': taskDate,
+        'dispatchType': dispatchType,
+      },
+    );
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
+    );
+  }
+
+  /// 开始园区巡检任务。
+  Future<Result<void>> startParkInspectionTask({
+    required String taskId,
+    required String executorId,
+    required String executorName,
+  }) async {
+    final result = await _httpService.post<dynamic>(
+      '/api/closed-off/inspectionTask/start',
+      data: {
+        'taskId': taskId,
+        'executorId': executorId,
+        'executorName': executorName,
+      },
+    );
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
+    );
+  }
+
+  /// 完成园区巡检任务。
+  Future<Result<dynamic>> completeParkInspectionTask({
+    required String taskId,
+    required String executorId,
+    String? completeRemark,
+  }) {
+    return _httpService.post<dynamic>(
+      '/api/closed-off/inspectionTask/complete',
+      data:
+          {
+            'taskId': taskId,
+            'executorId': executorId,
+            'completeRemark': completeRemark,
+          }..removeWhere((_, value) {
+            if (value == null) return true;
+            if (value.trim().isEmpty) return true;
+            return false;
+          }),
+      parser: (json) => json,
+    );
+  }
+
+  /// 取消园区巡检任务。
+  Future<Result<void>> cancelParkInspectionTask({
+    required String taskId,
+    required String cancelReason,
+  }) async {
+    final result = await _httpService.post<dynamic>(
+      '/api/closed-off/inspectionTask/cancel',
+      data: {'taskId': taskId, 'cancelReason': cancelReason},
+    );
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
+    );
+  }
+
+  /// 获取园区巡检任务记录列表。
+  Future<Result<List<ParkInspectionTaskRecordModel>>> getParkInspectionRecords({
+    required String taskId,
+  }) {
+    return _httpService.get<List<ParkInspectionTaskRecordModel>>(
+      '/api/closed-off/inspectionRecord/getRecordsByTaskId',
+      queryParameters: {'taskId': taskId},
+      parser: (json) => (json as List)
+          .whereType<Map>()
+          .map(
+            (item) => ParkInspectionTaskRecordModel.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  /// 获取巡检记录细则明细。
+  Future<Result<List<ParkInspectionRecordDetailItemModel>>>
+  getParkInspectionRecordDetails({required String recordId}) {
+    return _httpService.get<List<ParkInspectionRecordDetailItemModel>>(
+      '/api/closed-off/inspectionRecord/getRecordDetails',
+      queryParameters: {'recordId': recordId},
+      parser: (json) => (json as List)
+          .whereType<Map>()
+          .map(
+            (item) => ParkInspectionRecordDetailItemModel.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  /// 点位打卡。
+  Future<Result<dynamic>> checkInParkInspectionRecord({
+    required String taskId,
+    required String pointId,
+    required String executorId,
+    required String executorName,
+    required String position,
+    String? remark,
+  }) {
+    return _httpService.post<dynamic>(
+      '/api/closed-off/inspectionRecord/checkIn',
+      data:
+          {
+            'taskId': taskId,
+            'pointId': pointId,
+            'executorId': executorId,
+            'executorName': executorName,
+            'position': position,
+            'remark': remark,
+          }..removeWhere((_, value) {
+            if (value == null) return true;
+            if (value.trim().isEmpty) return true;
+            return false;
+          }),
+      parser: (json) => json,
+    );
+  }
+
+  /// 批量提交细则检查结果。
+  Future<Result<void>> checkParkInspectionRules({
+    required List<Map<String, dynamic>> payload,
+  }) async {
+    final result = await _httpService.post<dynamic>(
+      '/api/closed-off/inspectionRecord/checkRules',
+      data: payload,
+    );
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
+    );
+  }
+
+  /// 上报巡检异常。
+  Future<Result<void>> reportParkInspectionAbnormal({
+    required String taskId,
+    required String recordId,
+    required String pointId,
+    required String ruleId,
+    required String reporterId,
+    required String reporterName,
+    required String abnormalDesc,
+    required List<String> photoUrls,
+    required String isUrgent,
+  }) async {
+    final result = await _httpService.post<dynamic>(
+      '/api/closed-off/inspectionAbnormal/report',
+      data: {
+        'taskId': taskId,
+        'recordId': recordId,
+        'pointId': pointId,
+        'ruleId': ruleId,
+        'reporterId': reporterId,
+        'reporterName': reporterName,
+        'abnormalDesc': abnormalDesc,
+        'photoUrls': photoUrls,
+        'isUrgent': isUrgent,
+      },
+    );
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
+    );
+  }
+
+  /// 获取任务或记录关联的异常记录列表。
+  Future<Result<List<InspectionAbnormalItemModel>>> getParkInspectionAbnormals({
+    required String taskId,
+    String? recordId,
+  }) {
+    final query = <String, dynamic>{'taskId': taskId, 'recordId': recordId}
+      ..removeWhere((_, value) {
+        if (value == null) return true;
+        if (value is String && value.trim().isEmpty) return true;
+        return false;
+      });
+
+    return _httpService.get<List<InspectionAbnormalItemModel>>(
+      '/api/closed-off/inspectionAbnormal/list',
+      queryParameters: query,
+      parser: (json) => (json is List ? json : const <dynamic>[])
+          .whereType<Map>()
+          .map(
+            (item) => InspectionAbnormalItemModel.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  /// 获取园区巡检计划分页列表，并兼容返回原始列表的场景。
+  Future<Result<List<ParkInspectionPlanItemModel>>> getParkInspectionPlans({
+    String status = 'ENABLED',
+    int current = 1,
+    int size = 500,
+  }) {
+    return _httpService.post<List<ParkInspectionPlanItemModel>>(
+      '/api/closed-off/inspectionPlan/page',
+      data: {'status': status, 'pageIndex': current, 'pageSize': size},
+      parser: (json) {
+        if (json is List) {
+          return json
+              .whereType<Map>()
+              .map(
+                (item) => ParkInspectionPlanItemModel.fromJson(
+                  Map<String, dynamic>.from(item),
+                ),
+              )
+              .toList();
+        }
+        final page = parsePaginatedResult<ParkInspectionPlanItemModel>(
+          json: json,
+          requestPageIndex: current,
+          requestPageSize: size,
+          itemParser: (itemJson) =>
+              ParkInspectionPlanItemModel.fromJson(itemJson),
+        );
+        return page.items;
+      },
+    );
+  }
+
+  /// 获取计划关联点位列表。
+  Future<Result<List<ParkInspectionPointItemModel>>>
+  getParkInspectionPlanPoints({required String planId}) {
+    return _httpService.get<List<ParkInspectionPointItemModel>>(
+      '/api/closed-off/inspectionPlanPoint/list',
+      queryParameters: {'planId': planId},
+      parser: (json) => (json is List ? json : const <dynamic>[])
+          .whereType<Map>()
+          .map(
+            (item) => ParkInspectionPointItemModel.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  /// 获取计划关联细则列表。
+  Future<Result<List<ParkInspectionRuleItemModel>>> getParkInspectionPlanRules({
+    required String planId,
+  }) {
+    return _httpService.get<List<ParkInspectionRuleItemModel>>(
+      '/api/closed-off/inspectionPlanRule/list',
+      queryParameters: {'planId': planId},
+      parser: (json) => (json is List ? json : const <dynamic>[])
+          .whereType<Map>()
+          .map(
+            (item) => ParkInspectionRuleItemModel.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  /// 获取全量点位列表。
+  Future<Result<List<ParkInspectionPointItemModel>>> getParkInspectionPoints() {
+    return _httpService.get<List<ParkInspectionPointItemModel>>(
+      '/api/closed-off/inspectionPoint/list',
+      parser: (json) => (json is List ? json : const <dynamic>[])
+          .whereType<Map>()
+          .map(
+            (item) => ParkInspectionPointItemModel.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  /// 获取全量细则列表。
+  Future<Result<List<ParkInspectionRuleItemModel>>> getParkInspectionRules() {
+    return _httpService.get<List<ParkInspectionRuleItemModel>>(
+      '/api/closed-off/inspectionRule/list',
+      parser: (json) => (json is List ? json : const <dynamic>[])
+          .whereType<Map>()
+          .map(
+            (item) => ParkInspectionRuleItemModel.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .toList(),
     );
   }
 

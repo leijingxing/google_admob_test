@@ -5,6 +5,7 @@ import '../../data/models/workbench/appointment_approval_item_model.dart';
 import '../../data/models/workbench/blacklist_approval_item_model.dart';
 import '../../data/models/workbench/risk_warning_disposal_item_model.dart';
 import '../../data/models/workbench/inspection_abnormal_item_model.dart';
+import '../../data/models/workbench/park_inspection_task_item_model.dart';
 import '../../data/models/workbench/spot_inspection_item_model.dart';
 import '../../modules/dashboard/modules/workbench/alarm_disposal/detail/alarm_disposal_detail_binding.dart';
 import '../../modules/dashboard/modules/workbench/alarm_disposal/detail/alarm_disposal_detail_view.dart';
@@ -42,6 +43,10 @@ import '../../modules/dashboard/modules/workbench/hidden_danger_governance/appro
 import '../../modules/dashboard/modules/workbench/hidden_danger_governance/approve/hidden_danger_governance_approve_view.dart';
 import '../../modules/dashboard/modules/workbench/hidden_danger_governance/detail/hidden_danger_governance_detail_binding.dart';
 import '../../modules/dashboard/modules/workbench/hidden_danger_governance/detail/hidden_danger_governance_detail_view.dart';
+import '../../modules/dashboard/modules/workbench/park_inspection/detail/park_inspection_detail_binding.dart';
+import '../../modules/dashboard/modules/workbench/park_inspection/detail/park_inspection_detail_view.dart';
+import '../../modules/dashboard/modules/workbench/park_inspection/park_inspection_binding.dart';
+import '../../modules/dashboard/modules/workbench/park_inspection/park_inspection_view.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/whitelist_approval_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whitelist_approval_approve_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whitelist_approval_approve_view.dart';
@@ -157,6 +162,14 @@ abstract class WorkbenchRoutes {
       () => const WarningDisposalHandleView(),
       binding: WarningDisposalHandleBinding(),
       arguments: item,
+    );
+  }
+
+  /// 园区巡检。
+  static Future<T?>? toParkInspection<T>() {
+    return Get.to<T>(
+      () => const ParkInspectionView(),
+      binding: ParkInspectionBinding(),
     );
   }
 
@@ -285,6 +298,17 @@ abstract class WorkbenchRoutes {
     return Get.to<bool>(
       () => const SpotInspectionDetailView(),
       binding: SpotInspectionDetailBinding(),
+      arguments: item,
+    );
+  }
+
+  /// 园区巡检详情页。
+  static Future<bool?>? toParkInspectionDetail({
+    required ParkInspectionTaskItemModel item,
+  }) {
+    return Get.to<bool>(
+      () => const ParkInspectionDetailView(),
+      binding: ParkInspectionDetailBinding(),
       arguments: item,
     );
   }
