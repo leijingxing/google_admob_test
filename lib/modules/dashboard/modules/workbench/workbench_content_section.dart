@@ -125,6 +125,9 @@ class WorkbenchContentSection extends StatelessWidget {
                         case '隐患治理':
                           WorkbenchRoutes.toHiddenDangerGovernance();
                           break;
+                        case '申诉回复':
+                          WorkbenchRoutes.toAppealReply();
+                          break;
                         default:
                           break;
                       }

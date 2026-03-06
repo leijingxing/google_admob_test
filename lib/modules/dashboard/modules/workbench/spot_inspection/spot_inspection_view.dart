@@ -282,7 +282,7 @@ class _KeywordField extends StatelessWidget {
         textInputAction: TextInputAction.search,
         onSubmitted: controller.applyKeyword,
         decoration: InputDecoration(
-          hintText: '请输入企业名称、车牌号',
+          hintText: '请输入车牌号',
           hintStyle: TextStyle(
             color: const Color(0xFF9AA2AE),
             fontSize: AppDimens.sp12,

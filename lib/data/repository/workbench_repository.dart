@@ -1,6 +1,7 @@
 import '../../core/http/http_service.dart';
 import '../../core/http/paginated_parser.dart';
 import '../../core/http/result.dart';
+import '../models/workbench/appeal_reply_item_model.dart';
 import '../models/workbench/appointment_approval_item_model.dart';
 import '../models/workbench/blacklist_approval_item_model.dart';
 import '../models/workbench/checkpoint_area_option_model.dart';
@@ -16,6 +17,60 @@ import '../models/workbench/whitelist_approval_item_model.dart';
 /// 工作台模块数据仓库：统一处理工作台相关接口。
 class WorkbenchRepository {
   final HttpService _httpService = HttpService();
+
+  /// 获取申诉回复分页列表。
+  Future<Result<PaginatedResult<AppealReplyItemModel>>> getAppealRecordPage({
+    int current = 1,
+    int size = 20,
+    int? status,
+    int? appealType,
+    String? keywords,
+    String? appealTimeBegin,
+    String? appealTimeEnd,
+  }) {
+    final payload = <String, dynamic>{
+      ...buildPagePayload(pageIndex: current, pageSize: size),
+      'status': status,
+      'appealType': appealType,
+      'keywords': keywords,
+      'keyWords': keywords,
+      'appealTimeBegin': appealTimeBegin,
+      'appealTimeEnd': appealTimeEnd,
+    };
+    payload.removeWhere((_, value) {
+      if (value == null) return true;
+      if (value is String && value.trim().isEmpty) return true;
+      return false;
+    });
+
+    return _httpService.post<PaginatedResult<AppealReplyItemModel>>(
+      '/api/closed-off/appealRecord/page',
+      data: payload,
+      parser: (json) => parsePaginatedResult<AppealReplyItemModel>(
+        json: json,
+        requestPageIndex: current,
+        requestPageSize: size,
+        itemParser: (itemJson) => AppealReplyItemModel.fromJson(itemJson),
+      ),
+    );
+  }
+
+  /// 回复申诉记录。
+  Future<Result<void>> replyAppealRecord({
+    required String id,
+    required int status,
+    required String reply,
+  }) async {
+    final result = await _httpService.post<dynamic>(
+      '/api/closed-off/appealRecord/reply',
+      data: {'id': id, 'status': status, 'reply': reply},
+    );
+
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
+    );
+  }
 
   /// 获取任务进度跟踪百分比。
   ///

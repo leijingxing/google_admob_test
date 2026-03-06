@@ -1,8 +1,15 @@
 import 'package:get/get.dart';
 
+import '../../data/models/workbench/appeal_reply_item_model.dart';
 import '../../data/models/workbench/appointment_approval_item_model.dart';
 import '../../data/models/workbench/blacklist_approval_item_model.dart';
 import '../../data/models/workbench/spot_inspection_item_model.dart';
+import '../../modules/dashboard/modules/workbench/appeal_reply/appeal_reply_binding.dart';
+import '../../modules/dashboard/modules/workbench/appeal_reply/appeal_reply_view.dart';
+import '../../modules/dashboard/modules/workbench/appeal_reply/detail/appeal_reply_detail_binding.dart';
+import '../../modules/dashboard/modules/workbench/appeal_reply/detail/appeal_reply_detail_view.dart';
+import '../../modules/dashboard/modules/workbench/appeal_reply/handle/appeal_reply_handle_binding.dart';
+import '../../modules/dashboard/modules/workbench/appeal_reply/handle/appeal_reply_handle_view.dart';
 import '../../modules/dashboard/modules/workbench/appointment_approval/appointment_approval_binding.dart';
 import '../../modules/dashboard/modules/workbench/appointment_approval/approve/appointment_approval_approve_binding.dart';
 import '../../modules/dashboard/modules/workbench/appointment_approval/approve/appointment_approval_approve_view.dart';
@@ -72,6 +79,36 @@ abstract class WorkbenchRoutes {
     return Get.to<T>(
       () => const HiddenDangerGovernanceView(),
       binding: HiddenDangerGovernanceBinding(),
+    );
+  }
+
+  /// 申诉回复。
+  static Future<T?>? toAppealReply<T>() {
+    return Get.to<T>(
+      () => const AppealReplyView(),
+      binding: AppealReplyBinding(),
+    );
+  }
+
+  /// 申诉回复详情页。
+  static Future<T?>? toAppealReplyDetail<T>({
+    required AppealReplyItemModel item,
+  }) {
+    return Get.to<T>(
+      () => const AppealReplyDetailView(),
+      binding: AppealReplyDetailBinding(),
+      arguments: item,
+    );
+  }
+
+  /// 申诉回复处理页。
+  static Future<bool?>? toAppealReplyHandle({
+    required AppealReplyItemModel item,
+  }) {
+    return Get.to<bool>(
+      () => const AppealReplyHandleView(),
+      binding: AppealReplyHandleBinding(),
+      arguments: item,
     );
   }
 
