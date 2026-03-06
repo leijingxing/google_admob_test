@@ -318,14 +318,38 @@ class _WhitelistApprovalCard extends StatelessWidget {
           ),
         ],
       ),
-      trailingAction: _buildActionButtons(context),
+      trailingAction: _buildActionButtons(),
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
-    final buttons = <Widget>[];
+  Widget _buildActionButtons() {
+    final buttons = <Widget>[
+      SizedBox(
+        width: AppDimens.dp56,
+        height: AppDimens.dp26,
+        child: OutlinedButton(
+          onPressed: () =>
+              WorkbenchRoutes.toWhitelistApprovalDetail(item: item),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFF8DA0B8)),
+            padding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimens.dp4),
+            ),
+          ),
+          child: Text(
+            '查看',
+            style: TextStyle(
+              color: const Color(0xFF5D7189),
+              fontSize: AppDimens.sp12,
+            ),
+          ),
+        ),
+      ),
+    ];
 
     if (item.parkCheckStatus == 0) {
+      buttons.add(SizedBox(width: AppDimens.dp8));
       buttons.add(
         SizedBox(
           width: AppDimens.dp56,

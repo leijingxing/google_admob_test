@@ -10,6 +10,8 @@ import '../../modules/dashboard/modules/workbench/appointment_approval/detail/ap
 import '../../modules/dashboard/modules/workbench/whitelist_approval/whitelist_approval_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whitelist_approval_approve_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whitelist_approval_approve_view.dart';
+import '../../modules/dashboard/modules/workbench/whitelist_approval/detail/whitelist_approval_detail_binding.dart';
+import '../../modules/dashboard/modules/workbench/whitelist_approval/detail/whitelist_approval_detail_view.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/whitelist_approval_view.dart';
 import '../../data/models/workbench/whitelist_approval_item_model.dart';
 
@@ -40,6 +42,17 @@ abstract class WorkbenchRoutes {
     return Get.to<bool>(
       () => const WhitelistApprovalApproveView(),
       binding: WhitelistApprovalApproveBinding(),
+      arguments: item,
+    );
+  }
+
+  /// 白名单详情页。
+  static Future<T?>? toWhitelistApprovalDetail<T>({
+    required WhitelistApprovalItemModel item,
+  }) {
+    return Get.to<T>(
+      () => const WhitelistApprovalDetailView(),
+      binding: WhitelistApprovalDetailBinding(),
       arguments: item,
     );
   }
