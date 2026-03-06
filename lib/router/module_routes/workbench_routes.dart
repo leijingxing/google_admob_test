@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../data/models/workbench/appeal_reply_item_model.dart';
 import '../../data/models/workbench/appointment_approval_item_model.dart';
 import '../../data/models/workbench/blacklist_approval_item_model.dart';
+import '../../data/models/workbench/inspection_abnormal_item_model.dart';
 import '../../data/models/workbench/spot_inspection_item_model.dart';
 import '../../modules/dashboard/modules/workbench/appeal_reply/appeal_reply_binding.dart';
 import '../../modules/dashboard/modules/workbench/appeal_reply/appeal_reply_view.dart';
@@ -30,6 +31,10 @@ import '../../modules/dashboard/modules/workbench/spot_inspection/spot_inspectio
 import '../../modules/dashboard/modules/workbench/spot_inspection/spot_inspection_view.dart';
 import '../../modules/dashboard/modules/workbench/hidden_danger_governance/hidden_danger_governance_binding.dart';
 import '../../modules/dashboard/modules/workbench/hidden_danger_governance/hidden_danger_governance_view.dart';
+import '../../modules/dashboard/modules/workbench/hidden_danger_governance/approve/hidden_danger_governance_approve_binding.dart';
+import '../../modules/dashboard/modules/workbench/hidden_danger_governance/approve/hidden_danger_governance_approve_view.dart';
+import '../../modules/dashboard/modules/workbench/hidden_danger_governance/detail/hidden_danger_governance_detail_binding.dart';
+import '../../modules/dashboard/modules/workbench/hidden_danger_governance/detail/hidden_danger_governance_detail_view.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/whitelist_approval_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whitelist_approval_approve_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whitelist_approval_approve_view.dart';
@@ -108,6 +113,28 @@ abstract class WorkbenchRoutes {
     return Get.to<bool>(
       () => const AppealReplyHandleView(),
       binding: AppealReplyHandleBinding(),
+      arguments: item,
+    );
+  }
+
+  /// 隐患治理详情页。
+  static Future<T?>? toHiddenDangerGovernanceDetail<T>({
+    required InspectionAbnormalItemModel item,
+  }) {
+    return Get.to<T>(
+      () => const HiddenDangerGovernanceDetailView(),
+      binding: HiddenDangerGovernanceDetailBinding(),
+      arguments: item,
+    );
+  }
+
+  /// 隐患治理审批页。
+  static Future<bool?>? toHiddenDangerGovernanceApprove({
+    required InspectionAbnormalItemModel item,
+  }) {
+    return Get.to<bool>(
+      () => const HiddenDangerGovernanceApproveView(),
+      binding: HiddenDangerGovernanceApproveBinding(),
       arguments: item,
     );
   }

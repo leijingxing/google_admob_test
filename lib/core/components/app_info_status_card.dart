@@ -12,6 +12,7 @@ class AppInfoStatusCard extends StatelessWidget {
     required this.statusStyle,
     required this.body,
     this.trailingAction,
+    this.onTap,
   });
 
   final String title;
@@ -19,57 +20,66 @@ class AppInfoStatusCard extends StatelessWidget {
   final AppCardStatusStyle statusStyle;
   final Widget body;
   final Widget? trailingAction;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: const Color(0xFF2F3134),
+                  fontSize: AppDimens.sp20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppDimens.dp8,
+                vertical: AppDimens.dp3,
+              ),
+              decoration: BoxDecoration(
+                color: statusStyle.backgroundColor,
+                border: Border.all(color: statusStyle.borderColor),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                statusText,
+                style: TextStyle(
+                  color: statusStyle.textColor,
+                  fontSize: AppDimens.sp12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: AppDimens.dp8),
+        Container(height: 1, color: const Color(0xFFEFF3F8)),
+        SizedBox(height: AppDimens.dp8),
+        body,
+        if (trailingAction != null) ...[
+          SizedBox(height: AppDimens.dp8),
+          Align(alignment: Alignment.centerRight, child: trailingAction),
+        ],
+      ],
+    );
+
     return AppStandardCard(
       padding: EdgeInsets.all(AppDimens.dp12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: const Color(0xFF2F3134),
-                    fontSize: AppDimens.sp20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppDimens.dp8,
-                  vertical: AppDimens.dp3,
-                ),
-                decoration: BoxDecoration(
-                  color: statusStyle.backgroundColor,
-                  border: Border.all(color: statusStyle.borderColor),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  statusText,
-                  style: TextStyle(
-                    color: statusStyle.textColor,
-                    fontSize: AppDimens.sp12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: AppDimens.dp8),
-          Container(height: 1, color: const Color(0xFFEFF3F8)),
-          SizedBox(height: AppDimens.dp8),
-          body,
-          if (trailingAction != null) ...[
-            SizedBox(height: AppDimens.dp8),
-            Align(alignment: Alignment.centerRight, child: trailingAction),
-          ],
-        ],
-      ),
+      child: onTap == null
+          ? content
+          : GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onTap,
+              child: content,
+            ),
     );
   }
 }

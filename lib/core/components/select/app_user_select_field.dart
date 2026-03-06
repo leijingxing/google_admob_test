@@ -15,13 +15,7 @@ class AppSelectedUser {
   final String phone;
   final String companyName;
 
-  const AppSelectedUser({
-    required this.id,
-    required this.name,
-    this.postName = '',
-    this.phone = '',
-    this.companyName = '',
-  });
+  const AppSelectedUser({required this.id, required this.name, this.postName = '', this.phone = '', this.companyName = ''});
 
   factory AppSelectedUser.fromSystemUser(SystemUserItemModel model) {
     return AppSelectedUser(
@@ -47,6 +41,8 @@ class AppUserSelectField extends StatelessWidget {
     this.required = false,
     this.enabled = true,
     this.clearable = true,
+    this.borderRadius,
+    this.borderColor,
   });
 
   final String label;
@@ -56,11 +52,15 @@ class AppUserSelectField extends StatelessWidget {
   final bool required;
   final bool enabled;
   final bool clearable;
+  final BorderRadius? borderRadius;
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
     final selected = value;
     final hasValue = selected != null;
+    final resolvedBorderRadius = borderRadius ?? BorderRadius.circular(AppDimens.dp6);
+    final resolvedBorderColor = borderColor ?? const Color(0xFFC9D2DF);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,10 +70,7 @@ class AppUserSelectField extends StatelessWidget {
             if (required)
               const Text(
                 '* ',
-                style: TextStyle(
-                  color: Color(0xFFE55E59),
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(color: Color(0xFFE55E59), fontWeight: FontWeight.w700),
               ),
             Text(label, style: TextStyle(fontSize: AppDimens.sp12)),
           ],
@@ -82,26 +79,20 @@ class AppUserSelectField extends StatelessWidget {
         InkWell(
           onTap: enabled
               ? () async {
-                  final selectedUser = await showAppUserSelectDialog(
-                    context,
-                    initialValue: value,
-                  );
+                  final selectedUser = await showAppUserSelectDialog(context, initialValue: value);
                   if (selectedUser != null) {
                     onChanged(selectedUser);
                   }
                 }
               : null,
-          borderRadius: BorderRadius.circular(AppDimens.dp6),
+          borderRadius: resolvedBorderRadius,
           child: Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(
-              horizontal: AppDimens.dp10,
-              vertical: AppDimens.dp10,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: AppDimens.dp10, vertical: AppDimens.dp10),
             decoration: BoxDecoration(
               color: enabled ? Colors.white : const Color(0xFFF5F6F8),
-              borderRadius: BorderRadius.circular(AppDimens.dp6),
-              border: Border.all(color: const Color(0xFFC9D2DF)),
+              borderRadius: resolvedBorderRadius,
+              border: Border.all(color: resolvedBorderColor),
             ),
             child: Row(
               children: [
@@ -115,34 +106,23 @@ class AppUserSelectField extends StatelessWidget {
                               selected.displayName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: AppDimens.sp13,
-                                color: const Color(0xFF2B3A4F),
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: TextStyle(fontSize: AppDimens.sp13, color: const Color(0xFF2B3A4F), fontWeight: FontWeight.w600),
                             ),
-                            if (selected.postName.isNotEmpty ||
-                                selected.phone.isNotEmpty)
+                            if (selected.postName.isNotEmpty || selected.phone.isNotEmpty)
                               Padding(
                                 padding: EdgeInsets.only(top: AppDimens.dp2),
                                 child: Text(
                                   _buildSubLine(selected),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: AppDimens.sp11,
-                                    color: const Color(0xFF8A97A8),
-                                  ),
+                                  style: TextStyle(fontSize: AppDimens.sp11, color: const Color(0xFF8A97A8)),
                                 ),
                               ),
                           ],
                         )
                       : Text(
                           hintText,
-                          style: TextStyle(
-                            fontSize: AppDimens.sp12,
-                            color: const Color(0xFF9AA7B8),
-                          ),
+                          style: TextStyle(fontSize: AppDimens.sp12, color: const Color(0xFF9AA7B8)),
                         ),
                 ),
                 if (hasValue && clearable && enabled)
@@ -151,19 +131,10 @@ class AppUserSelectField extends StatelessWidget {
                     behavior: HitTestBehavior.opaque,
                     child: Padding(
                       padding: EdgeInsets.only(right: AppDimens.dp8),
-                      child: const Icon(
-                        Icons.close_rounded,
-                        size: 18,
-                        color: Color(0xFF9AA7B8),
-                      ),
+                      child: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF9AA7B8)),
                     ),
                   ),
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: enabled
-                      ? const Color(0xFF7E8EA4)
-                      : const Color(0xFFB7C0CE),
-                ),
+                Icon(Icons.keyboard_arrow_down_rounded, color: enabled ? const Color(0xFF7E8EA4) : const Color(0xFFB7C0CE)),
               ],
             ),
           ),
@@ -185,15 +156,10 @@ class AppUserSelectField extends StatelessWidget {
 }
 
 /// 打开统一人员选择弹窗。
-Future<AppSelectedUser?> showAppUserSelectDialog(
-  BuildContext context, {
-  AppSelectedUser? initialValue,
-  String title = '选择人员',
-}) {
+Future<AppSelectedUser?> showAppUserSelectDialog(BuildContext context, {AppSelectedUser? initialValue, String title = '选择人员'}) {
   return Navigator.of(context).push<AppSelectedUser>(
     MaterialPageRoute<AppSelectedUser>(
-      builder: (_) =>
-          _AppUserSelectPage(title: title, initialValue: initialValue),
+      builder: (_) => _AppUserSelectPage(title: title, initialValue: initialValue),
     ),
   );
 }
@@ -262,9 +228,7 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
     final result = await _repository.getSystemDepartmentTree();
     result.when(
       success: (list) {
-        final options = <_FilterOption>[
-          const _FilterOption(value: _allOptionValue, label: '全部部门'),
-        ];
+        final options = <_FilterOption>[const _FilterOption(value: _allOptionValue, label: '全部部门')];
         for (final node in list) {
           options.addAll(_flattenDepartments(node, depth: 0));
         }
@@ -272,9 +236,7 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
       },
       failure: (error) {
         AppToast.showError(error.message);
-        _departmentOptions = const <_FilterOption>[
-          _FilterOption(value: _allOptionValue, label: '全部部门'),
-        ];
+        _departmentOptions = const <_FilterOption>[_FilterOption(value: _allOptionValue, label: '全部部门')];
       },
     );
   }
@@ -292,10 +254,7 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
     );
   }
 
-  List<_FilterOption> _flattenDepartments(
-    SystemDepartmentTreeModel node, {
-    required int depth,
-  }) {
+  List<_FilterOption> _flattenDepartments(SystemDepartmentTreeModel node, {required int depth}) {
     final id = (node.id ?? '').trim();
     if (id.isEmpty) return const <_FilterOption>[];
 
@@ -317,20 +276,10 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
     });
 
     final keyword = _keywordController.text.trim();
-    final departmentId = _treeType == _UserTreeType.organization
-        ? _normalizeAllValue(_selectedDepartmentId)
-        : null;
-    final postId = _treeType == _UserTreeType.role
-        ? _normalizeAllValue(_selectedPostId)
-        : null;
+    final departmentId = _treeType == _UserTreeType.organization ? _normalizeAllValue(_selectedDepartmentId) : null;
+    final postId = _treeType == _UserTreeType.role ? _normalizeAllValue(_selectedPostId) : null;
 
-    final result = await _repository.getSystemUserPage(
-      current: 1,
-      size: 1000,
-      keywords: keyword.isEmpty ? null : keyword,
-      departmentId: departmentId,
-      postId: postId,
-    );
+    final result = await _repository.getSystemUserPage(current: 1, size: 1000, keywords: keyword.isEmpty ? null : keyword, departmentId: departmentId, postId: postId);
 
     if (!mounted) return;
     result.when(
@@ -362,12 +311,7 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
       backgroundColor: const Color(0xFFF6F8FC),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            AppDimens.dp12,
-            AppDimens.dp10,
-            AppDimens.dp12,
-            AppDimens.dp12,
-          ),
+          padding: EdgeInsets.fromLTRB(AppDimens.dp12, AppDimens.dp10, AppDimens.dp12, AppDimens.dp12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -382,10 +326,7 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('取消'),
-                    ),
+                    child: OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('取消')),
                   ),
                   SizedBox(width: AppDimens.dp10),
                   Expanded(
@@ -423,12 +364,8 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
               _loadUsers();
             },
             style: FilledButton.styleFrom(
-              backgroundColor: _treeType == _UserTreeType.role
-                  ? const Color(0xFF3A78F2)
-                  : const Color(0xFFEFF3FA),
-              foregroundColor: _treeType == _UserTreeType.role
-                  ? Colors.white
-                  : const Color(0xFF4A5A70),
+              backgroundColor: _treeType == _UserTreeType.role ? const Color(0xFF3A78F2) : const Color(0xFFEFF3FA),
+              foregroundColor: _treeType == _UserTreeType.role ? Colors.white : const Color(0xFF4A5A70),
             ),
             child: const Text('按岗位'),
           ),
@@ -444,12 +381,8 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
               _loadUsers();
             },
             style: FilledButton.styleFrom(
-              backgroundColor: _treeType == _UserTreeType.organization
-                  ? const Color(0xFF3A78F2)
-                  : const Color(0xFFEFF3FA),
-              foregroundColor: _treeType == _UserTreeType.organization
-                  ? Colors.white
-                  : const Color(0xFF4A5A70),
+              backgroundColor: _treeType == _UserTreeType.organization ? const Color(0xFF3A78F2) : const Color(0xFFEFF3FA),
+              foregroundColor: _treeType == _UserTreeType.organization ? Colors.white : const Color(0xFF4A5A70),
             ),
             child: const Text('按组织架构'),
           ),
@@ -463,11 +396,7 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
       return const Center(
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 8),
-          child: SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
+          child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
         ),
       );
     }
@@ -479,11 +408,7 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
             .map(
               (item) => DropdownMenuItem<String>(
                 value: item.value,
-                child: Text(
-                  item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                child: Text(item.label, maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             )
             .toList(),
@@ -494,33 +419,20 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
           });
           _loadUsers();
         },
-        decoration: const InputDecoration(
-          isDense: true,
-          labelText: '部门筛选',
-          border: OutlineInputBorder(),
-        ),
+        decoration: const InputDecoration(isDense: true, labelText: '部门筛选', border: OutlineInputBorder()),
       );
     }
 
     final postItems = <DropdownMenuItem<String>>[
-      const DropdownMenuItem<String>(
-        value: _allOptionValue,
-        child: Text('全部岗位'),
-      ),
+      const DropdownMenuItem<String>(value: _allOptionValue, child: Text('全部岗位')),
       ..._posts
           .map((item) {
             final id = (item.id ?? '').trim();
             final postName = (item.postName ?? '').trim();
             if (id.isEmpty) {
-              return const DropdownMenuItem<String>(
-                value: '',
-                child: SizedBox(),
-              );
+              return const DropdownMenuItem<String>(value: '', child: SizedBox());
             }
-            return DropdownMenuItem<String>(
-              value: id,
-              child: Text(postName.isEmpty ? id : postName),
-            );
+            return DropdownMenuItem<String>(value: id, child: Text(postName.isEmpty ? id : postName));
           })
           .where((item) => item.value != ''),
     ];
@@ -535,11 +447,7 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
         });
         _loadUsers();
       },
-      decoration: const InputDecoration(
-        isDense: true,
-        labelText: '岗位筛选',
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(isDense: true, labelText: '岗位筛选', border: OutlineInputBorder()),
     );
   }
 
@@ -554,14 +462,8 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
             decoration: InputDecoration(
               hintText: '请输入姓名/关键字',
               isDense: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimens.dp6),
-              ),
-              suffixIcon: IconButton(
-                onPressed: _loadUsers,
-                icon: const Icon(Icons.search_rounded),
-                tooltip: '查询',
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDimens.dp6)),
+              suffixIcon: IconButton(onPressed: _loadUsers, icon: const Icon(Icons.search_rounded), tooltip: '查询'),
             ),
           ),
         ),
@@ -577,10 +479,7 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
       return Center(
         child: Text(
           '暂无人员数据',
-          style: TextStyle(
-            fontSize: AppDimens.sp12,
-            color: const Color(0xFF8A97A8),
-          ),
+          style: TextStyle(fontSize: AppDimens.sp12, color: const Color(0xFF8A97A8)),
         ),
       );
     }
@@ -607,11 +506,7 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
             decoration: BoxDecoration(
               color: selected ? const Color(0xFFEAF1FF) : Colors.white,
               borderRadius: BorderRadius.circular(AppDimens.dp8),
-              border: Border.all(
-                color: selected
-                    ? const Color(0xFF3A78F2)
-                    : const Color(0xFFDCE3EE),
-              ),
+              border: Border.all(color: selected ? const Color(0xFF3A78F2) : const Color(0xFFDCE3EE)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -623,41 +518,23 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
                         _nonEmpty((row.userName ?? '').trim(), fallback: id),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: AppDimens.sp13,
-                          color: const Color(0xFF2E3B4D),
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: TextStyle(fontSize: AppDimens.sp13, color: const Color(0xFF2E3B4D), fontWeight: FontWeight.w700),
                       ),
                     ),
-                    Icon(
-                      selected
-                          ? Icons.radio_button_checked_rounded
-                          : Icons.radio_button_unchecked_rounded,
-                      size: 18,
-                      color: selected
-                          ? const Color(0xFF3A78F2)
-                          : const Color(0xFF9AA7B8),
-                    ),
+                    Icon(selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded, size: 18, color: selected ? const Color(0xFF3A78F2) : const Color(0xFF9AA7B8)),
                   ],
                 ),
                 SizedBox(height: AppDimens.dp4),
                 Text(
                   '岗位：${_nonEmpty((row.postName ?? '').trim())}   手机：${_nonEmpty((row.phone ?? '').trim())}',
-                  style: TextStyle(
-                    fontSize: AppDimens.sp11,
-                    color: const Color(0xFF7E8DA1),
-                  ),
+                  style: TextStyle(fontSize: AppDimens.sp11, color: const Color(0xFF7E8DA1)),
                 ),
                 SizedBox(height: AppDimens.dp2),
                 Text(
                   '单位：${_nonEmpty((row.companyName ?? '').trim())}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: AppDimens.sp11,
-                    color: const Color(0xFF7E8DA1),
-                  ),
+                  style: TextStyle(fontSize: AppDimens.sp11, color: const Color(0xFF7E8DA1)),
                 ),
               ],
             ),

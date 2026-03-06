@@ -16,6 +16,8 @@ import '../toast/toast_widget.dart';
 /// - 支持预览与删除
 enum CustomPickerMediaType { image, video }
 
+enum _CustomPickerSourceAction { camera, gallery }
+
 class CustomPickerPhoto extends StatefulWidget {
   /// 默认图片大小上限（10MB）。
   static const int defaultMaxImageSizeBytes = 10 * 1024 * 1024;
@@ -84,7 +86,15 @@ class _CustomPickerPhotoState extends State<CustomPickerPhoto> {
     }
 
     try {
-      final files = await _pickFiles(remainingCount);
+      final source = await _showSourcePickerSheet();
+      if (source == null) {
+        return;
+      }
+
+      final files = await _pickFiles(
+        remainingCount: remainingCount,
+        source: source,
+      );
       if (files.isEmpty) {
         AppToast.showInfo(
           widget.mediaType == CustomPickerMediaType.video ? '未选择视频' : '未选择图片',
@@ -124,9 +134,103 @@ class _CustomPickerPhotoState extends State<CustomPickerPhoto> {
     }
   }
 
-  Future<List<XFile>> _pickFiles(int remainingCount) async {
+  Future<_CustomPickerSourceAction?> _showSourcePickerSheet() {
+    return showModalBottomSheet<_CustomPickerSourceAction>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildSheetAction(
+                        label: '拍摄',
+                        onTap: () => Navigator.of(
+                          sheetContext,
+                        ).pop(_CustomPickerSourceAction.camera),
+                      ),
+                      const Divider(height: 1, color: Color(0xFFF0F2F5)),
+                      _buildSheetAction(
+                        label: '从相册选择',
+                        onTap: () => Navigator.of(
+                          sheetContext,
+                        ).pop(_CustomPickerSourceAction.gallery),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: _buildSheetAction(
+                    label: '取消',
+                    onTap: () => Navigator.of(sheetContext).pop(),
+                    isCancel: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSheetAction({
+    required String label,
+    required VoidCallback onTap,
+    bool isCancel = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isCancel
+                  ? const Color(0xFF2B3A4F)
+                  : const Color(0xFF1F2D3D),
+              fontSize: 16,
+              fontWeight: isCancel ? FontWeight.w600 : FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<List<XFile>> _pickFiles({
+    required int remainingCount,
+    required _CustomPickerSourceAction source,
+  }) async {
     if (widget.mediaType == CustomPickerMediaType.video) {
-      final file = await _picker.pickVideo(source: ImageSource.gallery);
+      final file = await _picker.pickVideo(
+        source: source == _CustomPickerSourceAction.camera
+            ? ImageSource.camera
+            : ImageSource.gallery,
+      );
+      if (file == null) return const <XFile>[];
+      return <XFile>[file];
+    }
+    if (source == _CustomPickerSourceAction.camera) {
+      final file = await _picker.pickImage(source: ImageSource.camera);
       if (file == null) return const <XFile>[];
       return <XFile>[file];
     }
