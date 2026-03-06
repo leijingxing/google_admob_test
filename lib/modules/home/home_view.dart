@@ -19,7 +19,7 @@ class HomeView extends GetView<HomeController> {
           backgroundColor: const Color(0xFFF5F8FC),
           body: IndexedStack(
             index: logic.currentIndex,
-            children: const [DashboardView(), RefreshTestView(), ProfileView()],
+            children: const [DashboardView(), MessageView(), ProfileView()],
           ),
           bottomNavigationBar: DecoratedBox(
             decoration: BoxDecoration(

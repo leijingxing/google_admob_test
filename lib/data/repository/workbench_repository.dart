@@ -115,6 +115,13 @@ class WorkbenchRepository {
   }
 
   /// 获取预约进度时间线（基本信息模块）。
+  ///
+  /// 后端返回的是“流程节点数组”，不是单个详情对象：
+  /// - `typeCode`：节点类型，0-发起预约，1-企业审批，2-园区审批，3-司机自检，4-园区抽查
+  /// - `time`：当前节点时间
+  /// - `specificData`：节点自身的业务字段，不同 typeCode 字段结构不同
+  ///
+  /// 前端详情页会根据 `typeCode` 将 `specificData` 再整理成分组结构。
   Future<Result<List<Map<String, dynamic>>>> getReservationProgressTimeline({
     required String id,
   }) {
@@ -136,6 +143,16 @@ class WorkbenchRepository {
   }
 
   /// 获取出入记录（出入记录模块）。
+  ///
+  /// 接口返回分组数组，每一组通常包含：
+  /// - `startDate`：入园时间
+  /// - `endDate`：出园时间
+  /// - `data`：当前分组下的节点数组
+  ///
+  /// `data` 内部常见字段：
+  /// - `type`：1-入园，2-出园，3-园内抓拍
+  /// - `address`：地点/闸机名称
+  /// - `headPicUrl` / `tailPicUrl`：抓拍图片
   Future<Result<List<Map<String, dynamic>>>> getGateRecords({
     required String id,
     int idType = 1,
@@ -156,6 +173,13 @@ class WorkbenchRepository {
   }
 
   /// 获取违规记录分页（违规记录模块）。
+  ///
+  /// 该接口为标准分页结构，列表项当前主要使用：
+  /// - `subModuleTypeName`：违规类型
+  /// - `position`：违规地点
+  /// - `createDate`：违规时间
+  /// - `description`：违规内容
+  /// - `fileUrl`：违规影像
   Future<Result<PaginatedResult<Map<String, dynamic>>>> getRiskWarningPage({
     required int pageIndex,
     required int pageSize,

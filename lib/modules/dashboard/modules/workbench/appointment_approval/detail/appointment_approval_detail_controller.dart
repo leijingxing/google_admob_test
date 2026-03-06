@@ -17,7 +17,10 @@ class AppointmentApprovalDetailController extends GetxController {
   bool _basicLoaded = false;
   bool _recordLoaded = false;
 
+  /// 基本信息模块使用时间线数据，节点类型由后端 typeCode 决定。
   List<Map<String, dynamic>> progressTimeline = const <Map<String, dynamic>>[];
+
+  /// 出入记录模块按 Web 结构保留原始分组数据。
   List<Map<String, dynamic>> gateRecords = const <Map<String, dynamic>>[];
 
   @override
@@ -36,6 +39,8 @@ class AppointmentApprovalDetailController extends GetxController {
     if (currentSection == index) return;
     currentSection = index;
     update();
+
+    // 仅在切到对应模块时加载，避免详情页首屏一次性打满所有接口。
     if (index == 1) {
       await _loadRecords();
     }
@@ -130,6 +135,8 @@ class AppointmentApprovalDetailController extends GetxController {
     }
   }
 
+  /// 将后端时间线节点转换为前端可直接渲染的分组结构。
+  /// 不同 typeCode 对应不同模块字段组合，保持与 Web 展示口径一致。
   List<DetailGroup> timelineDisplayGroups(Map<String, dynamic> node) {
     final typeCode = _toInt(node['typeCode']);
     final specific = timelineSpecificData(node);
@@ -174,6 +181,7 @@ class AppointmentApprovalDetailController extends GetxController {
   }
 
   List<DetailGroup> _buildInitiateGroups(Map<String, dynamic> specific) {
+    // 发起预约节点字段最多，前端按“发起/车辆/挂车/人员/载货/预约信息”拆组展示。
     final headerLines = <DetailLine>[];
     void addHeader(String label, Object? value) {
       final text = displayText(value);
@@ -272,6 +280,8 @@ class AppointmentApprovalDetailController extends GetxController {
         addCargo('$inOut 危化品名称', g['goodsName']);
         addCargo('$inOut 危化品数量', g['goodsAmount']);
         addCargo('$inOut 电子运单', g['electronicWaybill']);
+
+        // 组内插入空行标记，交给 View 渲染成一条分隔线。
         if (i != goodsListRaw.length - 1) {
           cargoLines.add(const DetailLine(label: '', value: ''));
         }
@@ -315,6 +325,7 @@ class AppointmentApprovalDetailController extends GetxController {
   }
 
   List<DetailGroup> _buildCompanyApproveGroups(Map<String, dynamic> specific) {
+    // 企业审批节点仅保留审批相关字段，字段名存在历史差异，这里做多 key 兜底。
     final lines = <DetailLine>[];
     void addLine(
       String label,
@@ -352,6 +363,7 @@ class AppointmentApprovalDetailController extends GetxController {
   }
 
   List<DetailGroup> _buildParkApproveGroups(Map<String, dynamic> specific) {
+    // 园区审批节点相比企业审批多出授权期限和入口/出口设备信息。
     final lines = <DetailLine>[];
     void addLine(String label, Object? value) {
       final text = displayText(value);
@@ -387,6 +399,7 @@ class AppointmentApprovalDetailController extends GetxController {
     return displayText(value);
   }
 
+  /// 统一的文本兜底：屏蔽 null/空串，并返回页面约定占位符。
   String displayText(Object? value) {
     final text = value?.toString().trim() ?? '';
     if (text.isEmpty || text.toLowerCase() == 'null' || text == '--/--') {
@@ -444,6 +457,7 @@ class AppointmentApprovalDetailController extends GetxController {
     final name = displayText(specific['loadTypeName']);
     if (name != '--') return name;
 
+    // 后端未返回字典名称时，按编码回退为固定文案。
     final code = _toInt(specific['loadType']);
     const map = <int, String>{
       0: '空载入园，空载出园',

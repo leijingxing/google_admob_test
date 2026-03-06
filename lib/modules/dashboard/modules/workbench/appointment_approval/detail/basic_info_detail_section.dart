@@ -5,6 +5,7 @@ import '../../../../../../core/constants/dimens.dart';
 import '../../../../../../core/utils/file_service.dart';
 import 'appointment_approval_detail_controller.dart';
 
+/// 基本信息
 class BasicInfoDetailSection extends StatelessWidget {
   const BasicInfoDetailSection({super.key, required this.controller});
 
@@ -92,6 +93,7 @@ class BasicInfoDetailSection extends StatelessWidget {
                           ),
                           SizedBox(height: AppDimens.dp8),
                           ...group.lines.map((line) {
+                            // 控制器会插入空行作为组内分隔标记，这里渲染成细分割线。
                             if (line.label.isEmpty && line.value.isEmpty) {
                               return Container(
                                 margin: EdgeInsets.symmetric(
@@ -151,6 +153,7 @@ class BasicInfoDetailSection extends StatelessWidget {
       );
     }
 
+    // 图片类字段可能携带多个文件标识，按逗号拆分后渲染为缩略图列表。
     final urls = line.value
         .split(',')
         .map((e) => e.trim())
