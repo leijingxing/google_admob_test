@@ -3,6 +3,7 @@ import '../../core/http/paginated_parser.dart';
 import '../../core/http/result.dart';
 import '../models/workbench/appointment_approval_item_model.dart';
 import '../models/workbench/checkpoint_area_option_model.dart';
+import '../models/workbench/whitelist_approval_item_model.dart';
 
 /// 工作台模块数据仓库：统一处理工作台相关接口。
 class WorkbenchRepository {
@@ -93,6 +94,71 @@ class WorkbenchRepository {
         itemParser: (itemJson) =>
             AppointmentApprovalItemModel.fromJson(itemJson),
       ),
+    );
+  }
+
+  /// 获取白名单审批分页列表。
+  Future<Result<PaginatedResult<WhitelistApprovalItemModel>>>
+  getWhitelistApprovePage({
+    required int parkCheckStatus,
+    int current = 1,
+    int size = 20,
+    int? type,
+    String? validityBeginTime,
+    String? validityEndTime,
+    String? keyword,
+  }) {
+    final requestData = <String, dynamic>{
+      ...buildPagePayload(pageIndex: current, pageSize: size),
+      'parkCheckStatus': parkCheckStatus,
+      'type': type,
+      'validityBeginTime': validityBeginTime,
+      'validityEndTime': validityEndTime,
+      // 移动端先按统一关键词透传，后续若后端要求拆字段再细化。
+      'keywords': keyword,
+    };
+    requestData.removeWhere((_, value) {
+      if (value == null) return true;
+      if (value is String && value.isEmpty) return true;
+      return false;
+    });
+
+    return _httpService.post<PaginatedResult<WhitelistApprovalItemModel>>(
+      '/api/closed-off/white/page',
+      data: requestData,
+      parser: (json) => parsePaginatedResult<WhitelistApprovalItemModel>(
+        json: json,
+        requestPageIndex: current,
+        requestPageSize: size,
+        itemParser: (itemJson) => WhitelistApprovalItemModel.fromJson(itemJson),
+      ),
+    );
+  }
+
+  /// 白名单审批。
+  Future<Result<void>> approveWhitelist({
+    required List<String> ids,
+    required int type,
+    required int parkCheckStatus,
+    required String validityBeginTime,
+    required String validityEndTime,
+    required String parkCheckDesc,
+  }) async {
+    final result = await _httpService.put<dynamic>(
+      '/api/closed-off/white/approval',
+      data: {
+        'ids': ids,
+        'type': type,
+        'parkCheckStatus': parkCheckStatus,
+        'validityBeginTime': validityBeginTime,
+        'validityEndTime': validityEndTime,
+        'parkCheckDesc': parkCheckDesc,
+      },
+    );
+
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
     );
   }
 

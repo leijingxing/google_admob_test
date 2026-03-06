@@ -111,6 +111,9 @@ class WorkbenchContentSection extends StatelessWidget {
                     count: entry.count,
                     color: color,
                     icon: entry.icon,
+                    onTap: entry.title == '白名单审批'
+                        ? WorkbenchRoutes.toWhitelistApproval
+                        : () {},
                   );
                 },
               ),
@@ -364,12 +367,14 @@ class _GridActionCard extends StatelessWidget {
     required this.count,
     required this.color,
     required this.icon,
+    required this.onTap,
   });
 
   final String title;
   final int count;
   final Color color;
   final IconData icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -389,7 +394,7 @@ class _GridActionCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: onTap,
           borderRadius: BorderRadius.circular(AppDimens.dp14),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
