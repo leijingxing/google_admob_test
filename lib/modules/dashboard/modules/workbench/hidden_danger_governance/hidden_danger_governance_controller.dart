@@ -1,12 +1,30 @@
-import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../../core/components/log_util.dart';
+import '../../../../../core/components/toast/toast_widget.dart';
+import '../../../../../core/utils/user_manager.dart';
+import '../../../../../data/models/workbench/inspection_abnormal_item_model.dart';
+import '../../../../../data/models/workbench/inspection_rectification_item_model.dart';
+import '../../../../../data/repository/workbench_repository.dart';
 import '../widgets/workbench_segment_tabs.dart';
+
+/// 巡检异常状态枚举值。
+abstract class HiddenDangerAbnormalStatus {
+  static const String pendingConfirm = 'PENDING_CONFIRM';
+  static const String pendingRectify = 'PENDING_RECTIFY';
+  static const String rectifying = 'RECTIFYING';
+  static const String pendingVerify = 'PENDING_VERIFY';
+  static const String completed = 'COMPLETED';
+  static const String reassign = 'REASSIGN';
+}
 
 /// 隐患治理控制器。
 class HiddenDangerGovernanceController extends GetxController {
+  final WorkbenchRepository _repository = WorkbenchRepository();
+
   final ValueNotifier<int> refreshTrigger = ValueNotifier<int>(0);
   final TextEditingController keywordController = TextEditingController();
 
@@ -23,81 +41,81 @@ class HiddenDangerGovernanceController extends GetxController {
 
   final List<HiddenDangerStatusOption> _pendingStatusOptions = const [
     HiddenDangerStatusOption(label: '请选择状态', value: null),
-    HiddenDangerStatusOption(label: '待确认', value: 0),
-    HiddenDangerStatusOption(label: '待整改', value: 1),
+    HiddenDangerStatusOption(
+      label: '待确认',
+      value: HiddenDangerAbnormalStatus.pendingConfirm,
+    ),
+    HiddenDangerStatusOption(
+      label: '待整改',
+      value: HiddenDangerAbnormalStatus.pendingRectify,
+    ),
+    HiddenDangerStatusOption(
+      label: '整改中',
+      value: HiddenDangerAbnormalStatus.rectifying,
+    ),
+    HiddenDangerStatusOption(
+      label: '待核查',
+      value: HiddenDangerAbnormalStatus.pendingVerify,
+    ),
+    HiddenDangerStatusOption(
+      label: '待重新指派',
+      value: HiddenDangerAbnormalStatus.reassign,
+    ),
   ];
 
   final List<HiddenDangerStatusOption> _doneStatusOptions = const [
     HiddenDangerStatusOption(label: '请选择状态', value: null),
-    HiddenDangerStatusOption(label: '已整改', value: 2),
-    HiddenDangerStatusOption(label: '已关闭', value: 3),
+    HiddenDangerStatusOption(
+      label: '已完成',
+      value: HiddenDangerAbnormalStatus.completed,
+    ),
   ];
+
+  final Map<String, List<InspectionRectificationItemModel>>
+  _rectificationsCache = <String, List<InspectionRectificationItemModel>>{};
+
+  Map<String, String> pointNameMap = <String, String>{};
+  Map<String, String> ruleNameMap = <String, String>{};
 
   int currentTabIndex = 0;
   bool? selectedEmergency;
-  int? selectedStatus;
+  String? selectedStatus;
   DateTimeRange? dateRange;
-
-  static final List<HiddenDangerGovernanceItem> _mockItems =
-      <HiddenDangerGovernanceItem>[
-        HiddenDangerGovernanceItem(
-          pointName: '巡检点位A-01',
-          abnormalDesc: '临时堆放区域未设置警戒线',
-          reporter: '张三',
-          reportTime: DateTime(2026, 3, 6, 9, 30, 0),
-          urgent: true,
-          status: 0,
-        ),
-        HiddenDangerGovernanceItem(
-          pointName: '巡检点位B-02',
-          abnormalDesc: '消防通道有占用现象',
-          reporter: '李四',
-          reportTime: DateTime(2026, 3, 5, 16, 20, 0),
-          urgent: false,
-          status: 1,
-        ),
-        HiddenDangerGovernanceItem(
-          pointName: '巡检点位C-03',
-          abnormalDesc: '危化品标识缺失',
-          reporter: '王五',
-          reportTime: DateTime(2026, 3, 4, 14, 8, 0),
-          urgent: true,
-          status: 1,
-        ),
-        HiddenDangerGovernanceItem(
-          pointName: '巡检点位D-04',
-          abnormalDesc: '照明设施损坏已修复',
-          reporter: '赵六',
-          reportTime: DateTime(2026, 3, 3, 10, 45, 0),
-          urgent: false,
-          status: 2,
-        ),
-        HiddenDangerGovernanceItem(
-          pointName: '巡检点位E-05',
-          abnormalDesc: '排水沟堵塞已处理',
-          reporter: '钱七',
-          reportTime: DateTime(2026, 3, 2, 11, 15, 0),
-          urgent: false,
-          status: 2,
-        ),
-        HiddenDangerGovernanceItem(
-          pointName: '巡检点位F-06',
-          abnormalDesc: '设备护栏松动，现场复查关闭',
-          reporter: '孙八',
-          reportTime: DateTime(2026, 3, 1, 8, 40, 0),
-          urgent: true,
-          status: 3,
-        ),
-      ];
 
   List<HiddenDangerStatusOption> get statusOptions =>
       currentTabIndex == 0 ? _pendingStatusOptions : _doneStatusOptions;
+
+  @override
+  void onInit() {
+    super.onInit();
+    unawaited(loadNameMaps());
+  }
 
   @override
   void onClose() {
     refreshTrigger.dispose();
     keywordController.dispose();
     super.onClose();
+  }
+
+  /// 加载点位与细则名称映射。
+  Future<void> loadNameMaps() async {
+    final pointResult = await _repository.getInspectionPointNameMap();
+    pointResult.when(
+      success: (data) => pointNameMap = data,
+      failure: (error) {
+        AppLog.warning('加载巡检点位失败: ${error.message}');
+      },
+    );
+
+    final ruleResult = await _repository.getInspectionRuleNameMap();
+    ruleResult.when(
+      success: (data) => ruleNameMap = data,
+      failure: (error) {
+        AppLog.warning('加载巡检细则失败: ${error.message}');
+      },
+    );
+    update();
   }
 
   void onTabChanged(int index) {
@@ -112,7 +130,7 @@ class HiddenDangerGovernanceController extends GetxController {
 
   void applyFilters({
     required bool? nextEmergency,
-    required int? nextStatus,
+    required String? nextStatus,
     required String nextKeywords,
     required DateTimeRange? nextDateRange,
   }) {
@@ -151,52 +169,95 @@ class HiddenDangerGovernanceController extends GetxController {
     _triggerRefresh();
   }
 
-  Future<List<HiddenDangerGovernanceItem>> loadPage(
-    int pageIndex,
-    int pageSize,
-  ) async {
-    return loadPageByTab(currentTabIndex, pageIndex, pageSize);
-  }
-
-  Future<List<HiddenDangerGovernanceItem>> loadPageByTab(
+  Future<List<InspectionAbnormalItemModel>> loadPageByTab(
     int tabIndex,
     int pageIndex,
     int pageSize,
   ) async {
-    final filtered = _buildFilteredItems(tabIndex);
-    final start = (pageIndex - 1) * pageSize;
-    if (start >= filtered.length) {
-      return const [];
-    }
-    final end = math.min(start + pageSize, filtered.length);
-    return filtered.sublist(start, end);
+    final result = await _repository.getInspectionAbnormalPage(
+      current: pageIndex,
+      size: pageSize,
+      keywords: keywordController.text.trim(),
+      abnormalStatus: selectedStatus,
+      isUrgent: _urgentParam(selectedEmergency),
+      beginTime: rangeStartTime(dateRange),
+      endTime: rangeEndTime(dateRange),
+    );
+
+    return result.when(
+      success: (page) => page.items
+          .where((item) => _isInCurrentTab(item.abnormalStatus, tabIndex))
+          .toList(),
+      failure: (error) {
+        AppToast.showError(error.message);
+        throw Exception(error.message);
+      },
+    );
   }
 
-  String statusText(int status) {
-    switch (status) {
-      case 0:
+  /// 加载异常整改记录。
+  Future<List<InspectionRectificationItemModel>> loadRectifications({
+    required String abnormalId,
+    bool forceRefresh = false,
+  }) async {
+    final key = abnormalId.trim();
+    if (key.isEmpty) return const <InspectionRectificationItemModel>[];
+    if (!forceRefresh && _rectificationsCache.containsKey(key)) {
+      return _rectificationsCache[key]!;
+    }
+
+    final result = await _repository.getInspectionRectifications(
+      abnormalId: key,
+    );
+    return result.when(
+      success: (list) {
+        _rectificationsCache[key] = list;
+        return list;
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
+        throw Exception(error.message);
+      },
+    );
+  }
+
+  /// 根据异常状态判断主操作按钮文案。
+  String actionText(String? abnormalStatus) {
+    switch (abnormalStatus) {
+      case HiddenDangerAbnormalStatus.pendingConfirm:
+        return '确认';
+      case HiddenDangerAbnormalStatus.pendingRectify:
+      case HiddenDangerAbnormalStatus.rectifying:
+        return '整改';
+      case HiddenDangerAbnormalStatus.pendingVerify:
+        return '核查';
+      case HiddenDangerAbnormalStatus.reassign:
+        return '指派';
+      default:
+        return '查看';
+    }
+  }
+
+  String statusText(String? abnormalStatus) {
+    switch (abnormalStatus) {
+      case HiddenDangerAbnormalStatus.pendingConfirm:
         return '待确认';
-      case 1:
+      case HiddenDangerAbnormalStatus.pendingRectify:
         return '待整改';
-      case 2:
-        return '已整改';
-      case 3:
-        return '已关闭';
+      case HiddenDangerAbnormalStatus.rectifying:
+        return '整改中';
+      case HiddenDangerAbnormalStatus.pendingVerify:
+        return '待核查';
+      case HiddenDangerAbnormalStatus.completed:
+        return '已完成';
+      case HiddenDangerAbnormalStatus.reassign:
+        return '待重新指派';
       default:
         return '--';
     }
   }
 
-  String actionText(int status) {
-    switch (status) {
-      case 0:
-        return '确认';
-      case 1:
-        return '整改';
-      default:
-        return '查看';
-    }
-  }
+  String urgentText(String? isUrgent) => isUrgent == '1' ? '是' : '否';
 
   String dateRangeText() {
     if (dateRange == null) return '开始时间 - 结束时间';
@@ -205,53 +266,276 @@ class HiddenDangerGovernanceController extends GetxController {
     return '$start - $end';
   }
 
-  String reportTimeText(DateTime reportTime) {
-    return '${_formatDate(reportTime)} ${_formatTime(reportTime)}';
+  String displayPointName(InspectionAbnormalItemModel item) {
+    final pointName = (item.pointName ?? '').trim();
+    if (pointName.isNotEmpty) return pointName;
+    final pointId = (item.pointId ?? '').trim();
+    if (pointId.isEmpty) return '--';
+    return pointNameMap[pointId] ?? pointId;
   }
 
-  String urgentText(bool urgent) => urgent ? '是' : '否';
+  String displayRuleName(InspectionAbnormalItemModel item) {
+    final ruleName = (item.ruleName ?? '').trim();
+    if (ruleName.isNotEmpty) return ruleName;
+    final ruleId = (item.ruleId ?? '').trim();
+    if (ruleId.isEmpty) return '--';
+    return ruleNameMap[ruleId] ?? ruleId;
+  }
 
-  List<HiddenDangerGovernanceItem> _buildFilteredItems(int tabIndex) {
-    final keyword = keywordController.text.trim();
-    final isPendingTab = tabIndex == 0;
-    final begin = dateRange?.start;
-    final end = dateRange?.end;
+  String displayReporterName(InspectionAbnormalItemModel item) {
+    final value = (item.reporterName ?? '').trim();
+    return value.isEmpty ? '--' : value;
+  }
 
-    return _mockItems.where((item) {
-      final inCurrentTab = isPendingTab
-          ? (item.status == 0 || item.status == 1)
-          : (item.status == 2 || item.status == 3);
-      if (!inCurrentTab) return false;
+  String displayAbnormalDesc(InspectionAbnormalItemModel item) {
+    final value = (item.abnormalDesc ?? '').trim();
+    return value.isEmpty ? '--' : value;
+  }
 
-      if (selectedEmergency != null && item.urgent != selectedEmergency) {
+  String displayReportTime(InspectionAbnormalItemModel item) {
+    final value = (item.reportTime ?? '').trim();
+    return value.isEmpty ? '--' : value;
+  }
+
+  String displayPhotoSummary(List<String>? photoUrls) {
+    if (photoUrls == null || photoUrls.isEmpty) return '0';
+    return '${photoUrls.length}张';
+  }
+
+  bool canShowPrimaryAction(String? abnormalStatus) {
+    return abnormalStatus == HiddenDangerAbnormalStatus.pendingConfirm ||
+        abnormalStatus == HiddenDangerAbnormalStatus.pendingRectify ||
+        abnormalStatus == HiddenDangerAbnormalStatus.rectifying ||
+        abnormalStatus == HiddenDangerAbnormalStatus.pendingVerify ||
+        abnormalStatus == HiddenDangerAbnormalStatus.reassign;
+  }
+
+  Future<bool> confirmAbnormal({
+    required InspectionAbnormalItemModel item,
+    required String verifyResult,
+    String? responsibleType,
+    String? responsibleId,
+    String? responsibleName,
+    String? rectifyUserId,
+    String? rectifyUserName,
+    String? deadline,
+  }) async {
+    final abnormalId = (item.id ?? '').trim();
+    if (abnormalId.isEmpty) {
+      AppToast.showWarning('异常ID为空，无法确认');
+      return false;
+    }
+
+    final currentUser = UserManager.user;
+    final result = await _repository.confirmInspectionAbnormal(
+      abnormalId: abnormalId,
+      verifyResult: verifyResult,
+      verifierId: (currentUser?.id ?? '').trim(),
+      verifierName: (currentUser?.userName ?? '').trim(),
+      responsibleType: responsibleType,
+      responsibleId: responsibleId,
+      responsibleName: responsibleName,
+      rectifyUserId: rectifyUserId,
+      rectifyUserName: rectifyUserName,
+      deadline: deadline,
+    );
+
+    return result.when(
+      success: (_) {
+        AppToast.showSuccess('确认成功');
+        _triggerRefresh();
+        return true;
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
         return false;
-      }
+      },
+    );
+  }
 
-      if (selectedStatus != null && item.status != selectedStatus) {
+  Future<bool> submitRectification({
+    required InspectionAbnormalItemModel item,
+    required String rectifyUserId,
+    required String rectifyUserName,
+    required String rectifyDesc,
+    List<String>? photoUrls,
+  }) async {
+    final abnormalId = (item.id ?? '').trim();
+    if (abnormalId.isEmpty) {
+      AppToast.showWarning('异常ID为空，无法提交整改');
+      return false;
+    }
+
+    final result = await _repository.submitInspectionRectification(
+      abnormalId: abnormalId,
+      rectifyUserId: rectifyUserId,
+      rectifyUserName: rectifyUserName,
+      rectifyDesc: rectifyDesc,
+      photoUrls: photoUrls,
+    );
+
+    return result.when(
+      success: (_) {
+        AppToast.showSuccess('提交整改成功');
+        _rectificationsCache.remove(abnormalId);
+        _triggerRefresh();
+        return true;
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
         return false;
-      }
+      },
+    );
+  }
 
-      if (begin != null && end != null) {
-        final itemDate = DateTime(
-          item.reportTime.year,
-          item.reportTime.month,
-          item.reportTime.day,
-        );
-        final startDate = DateTime(begin.year, begin.month, begin.day);
-        final endDate = DateTime(end.year, end.month, end.day);
-        if (itemDate.isBefore(startDate) || itemDate.isAfter(endDate)) {
-          return false;
-        }
-      }
+  Future<bool> verifyRectification({
+    required InspectionAbnormalItemModel item,
+    required String rectificationId,
+    required String verifyResult,
+    String? verifyComment,
+  }) async {
+    final abnormalId = (item.id ?? '').trim();
+    if (abnormalId.isEmpty) {
+      AppToast.showWarning('异常ID为空，无法核查整改');
+      return false;
+    }
 
-      if (keyword.isNotEmpty) {
-        final text = '${item.pointName}${item.abnormalDesc}'.toLowerCase();
-        if (!text.contains(keyword.toLowerCase())) {
-          return false;
-        }
+    final currentUser = UserManager.user;
+    final result = await _repository.verifyInspectionRectification(
+      abnormalId: abnormalId,
+      rectificationId: rectificationId,
+      verifyResult: verifyResult,
+      verifyComment: verifyComment,
+      verifierId: (currentUser?.id ?? '').trim(),
+      verifierName: (currentUser?.userName ?? '').trim(),
+    );
+
+    return result.when(
+      success: (_) {
+        AppToast.showSuccess('核查成功');
+        _rectificationsCache.remove(abnormalId);
+        _triggerRefresh();
+        return true;
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
+        return false;
+      },
+    );
+  }
+
+  Future<bool> reassignAbnormal({
+    required InspectionAbnormalItemModel item,
+    required String newRectifyUserId,
+    required String newRectifyUserName,
+    String? reassignReason,
+  }) async {
+    final abnormalId = (item.id ?? '').trim();
+    if (abnormalId.isEmpty) {
+      AppToast.showWarning('异常ID为空，无法重新指派');
+      return false;
+    }
+
+    final result = await _repository.reassignInspectionAbnormal(
+      abnormalId: abnormalId,
+      newRectifyUserId: newRectifyUserId,
+      newRectifyUserName: newRectifyUserName,
+      reassignReason: reassignReason,
+    );
+
+    return result.when(
+      success: (_) {
+        AppToast.showSuccess('重新指派成功');
+        _rectificationsCache.remove(abnormalId);
+        _triggerRefresh();
+        return true;
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
+        return false;
+      },
+    );
+  }
+
+  InspectionRectificationItemModel? pickLatestPendingVerifyRectification(
+    List<InspectionRectificationItemModel> records,
+  ) {
+    if (records.isEmpty) return null;
+    for (final item in records) {
+      if ((item.status ?? '').trim() == 'PENDING_VERIFY') {
+        return item;
       }
-      return true;
-    }).toList();
+    }
+    return records.last;
+  }
+
+  String rectifyTypeText(String? rectifyType) {
+    switch (rectifyType) {
+      case 'INITIAL':
+        return '初始整改';
+      case 'REJECT':
+        return '驳回重改';
+      case 'REASSIGN':
+        return '重新指派';
+      default:
+        return rectifyType?.trim().isNotEmpty == true ? rectifyType! : '--';
+    }
+  }
+
+  String verifyResultText(String? verifyResult) {
+    switch (verifyResult) {
+      case 'PASS':
+        return '通过';
+      case 'REJECT':
+        return '驳回';
+      default:
+        return verifyResult?.trim().isNotEmpty == true ? verifyResult! : '--';
+    }
+  }
+
+  String rectifyStatusText(String? status) {
+    switch (status) {
+      case 'PENDING_VERIFY':
+        return '待核查';
+      case 'PASSED':
+        return '已通过';
+      case 'REJECTED':
+        return '已驳回';
+      default:
+        return status?.trim().isNotEmpty == true ? status! : '--';
+    }
+  }
+
+  String? rangeStartTime(DateTimeRange? range) {
+    if (range == null) return null;
+    return _formatDateTime(
+      DateTime(range.start.year, range.start.month, range.start.day, 0, 0, 0),
+    );
+  }
+
+  String? rangeEndTime(DateTimeRange? range) {
+    if (range == null) return null;
+    return _formatDateTime(
+      DateTime(range.end.year, range.end.month, range.end.day, 23, 59, 59),
+    );
+  }
+
+  bool _isInCurrentTab(String? abnormalStatus, int tabIndex) {
+    final value = (abnormalStatus ?? '').trim();
+    if (tabIndex == 1) {
+      return value == HiddenDangerAbnormalStatus.completed;
+    }
+    return value == HiddenDangerAbnormalStatus.pendingConfirm ||
+        value == HiddenDangerAbnormalStatus.pendingRectify ||
+        value == HiddenDangerAbnormalStatus.rectifying ||
+        value == HiddenDangerAbnormalStatus.pendingVerify ||
+        value == HiddenDangerAbnormalStatus.reassign ||
+        value.isEmpty;
+  }
+
+  String? _urgentParam(bool? value) {
+    if (value == null) return null;
+    return value ? '1' : '0';
   }
 
   void _triggerRefresh() {
@@ -262,34 +546,17 @@ class HiddenDangerGovernanceController extends GetxController {
     return '${date.year}-${_pad2(date.month)}-${_pad2(date.day)}';
   }
 
-  String _formatTime(DateTime date) {
-    return '${_pad2(date.hour)}:${_pad2(date.minute)}';
+  String _formatDateTime(DateTime dateTime) {
+    return '${dateTime.year}-${_pad2(dateTime.month)}-${_pad2(dateTime.day)} '
+        '${_pad2(dateTime.hour)}:${_pad2(dateTime.minute)}:${_pad2(dateTime.second)}';
   }
 
   String _pad2(int value) => value.toString().padLeft(2, '0');
 }
 
-class HiddenDangerGovernanceItem {
-  final String pointName;
-  final String abnormalDesc;
-  final String reporter;
-  final DateTime reportTime;
-  final bool urgent;
-  final int status;
-
-  const HiddenDangerGovernanceItem({
-    required this.pointName,
-    required this.abnormalDesc,
-    required this.reporter,
-    required this.reportTime,
-    required this.urgent,
-    required this.status,
-  });
-}
-
 class HiddenDangerStatusOption {
   final String label;
-  final int? value;
+  final String? value;
 
   const HiddenDangerStatusOption({required this.label, required this.value});
 }

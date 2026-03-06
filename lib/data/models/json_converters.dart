@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:json_annotation/json_annotation.dart';
 
 /// int 容错转换：支持 int/num/string/null，失败默认 0。
@@ -28,8 +30,7 @@ class StringSafeConverter implements JsonConverter<String, Object?> {
 }
 
 /// 可空 String 容错转换：null 或空字符串 -> null。
-class NullableStringSafeConverter
-    implements JsonConverter<String?, Object?> {
+class NullableStringSafeConverter implements JsonConverter<String?, Object?> {
   const NullableStringSafeConverter();
 
   @override
@@ -41,4 +42,58 @@ class NullableStringSafeConverter
 
   @override
   Object? toJson(String? object) => object;
+}
+
+/// 可空字符串列表容错转换：
+/// - null/空字符串 -> null
+/// - List -> 过滤后转为 `List<String>`
+/// - 逗号字符串或 JSON 数组字符串 -> `List<String>`
+class NullableStringListSafeConverter
+    implements JsonConverter<List<String>?, Object?> {
+  const NullableStringListSafeConverter();
+
+  @override
+  List<String>? fromJson(Object? json) {
+    if (json == null) return null;
+    if (json is List) {
+      final values = json
+          .map((e) => e?.toString().trim() ?? '')
+          .where((e) => e.isNotEmpty)
+          .toList();
+      return values.isEmpty ? null : values;
+    }
+    if (json is String) {
+      final text = json.trim();
+      if (text.isEmpty) return null;
+      if (text.startsWith('[') && text.endsWith(']')) {
+        try {
+          final decoded = jsonDecode(text);
+          if (decoded is List) {
+            final values = decoded
+                .map((e) => e?.toString().trim() ?? '')
+                .where((e) => e.isNotEmpty)
+                .toList();
+            return values.isEmpty ? null : values;
+          }
+        } catch (_) {
+          // ignore
+        }
+      }
+      if (text.contains(',')) {
+        final values = text
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+        return values.isEmpty ? null : values;
+      }
+      return <String>[text];
+    }
+    final value = json.toString().trim();
+    if (value.isEmpty) return null;
+    return <String>[value];
+  }
+
+  @override
+  Object? toJson(List<String>? object) => object;
 }
