@@ -3,8 +3,13 @@ import 'package:get/get.dart';
 import '../../data/models/workbench/appeal_reply_item_model.dart';
 import '../../data/models/workbench/appointment_approval_item_model.dart';
 import '../../data/models/workbench/blacklist_approval_item_model.dart';
+import '../../data/models/workbench/risk_warning_disposal_item_model.dart';
 import '../../data/models/workbench/inspection_abnormal_item_model.dart';
 import '../../data/models/workbench/spot_inspection_item_model.dart';
+import '../../modules/dashboard/modules/workbench/alarm_disposal/detail/alarm_disposal_detail_binding.dart';
+import '../../modules/dashboard/modules/workbench/alarm_disposal/detail/alarm_disposal_detail_view.dart';
+import '../../modules/dashboard/modules/workbench/alarm_disposal/handle/alarm_disposal_handle_binding.dart';
+import '../../modules/dashboard/modules/workbench/alarm_disposal/handle/alarm_disposal_handle_view.dart';
 import '../../modules/dashboard/modules/workbench/appeal_reply/appeal_reply_binding.dart';
 import '../../modules/dashboard/modules/workbench/appeal_reply/appeal_reply_view.dart';
 import '../../modules/dashboard/modules/workbench/appeal_reply/detail/appeal_reply_detail_binding.dart';
@@ -31,6 +36,8 @@ import '../../modules/dashboard/modules/workbench/spot_inspection/spot_inspectio
 import '../../modules/dashboard/modules/workbench/spot_inspection/spot_inspection_view.dart';
 import '../../modules/dashboard/modules/workbench/hidden_danger_governance/hidden_danger_governance_binding.dart';
 import '../../modules/dashboard/modules/workbench/hidden_danger_governance/hidden_danger_governance_view.dart';
+import '../../modules/dashboard/modules/workbench/alarm_disposal/alarm_disposal_binding.dart';
+import '../../modules/dashboard/modules/workbench/alarm_disposal/alarm_disposal_view.dart';
 import '../../modules/dashboard/modules/workbench/hidden_danger_governance/approve/hidden_danger_governance_approve_binding.dart';
 import '../../modules/dashboard/modules/workbench/hidden_danger_governance/approve/hidden_danger_governance_approve_view.dart';
 import '../../modules/dashboard/modules/workbench/hidden_danger_governance/detail/hidden_danger_governance_detail_binding.dart';
@@ -41,6 +48,12 @@ import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whi
 import '../../modules/dashboard/modules/workbench/whitelist_approval/detail/whitelist_approval_detail_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/detail/whitelist_approval_detail_view.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/whitelist_approval_view.dart';
+import '../../modules/dashboard/modules/workbench/warning_disposal/detail/warning_disposal_detail_binding.dart';
+import '../../modules/dashboard/modules/workbench/warning_disposal/detail/warning_disposal_detail_view.dart';
+import '../../modules/dashboard/modules/workbench/warning_disposal/handle/warning_disposal_handle_binding.dart';
+import '../../modules/dashboard/modules/workbench/warning_disposal/handle/warning_disposal_handle_view.dart';
+import '../../modules/dashboard/modules/workbench/warning_disposal/warning_disposal_binding.dart';
+import '../../modules/dashboard/modules/workbench/warning_disposal/warning_disposal_view.dart';
 import '../../data/models/workbench/whitelist_approval_item_model.dart';
 
 /// Workbench 模块页面跳转封装（非命名路由）。
@@ -84,6 +97,66 @@ abstract class WorkbenchRoutes {
     return Get.to<T>(
       () => const HiddenDangerGovernanceView(),
       binding: HiddenDangerGovernanceBinding(),
+    );
+  }
+
+  /// 报警处置。
+  static Future<T?>? toAlarmDisposal<T>() {
+    return Get.to<T>(
+      () => const AlarmDisposalView(),
+      binding: AlarmDisposalBinding(),
+    );
+  }
+
+  /// 预警处置。
+  static Future<T?>? toWarningDisposal<T>() {
+    return Get.to<T>(
+      () => const WarningDisposalView(),
+      binding: WarningDisposalBinding(),
+    );
+  }
+
+  /// 报警详情页。
+  static Future<T?>? toAlarmDisposalDetail<T>({
+    required RiskWarningDisposalItemModel item,
+  }) {
+    return Get.to<T>(
+      () => const AlarmDisposalDetailView(),
+      binding: AlarmDisposalDetailBinding(),
+      arguments: item,
+    );
+  }
+
+  /// 报警处置页。
+  static Future<bool?>? toAlarmDisposalHandle({
+    required RiskWarningDisposalItemModel item,
+  }) {
+    return Get.to<bool>(
+      () => const AlarmDisposalHandleView(),
+      binding: AlarmDisposalHandleBinding(),
+      arguments: item,
+    );
+  }
+
+  /// 预警详情页。
+  static Future<T?>? toWarningDisposalDetail<T>({
+    required RiskWarningDisposalItemModel item,
+  }) {
+    return Get.to<T>(
+      () => const WarningDisposalDetailView(),
+      binding: WarningDisposalDetailBinding(),
+      arguments: item,
+    );
+  }
+
+  /// 预警处置页。
+  static Future<bool?>? toWarningDisposalHandle({
+    required RiskWarningDisposalItemModel item,
+  }) {
+    return Get.to<bool>(
+      () => const WarningDisposalHandleView(),
+      binding: WarningDisposalHandleBinding(),
+      arguments: item,
     );
   }
 

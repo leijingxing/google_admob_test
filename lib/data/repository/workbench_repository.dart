@@ -7,6 +7,7 @@ import '../models/workbench/blacklist_approval_item_model.dart';
 import '../models/workbench/checkpoint_area_option_model.dart';
 import '../models/workbench/inspection_abnormal_item_model.dart';
 import '../models/workbench/inspection_rectification_item_model.dart';
+import '../models/workbench/risk_warning_disposal_item_model.dart';
 import '../models/workbench/spot_inspection_check_item_model.dart';
 import '../models/workbench/spot_inspection_item_model.dart';
 import '../models/workbench/system_department_tree_model.dart';
@@ -453,6 +454,104 @@ class WorkbenchRepository {
         requestPageSize: pageSize,
         itemParser: (item) => Map<String, dynamic>.from(item),
       ),
+    );
+  }
+
+  /// 获取报警/预警处置分页列表。
+  Future<Result<PaginatedResult<RiskWarningDisposalItemModel>>>
+  getRiskWarningDisposalPage({
+    required int warningType,
+    required int warningStatus,
+    int current = 1,
+    int size = 20,
+    String? keyword,
+    int? warningLevel,
+    String? warningStartTimeBegin,
+    String? warningStartTimeEnd,
+    String? warningEndTimeBegin,
+    String? warningEndTimeEnd,
+  }) {
+    final payload = <String, dynamic>{
+      ...buildPagePayload(pageIndex: current, pageSize: size),
+      'warningType': warningType,
+      'warningStatus': warningStatus,
+      'keyword': keyword,
+      'keywords': keyword,
+      'title': keyword,
+      'warningLevel': warningLevel,
+      'warningStartTimeBegin': warningStartTimeBegin,
+      'warningStartTimeEnd': warningStartTimeEnd,
+      'warningEndTimeBegin': warningEndTimeBegin,
+      'warningEndTimeEnd': warningEndTimeEnd,
+    };
+    payload.removeWhere((_, value) {
+      if (value == null) return true;
+      if (value is String && value.trim().isEmpty) return true;
+      return false;
+    });
+
+    return _httpService.post<PaginatedResult<RiskWarningDisposalItemModel>>(
+      '/api/risk-warning/riskWarning/page',
+      data: payload,
+      parser: (json) => parsePaginatedResult<RiskWarningDisposalItemModel>(
+        json: json,
+        requestPageIndex: current,
+        requestPageSize: size,
+        itemParser: (itemJson) =>
+            RiskWarningDisposalItemModel.fromJson(itemJson),
+      ),
+    );
+  }
+
+  /// 获取报警/预警详情。
+  Future<Result<RiskWarningDisposalItemModel>> getRiskWarningDisposalDetail({
+    required String id,
+  }) {
+    return _httpService.get<RiskWarningDisposalItemModel>(
+      '/api/risk-warning/riskWarning/one',
+      queryParameters: {'id': id},
+      parser: (json) {
+        if (json is Map) {
+          return RiskWarningDisposalItemModel.fromJson(
+            Map<String, dynamic>.from(json),
+          );
+        }
+        if (json is List && json.isNotEmpty && json.first is Map) {
+          return RiskWarningDisposalItemModel.fromJson(
+            Map<String, dynamic>.from(json.first as Map),
+          );
+        }
+        throw StateError('报警/预警详情解析失败，期望 Map，实际为 ${json.runtimeType}');
+      },
+    );
+  }
+
+  /// 提交报警/预警处置。
+  Future<Result<void>> disposeRiskWarning({
+    required RiskWarningDisposalItemModel item,
+    required String disposalResult,
+    required List<String> disposalFiles,
+  }) async {
+    final payload = <String, dynamic>{
+      ...item.toJson(),
+      'id': item.id,
+      'warningType': item.warningType,
+      'disposalResult': disposalResult,
+      'disposalFiles': disposalFiles,
+    };
+    payload.removeWhere((_, value) {
+      if (value == null) return true;
+      if (value is String && value.trim().isEmpty) return true;
+      return false;
+    });
+
+    final result = await _httpService.post<dynamic>(
+      '/api/risk-warning/riskWarning/disposal',
+      data: payload,
+    );
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
     );
   }
 

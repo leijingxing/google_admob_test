@@ -128,6 +128,12 @@ class WorkbenchContentSection extends StatelessWidget {
                         case '申诉回复':
                           WorkbenchRoutes.toAppealReply();
                           break;
+                        case '报警处置':
+                          WorkbenchRoutes.toAlarmDisposal();
+                          break;
+                        case '预警处置':
+                          WorkbenchRoutes.toWarningDisposal();
+                          break;
                         default:
                           break;
                       }
