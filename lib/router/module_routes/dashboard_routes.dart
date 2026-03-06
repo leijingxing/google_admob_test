@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../../modules/dashboard/modules/logistics_query/logistics_query_binding.dart';
 import '../../modules/dashboard/modules/logistics_query/logistics_query_view.dart';
 import '../../modules/dashboard/modules/overview/overview_binding.dart';
 import '../../modules/dashboard/modules/overview/overview_view.dart';
@@ -21,17 +22,26 @@ abstract class DashboardRoutes {
 
   /// 车辆查询。
   static Future<T?>? toVehicleQuery<T>() {
-    return Get.to<T>(() => const VehicleQueryView(), binding: VehicleQueryBinding());
+    return Get.to<T>(
+      () => const VehicleQueryView(),
+      binding: VehicleQueryBinding(),
+    );
   }
 
   /// 人员查询。
   static Future<T?>? toPersonnelQuery<T>() {
-    return Get.to<T>(() => const PersonnelQueryView(), binding: PersonnelQueryBinding());
+    return Get.to<T>(
+      () => const PersonnelQueryView(),
+      binding: PersonnelQueryBinding(),
+    );
   }
 
   /// 物流查询。
   static Future<T?>? toLogisticsQuery<T>() {
-    return Get.to<T>(() => const LogisticsQueryView());
+    return Get.to<T>(
+      () => const LogisticsQueryView(),
+      binding: LogisticsQueryBinding(),
+    );
   }
 
   /// 总览。
