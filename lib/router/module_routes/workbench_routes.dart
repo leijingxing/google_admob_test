@@ -1,12 +1,19 @@
 import 'package:get/get.dart';
 
 import '../../data/models/workbench/appointment_approval_item_model.dart';
+import '../../data/models/workbench/blacklist_approval_item_model.dart';
 import '../../modules/dashboard/modules/workbench/appointment_approval/appointment_approval_binding.dart';
 import '../../modules/dashboard/modules/workbench/appointment_approval/approve/appointment_approval_approve_binding.dart';
 import '../../modules/dashboard/modules/workbench/appointment_approval/approve/appointment_approval_approve_view.dart';
 import '../../modules/dashboard/modules/workbench/appointment_approval/appointment_approval_view.dart';
 import '../../modules/dashboard/modules/workbench/appointment_approval/detail/appointment_approval_detail_binding.dart';
 import '../../modules/dashboard/modules/workbench/appointment_approval/detail/appointment_approval_detail_view.dart';
+import '../../modules/dashboard/modules/workbench/blacklist_approval/approve/blacklist_approval_approve_binding.dart';
+import '../../modules/dashboard/modules/workbench/blacklist_approval/approve/blacklist_approval_approve_view.dart';
+import '../../modules/dashboard/modules/workbench/blacklist_approval/blacklist_approval_binding.dart';
+import '../../modules/dashboard/modules/workbench/blacklist_approval/blacklist_approval_view.dart';
+import '../../modules/dashboard/modules/workbench/blacklist_approval/detail/blacklist_approval_detail_binding.dart';
+import '../../modules/dashboard/modules/workbench/blacklist_approval/detail/blacklist_approval_detail_view.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/whitelist_approval_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whitelist_approval_approve_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whitelist_approval_approve_view.dart';
@@ -35,6 +42,14 @@ abstract class WorkbenchRoutes {
     );
   }
 
+  /// 黑名单审批。
+  static Future<T?>? toBlacklistApproval<T>() {
+    return Get.to<T>(
+      () => const BlacklistApprovalView(),
+      binding: BlacklistApprovalBinding(),
+    );
+  }
+
   /// 白名单审批页。
   static Future<bool?>? toWhitelistApprovalApprove({
     required WhitelistApprovalItemModel item,
@@ -53,6 +68,39 @@ abstract class WorkbenchRoutes {
     return Get.to<T>(
       () => const WhitelistApprovalDetailView(),
       binding: WhitelistApprovalDetailBinding(),
+      arguments: item,
+    );
+  }
+
+  /// 黑名单审批页。
+  static Future<bool?>? toBlacklistApprovalApprove({
+    required BlacklistApprovalItemModel item,
+  }) {
+    return Get.to<bool>(
+      () => const BlacklistApprovalApproveView(),
+      binding: BlacklistApprovalApproveBinding(),
+      arguments: {'item': item, 'authorizationMode': false},
+    );
+  }
+
+  /// 黑名单更改授权页。
+  static Future<bool?>? toBlacklistAuthorization({
+    required BlacklistApprovalItemModel item,
+  }) {
+    return Get.to<bool>(
+      () => const BlacklistApprovalApproveView(),
+      binding: BlacklistApprovalApproveBinding(),
+      arguments: {'item': item, 'authorizationMode': true},
+    );
+  }
+
+  /// 黑名单详情页。
+  static Future<T?>? toBlacklistApprovalDetail<T>({
+    required BlacklistApprovalItemModel item,
+  }) {
+    return Get.to<T>(
+      () => const BlacklistApprovalDetailView(),
+      binding: BlacklistApprovalDetailBinding(),
       arguments: item,
     );
   }

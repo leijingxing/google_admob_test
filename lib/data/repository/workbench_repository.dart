@@ -2,6 +2,7 @@ import '../../core/http/http_service.dart';
 import '../../core/http/paginated_parser.dart';
 import '../../core/http/result.dart';
 import '../models/workbench/appointment_approval_item_model.dart';
+import '../models/workbench/blacklist_approval_item_model.dart';
 import '../models/workbench/checkpoint_area_option_model.dart';
 import '../models/workbench/whitelist_approval_item_model.dart';
 
@@ -151,6 +152,104 @@ class WorkbenchRepository {
         }
         throw StateError('白名单详情解析失败，期望 Map，实际为 ${json.runtimeType}');
       },
+    );
+  }
+
+  /// 获取黑名单审批分页列表。
+  Future<Result<PaginatedResult<BlacklistApprovalItemModel>>>
+  getBlacklistApprovePage({
+    required int parkCheckStatus,
+    int current = 1,
+    int size = 20,
+    int? type,
+    String? validityBeginTime,
+    String? validityEndTime,
+    String? keyword,
+  }) {
+    final requestData = <String, dynamic>{
+      ...buildPagePayload(pageIndex: current, pageSize: size),
+      'parkCheckStatus': parkCheckStatus,
+      'type': type,
+      'validityBeginTime': validityBeginTime,
+      'validityEndTime': validityEndTime,
+      'keywords': keyword,
+    };
+    requestData.removeWhere((_, value) {
+      if (value == null) return true;
+      if (value is String && value.isEmpty) return true;
+      return false;
+    });
+
+    return _httpService.post<PaginatedResult<BlacklistApprovalItemModel>>(
+      '/api/closed-off/black/page',
+      data: requestData,
+      parser: (json) => parsePaginatedResult<BlacklistApprovalItemModel>(
+        json: json,
+        requestPageIndex: current,
+        requestPageSize: size,
+        itemParser: (itemJson) => BlacklistApprovalItemModel.fromJson(itemJson),
+      ),
+    );
+  }
+
+  /// 获取黑名单详情。
+  Future<Result<Map<String, dynamic>>> getBlacklistDetail({
+    required String id,
+  }) {
+    return _httpService.get<Map<String, dynamic>>(
+      '/api/closed-off/black/one',
+      queryParameters: {'id': id},
+      parser: (json) {
+        if (json is Map) {
+          return Map<String, dynamic>.from(json);
+        }
+        if (json is List && json.isNotEmpty && json.first is Map) {
+          return Map<String, dynamic>.from(json.first as Map);
+        }
+        throw StateError('黑名单详情解析失败，期望 Map，实际为 ${json.runtimeType}');
+      },
+    );
+  }
+
+  /// 黑名单审批。
+  Future<Result<void>> reviewBlacklist({
+    required List<String> ids,
+    required int parkCheckStatus,
+    required String approvalOpinion,
+  }) async {
+    final result = await _httpService.post<dynamic>(
+      '/api/closed-off/black/review',
+      data: {
+        'id': ids,
+        'parkCheckStatus': parkCheckStatus,
+        'approvalOpinion': approvalOpinion,
+      },
+    );
+
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
+    );
+  }
+
+  /// 黑名单更改授权。
+  Future<Result<void>> authorizeBlacklist({
+    required List<String> ids,
+    required String validityBeginTime,
+    required String validityEndTime,
+  }) async {
+    final result = await _httpService.post<dynamic>(
+      '/api/closed-off/black/authorize',
+      data: {
+        'id': ids,
+        'validityBeginTime': validityBeginTime,
+        'validityEndTime': validityEndTime,
+      },
+    );
+
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
     );
   }
 

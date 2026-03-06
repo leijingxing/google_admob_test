@@ -111,9 +111,18 @@ class WorkbenchContentSection extends StatelessWidget {
                     count: entry.count,
                     color: color,
                     icon: entry.icon,
-                    onTap: entry.title == '白名单审批'
-                        ? WorkbenchRoutes.toWhitelistApproval
-                        : () {},
+                    onTap: () {
+                      switch (entry.title) {
+                        case '白名单审批':
+                          WorkbenchRoutes.toWhitelistApproval();
+                          break;
+                        case '黑名单审批':
+                          WorkbenchRoutes.toBlacklistApproval();
+                          break;
+                        default:
+                          break;
+                      }
+                    },
                   );
                 },
               ),
