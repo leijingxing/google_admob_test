@@ -250,8 +250,8 @@ class BuildRunner {
     final input = (await _ioPromptWithTimeout(prompt, timeout)).toLowerCase().trim();
 
     if (input == _TIMED_OUT) {
-      Logger.info('输入超时，将自动选择 "y"。');
-      return false;
+      Logger.info('输入超时，将自动选择 "y"（上传到蒲公英）。');
+      return true;
     }
 
     return !input.contains('n');
