@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 /// @description 一个美观、易用的日期范围选择组件
 /// 点击后会从底部弹出 iOS 风格的选择器
 class CustomDateRangePicker extends StatelessWidget {
+  static DateTime get _today {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
   /// 选中的开始日期
   final DateTime? startDate;
 
@@ -64,7 +69,7 @@ class CustomDateRangePicker extends StatelessWidget {
     DateTime? date,
   }) {
     final bool hasValue = date != null;
-    final DateTime safeDate = date ?? DateTime.now();
+    final DateTime safeDate = date ?? _today;
     final String displayText = hasValue ? _displayDate(safeDate) : label;
 
     return InkWell(
@@ -97,12 +102,14 @@ class CustomDateRangePicker extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),
       builder: (BuildContext bottomSheetContext) {
         return _DatePickerSheet(
-          initialStartDate: startDate,
+          initialStartDate: startDate ?? _today,
           initialEndDate: endDate,
           onConfirm: (start, end) {
             onDateRangeSelected(start, end);
@@ -138,14 +145,24 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
   @override
   void initState() {
     super.initState();
-    _startDate = widget.initialStartDate;
-    _endDate = widget.initialEndDate;
+    final normalized = _normalizeRange(
+      widget.initialStartDate,
+      widget.initialEndDate,
+    );
+    _startDate = normalized.$1;
+    _endDate = normalized.$2;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final selectedDate = _isSelectingStart ? _startDate : _endDate;
+    final minimumDate = _isSelectingStart ? DateTime(2000) : _startDate;
+    final initialDateTime = _resolvePickerInitialDate(
+      selectedDate: selectedDate,
+      minimumDate: minimumDate,
+      maximumDate: DateTime(2101),
+    );
 
     return SafeArea(
       child: Wrap(
@@ -172,16 +189,16 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
             height: 220,
             child: CupertinoDatePicker(
               mode: CupertinoDatePickerMode.date,
-              initialDateTime: selectedDate ?? DateTime.now(),
-              minimumDate: _isSelectingStart ? DateTime(2000) : _startDate,
+              initialDateTime: initialDateTime,
+              minimumDate: minimumDate,
               maximumDate: DateTime(2101),
               onDateTimeChanged: (DateTime newDate) {
                 setState(() {
                   if (_isSelectingStart) {
                     _startDate = newDate;
-                    // 如果结束日期早于新的开始日期，则清空结束日期
+                    // 结束时间早于开始时间时，自动同步为开始时间，避免组件报错。
                     if (_endDate != null && _endDate!.isBefore(_startDate!)) {
-                      _endDate = null;
+                      _endDate = _startDate;
                     }
                   } else {
                     _endDate = newDate;
@@ -233,23 +250,82 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
-    final color = isSelected ? theme.primaryColor : Colors.grey.shade600;
+    final primaryColor = theme.primaryColor;
+    final borderColor = isSelected ? primaryColor : Colors.grey.shade300;
+    final backgroundColor = isSelected
+        ? primaryColor.withValues(alpha: 0.08)
+        : const Color(0xFFF7F9FC);
+    final titleColor = isSelected ? primaryColor : Colors.grey.shade700;
+    final valueColor = isSelected ? const Color(0xFF1D4ED8) : Colors.black87;
+
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: color, width: 2.0)),
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor, width: isSelected ? 1.6 : 1),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: primaryColor.withValues(alpha: 0.12),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(color: color, fontSize: 14)),
+            Row(
+              children: [
+                Icon(
+                  isSelected
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_off_rounded,
+                  size: 16,
+                  color: titleColor,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: titleColor,
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+                const Spacer(),
+                if (isSelected)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '当前选择',
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 4),
             Text(
               date != null ? CustomDateRangePicker._displayDate(date) : '未设置',
               style: TextStyle(
-                color: isSelected ? theme.primaryColor : Colors.black87,
+                color: valueColor,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -280,12 +356,36 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
           const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
-              onPressed: () => widget.onConfirm(_startDate, _endDate),
+              onPressed: () {
+                final normalized = _normalizeRange(_startDate, _endDate);
+                widget.onConfirm(normalized.$1, normalized.$2);
+              },
               child: const Text('确认'),
             ),
           ),
         ],
       ),
     );
+  }
+
+  (DateTime?, DateTime?) _normalizeRange(DateTime? start, DateTime? end) {
+    if (start == null || end == null) return (start, end);
+    if (start.isAfter(end)) {
+      return (end, start);
+    }
+    return (start, end);
+  }
+
+  DateTime _resolvePickerInitialDate({
+    required DateTime? selectedDate,
+    required DateTime? minimumDate,
+    required DateTime maximumDate,
+  }) {
+    final fallback = selectedDate ?? minimumDate ?? DateTime.now();
+    if (fallback.isAfter(maximumDate)) return maximumDate;
+    if (minimumDate != null && fallback.isBefore(minimumDate)) {
+      return minimumDate;
+    }
+    return fallback;
   }
 }
