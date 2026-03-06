@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../data/models/workbench/appointment_approval_item_model.dart';
 import '../../data/models/workbench/blacklist_approval_item_model.dart';
+import '../../data/models/workbench/spot_inspection_item_model.dart';
 import '../../modules/dashboard/modules/workbench/appointment_approval/appointment_approval_binding.dart';
 import '../../modules/dashboard/modules/workbench/appointment_approval/approve/appointment_approval_approve_binding.dart';
 import '../../modules/dashboard/modules/workbench/appointment_approval/approve/appointment_approval_approve_view.dart';
@@ -14,6 +15,12 @@ import '../../modules/dashboard/modules/workbench/blacklist_approval/blacklist_a
 import '../../modules/dashboard/modules/workbench/blacklist_approval/blacklist_approval_view.dart';
 import '../../modules/dashboard/modules/workbench/blacklist_approval/detail/blacklist_approval_detail_binding.dart';
 import '../../modules/dashboard/modules/workbench/blacklist_approval/detail/blacklist_approval_detail_view.dart';
+import '../../modules/dashboard/modules/workbench/spot_inspection/detail/spot_inspection_detail_binding.dart';
+import '../../modules/dashboard/modules/workbench/spot_inspection/detail/spot_inspection_detail_view.dart';
+import '../../modules/dashboard/modules/workbench/spot_inspection/fill/spot_inspection_fill_binding.dart';
+import '../../modules/dashboard/modules/workbench/spot_inspection/fill/spot_inspection_fill_view.dart';
+import '../../modules/dashboard/modules/workbench/spot_inspection/spot_inspection_binding.dart';
+import '../../modules/dashboard/modules/workbench/spot_inspection/spot_inspection_view.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/whitelist_approval_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whitelist_approval_approve_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whitelist_approval_approve_view.dart';
@@ -47,6 +54,14 @@ abstract class WorkbenchRoutes {
     return Get.to<T>(
       () => const BlacklistApprovalView(),
       binding: BlacklistApprovalBinding(),
+    );
+  }
+
+  /// 车辆抽检。
+  static Future<T?>? toSpotInspection<T>() {
+    return Get.to<T>(
+      () => const SpotInspectionView(),
+      binding: SpotInspectionBinding(),
     );
   }
 
@@ -101,6 +116,28 @@ abstract class WorkbenchRoutes {
     return Get.to<T>(
       () => const BlacklistApprovalDetailView(),
       binding: BlacklistApprovalDetailBinding(),
+      arguments: item,
+    );
+  }
+
+  /// 抽检填写页。
+  static Future<bool?>? toSpotInspectionFill({
+    required SpotInspectionItemModel item,
+  }) {
+    return Get.to<bool>(
+      () => const SpotInspectionFillView(),
+      binding: SpotInspectionFillBinding(),
+      arguments: item,
+    );
+  }
+
+  /// 抽检详情页。
+  static Future<bool?>? toSpotInspectionDetail({
+    required SpotInspectionItemModel item,
+  }) {
+    return Get.to<bool>(
+      () => const SpotInspectionDetailView(),
+      binding: SpotInspectionDetailBinding(),
       arguments: item,
     );
   }

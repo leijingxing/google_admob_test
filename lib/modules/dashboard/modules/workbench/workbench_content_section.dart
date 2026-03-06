@@ -119,6 +119,9 @@ class WorkbenchContentSection extends StatelessWidget {
                         case '黑名单审批':
                           WorkbenchRoutes.toBlacklistApproval();
                           break;
+                        case '车辆抽检':
+                          WorkbenchRoutes.toSpotInspection();
+                          break;
                         default:
                           break;
                       }

@@ -4,6 +4,8 @@ import '../../core/http/result.dart';
 import '../models/workbench/appointment_approval_item_model.dart';
 import '../models/workbench/blacklist_approval_item_model.dart';
 import '../models/workbench/checkpoint_area_option_model.dart';
+import '../models/workbench/spot_inspection_check_item_model.dart';
+import '../models/workbench/spot_inspection_item_model.dart';
 import '../models/workbench/whitelist_approval_item_model.dart';
 
 /// 工作台模块数据仓库：统一处理工作台相关接口。
@@ -457,6 +459,102 @@ class WorkbenchRepository {
             ),
           )
           .toList(),
+    );
+  }
+
+  /// 获取车辆抽检分页列表。
+  Future<Result<PaginatedResult<SpotInspectionItemModel>>>
+  getSpotInspectionPage({
+    int current = 1,
+    int size = 20,
+    String? keyword,
+    String? strSecurityCheckTime,
+    String? endSecurityCheckTime,
+    String? securityCheckResults,
+  }) {
+    final payload = <String, dynamic>{
+      ...buildPagePayload(pageIndex: current, pageSize: size),
+      'keyWords': keyword,
+      'strSecurityCheckTime': strSecurityCheckTime,
+      'endSecurityCheckTime': endSecurityCheckTime,
+      'securityCheckResults': securityCheckResults,
+    };
+    payload.removeWhere((_, value) {
+      if (value == null) return true;
+      if (value is String && value.isEmpty) return true;
+      return false;
+    });
+
+    return _httpService.post<PaginatedResult<SpotInspectionItemModel>>(
+      '/api/closed-off/securityCheckResult/selSamplingLedgerPage',
+      data: payload,
+      parser: (json) => parsePaginatedResult<SpotInspectionItemModel>(
+        json: json,
+        requestPageIndex: current,
+        requestPageSize: size,
+        itemParser: (itemJson) => SpotInspectionItemModel.fromJson(itemJson),
+      ),
+    );
+  }
+
+  /// 获取车辆抽检统计。
+  Future<Result<Map<String, dynamic>>> getSpotInspectionStatistics() {
+    return _httpService.get<Map<String, dynamic>>(
+      '/api/closed-off/securityCheckResult/samplingLedgersStatistics',
+      parser: (json) {
+        if (json is Map) return Map<String, dynamic>.from(json);
+        return const <String, dynamic>{};
+      },
+    );
+  }
+
+  /// 获取车辆抽检详情。
+  Future<Result<Map<String, dynamic>>> getSpotInspectionDetail({
+    required String id,
+  }) {
+    return _httpService.get<Map<String, dynamic>>(
+      '/api/closed-off/securityCheckResult/one',
+      queryParameters: {'id': id},
+      parser: (json) {
+        if (json is Map) {
+          return Map<String, dynamic>.from(json);
+        }
+        if (json is List && json.isNotEmpty && json.first is Map) {
+          return Map<String, dynamic>.from(json.first as Map);
+        }
+        throw StateError('车辆抽检详情解析失败，期望 Map，实际为 ${json.runtimeType}');
+      },
+    );
+  }
+
+  /// 获取车辆抽检检查项列表。
+  Future<Result<List<SpotInspectionCheckItemModel>>>
+  getSpotInspectionCheckList({required String reservationId}) {
+    return _httpService.get<List<SpotInspectionCheckItemModel>>(
+      '/api/closed-off/securityCheckList/list',
+      queryParameters: {'reservationId': reservationId},
+      parser: (json) => (json is List ? json : const <dynamic>[])
+          .map(
+            (item) => SpotInspectionCheckItemModel.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  /// 提交车辆抽检结果。
+  Future<Result<void>> submitSpotInspection({
+    required Map<String, dynamic> payload,
+  }) async {
+    final result = await _httpService.put<dynamic>(
+      '/api/closed-off/securityCheckResult',
+      data: payload,
+    );
+
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
     );
   }
 }
