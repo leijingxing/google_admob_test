@@ -21,6 +21,8 @@ import '../../modules/dashboard/modules/workbench/spot_inspection/fill/spot_insp
 import '../../modules/dashboard/modules/workbench/spot_inspection/fill/spot_inspection_fill_view.dart';
 import '../../modules/dashboard/modules/workbench/spot_inspection/spot_inspection_binding.dart';
 import '../../modules/dashboard/modules/workbench/spot_inspection/spot_inspection_view.dart';
+import '../../modules/dashboard/modules/workbench/hidden_danger_governance/hidden_danger_governance_binding.dart';
+import '../../modules/dashboard/modules/workbench/hidden_danger_governance/hidden_danger_governance_view.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/whitelist_approval_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whitelist_approval_approve_binding.dart';
 import '../../modules/dashboard/modules/workbench/whitelist_approval/approve/whitelist_approval_approve_view.dart';
@@ -62,6 +64,14 @@ abstract class WorkbenchRoutes {
     return Get.to<T>(
       () => const SpotInspectionView(),
       binding: SpotInspectionBinding(),
+    );
+  }
+
+  /// 隐患治理。
+  static Future<T?>? toHiddenDangerGovernance<T>() {
+    return Get.to<T>(
+      () => const HiddenDangerGovernanceView(),
+      binding: HiddenDangerGovernanceBinding(),
     );
   }
 
