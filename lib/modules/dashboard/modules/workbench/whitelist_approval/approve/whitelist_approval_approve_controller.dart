@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../../../core/components/toast/toast_widget.dart';
+import '../../../../../../core/http/result.dart';
+import '../../../../../../data/models/workbench/checkpoint_area_option_model.dart';
 import '../../../../../../data/models/workbench/whitelist_approval_item_model.dart';
 import '../../../../../../data/repository/workbench_repository.dart';
 import '../../../../../../global.dart';
@@ -14,10 +16,29 @@ class WhitelistApprovalApproveController extends GetxController {
   final TextEditingController parkCheckDescController = TextEditingController();
 
   bool loading = false;
+  bool gateLoading = false;
   bool submitting = false;
+  Map<String, dynamic> detail = const <String, dynamic>{};
 
   DateTime? validityStart;
   DateTime? validityEnd;
+
+  List<CheckpointAreaOption> inGateOptions = const <CheckpointAreaOption>[];
+  List<CheckpointAreaOption> outGateOptions = const <CheckpointAreaOption>[];
+
+  Set<String> inSelectedAreaIds = <String>{};
+  Set<String> outSelectedAreaIds = <String>{};
+  Set<String> inSelectedDeviceCodes = <String>{};
+  Set<String> outSelectedDeviceCodes = <String>{};
+
+  List<String> _inDefaultAreaIds = const <String>[];
+  List<String> _outDefaultAreaIds = const <String>[];
+  List<String> _inDefaultDeviceCodes = const <String>[];
+  List<String> _outDefaultDeviceCodes = const <String>[];
+  List<String> _inDefaultAreaNames = const <String>[];
+  List<String> _outDefaultAreaNames = const <String>[];
+  List<String> _inDefaultDeviceNames = const <String>[];
+  List<String> _outDefaultDeviceNames = const <String>[];
 
   @override
   void onInit() {
@@ -25,11 +46,8 @@ class WhitelistApprovalApproveController extends GetxController {
     final args = Get.arguments;
     if (args is WhitelistApprovalItemModel) {
       item = args;
-      validityStart = _parseDateTime(item.validityBeginTime);
-      validityEnd = _parseDateTime(item.validityEndTime);
-      final desc = (item.parkCheckDesc ?? '').trim();
-      if (desc.isNotEmpty) {
-        parkCheckDescController.text = desc;
+      if ((item.id ?? '').isNotEmpty) {
+        loadDetail();
       }
     } else {
       item = const WhitelistApprovalItemModel();
@@ -40,6 +58,47 @@ class WhitelistApprovalApproveController extends GetxController {
   void onClose() {
     parkCheckDescController.dispose();
     super.onClose();
+  }
+
+  Future<void> loadDetail() async {
+    final id = item.id ?? '';
+    if (id.isEmpty) return;
+
+    loading = true;
+    update();
+
+    final result = await _repository.getWhitelistDetail(id: id);
+    if (result is Success<Map<String, dynamic>>) {
+      detail = result.data;
+      _applyDetailDefaults();
+      await _reloadGateOptions();
+    } else if (result is Failure<Map<String, dynamic>>) {
+      talker.error('白名单审批详情加载失败', result.error, StackTrace.current);
+      AppToast.showError(result.error.message);
+    }
+
+    loading = false;
+    update();
+  }
+
+  void _applyDetailDefaults() {
+    final source = detail.isEmpty ? item.toJson() : detail;
+    validityStart = _parseDateTime(source['validityBeginTime']);
+    validityEnd = _parseDateTime(source['validityEndTime']);
+
+    final desc = (source['parkCheckDesc'] ?? '').toString().trim();
+    if (desc.isNotEmpty && parkCheckDescController.text.trim().isEmpty) {
+      parkCheckDescController.text = desc;
+    }
+
+    _inDefaultAreaIds = _splitCsv(source['inDistrictId']);
+    _outDefaultAreaIds = _splitCsv(source['outDistrictId']);
+    _inDefaultDeviceCodes = _splitCsv(source['inDeviceCode']);
+    _outDefaultDeviceCodes = _splitCsv(source['outDeviceCode']);
+    _inDefaultAreaNames = _splitCsv(source['inDistrictName']);
+    _outDefaultAreaNames = _splitCsv(source['outDistrictName']);
+    _inDefaultDeviceNames = _splitCsv(source['inDeviceName']);
+    _outDefaultDeviceNames = _splitCsv(source['outDeviceName']);
   }
 
   Future<void> onValidityDateChanged(DateTime? start, DateTime? end) async {
@@ -67,6 +126,194 @@ class WhitelistApprovalApproveController extends GetxController {
       );
     }
     update();
+    await _reloadGateOptions();
+  }
+
+  Future<void> _reloadGateOptions() async {
+    gateLoading = true;
+    update();
+
+    await Future.wait([
+      _loadGateOptions(isIn: true),
+      _loadGateOptions(isIn: false),
+    ]);
+
+    gateLoading = false;
+    update();
+  }
+
+  Future<void> _loadGateOptions({required bool isIn}) async {
+    final result = await _repository.getCheckPointDevice(
+      inOrOut: isIn ? 2 : 1,
+      deviceType: item.type == 1 ? 2 : 1,
+      validityBeginTime: validityStart == null
+          ? null
+          : _formatDateTime(validityStart!),
+      validityEndTime: validityEnd == null
+          ? null
+          : _formatDateTime(validityEnd!),
+    );
+
+    result.when(
+      success: (data) {
+        if (isIn) {
+          inGateOptions = data;
+          _syncSelectionByOptions(isIn: true);
+        } else {
+          outGateOptions = data;
+          _syncSelectionByOptions(isIn: false);
+        }
+      },
+      failure: (error) {
+        talker.error('白名单闸机选项加载失败 isIn=$isIn', error, StackTrace.current);
+        if (isIn) {
+          inGateOptions = const <CheckpointAreaOption>[];
+        } else {
+          outGateOptions = const <CheckpointAreaOption>[];
+        }
+        AppToast.showError(error.message);
+      },
+    );
+  }
+
+  void _syncSelectionByOptions({required bool isIn}) {
+    final options = isIn ? inGateOptions : outGateOptions;
+    final allAreaIds = options
+        .map((e) => e.districtId)
+        .where((e) => e.isNotEmpty)
+        .toSet();
+
+    final defaultAreaIds = (isIn ? _inDefaultAreaIds : _outDefaultAreaIds)
+        .where((e) => allAreaIds.contains(e))
+        .toSet();
+
+    Set<String> selectedAreas = isIn ? inSelectedAreaIds : outSelectedAreaIds;
+    Set<String> selectedDevices = isIn
+        ? inSelectedDeviceCodes
+        : outSelectedDeviceCodes;
+
+    if (selectedAreas.isEmpty) {
+      selectedAreas = defaultAreaIds.isNotEmpty ? defaultAreaIds : allAreaIds;
+    } else {
+      selectedAreas = selectedAreas
+          .where((e) => allAreaIds.contains(e))
+          .toSet();
+      if (selectedAreas.isEmpty) {
+        selectedAreas = defaultAreaIds.isNotEmpty ? defaultAreaIds : allAreaIds;
+      }
+    }
+
+    final availableDeviceCodes = _allDeviceCodesByAreas(
+      options: options,
+      areaIds: selectedAreas,
+    );
+    if (selectedDevices.isEmpty) {
+      final defaultCodes =
+          (isIn ? _inDefaultDeviceCodes : _outDefaultDeviceCodes)
+              .where((e) => availableDeviceCodes.contains(e))
+              .toSet();
+      selectedDevices = defaultCodes.isNotEmpty
+          ? defaultCodes
+          : availableDeviceCodes;
+    } else {
+      selectedDevices = selectedDevices
+          .where((e) => availableDeviceCodes.contains(e))
+          .toSet();
+      if (selectedDevices.isEmpty) {
+        selectedDevices = availableDeviceCodes;
+      }
+    }
+
+    if (isIn) {
+      inSelectedAreaIds = selectedAreas;
+      inSelectedDeviceCodes = selectedDevices;
+    } else {
+      outSelectedAreaIds = selectedAreas;
+      outSelectedDeviceCodes = selectedDevices;
+    }
+  }
+
+  Future<void> refreshGateOptionsIfNeeded({required bool isIn}) async {
+    final options = isIn ? inGateOptions : outGateOptions;
+    if (options.isNotEmpty) return;
+    gateLoading = true;
+    update();
+    await _loadGateOptions(isIn: isIn);
+    gateLoading = false;
+    update();
+  }
+
+  void applyGateSelection({
+    required bool isIn,
+    required Set<String> areaIds,
+    required Set<String> deviceCodes,
+  }) {
+    final options = isIn ? inGateOptions : outGateOptions;
+    final availableDeviceCodes = _allDeviceCodesByAreas(
+      options: options,
+      areaIds: areaIds,
+    );
+    final finalDeviceCodes = deviceCodes
+        .where((code) => availableDeviceCodes.contains(code))
+        .toSet();
+
+    if (isIn) {
+      inSelectedAreaIds = areaIds;
+      inSelectedDeviceCodes = finalDeviceCodes;
+    } else {
+      outSelectedAreaIds = areaIds;
+      outSelectedDeviceCodes = finalDeviceCodes;
+    }
+    update();
+  }
+
+  Set<String> allDeviceCodesForAreaIds({
+    required bool isIn,
+    required Set<String> areaIds,
+  }) {
+    return _allDeviceCodesByAreas(
+      options: isIn ? inGateOptions : outGateOptions,
+      areaIds: areaIds,
+    );
+  }
+
+  List<CheckpointDeviceOption> devicesByAreaIds({
+    required bool isIn,
+    required Set<String> areaIds,
+  }) {
+    final options = isIn ? inGateOptions : outGateOptions;
+    return _devicesByAreaIds(options: options, areaIds: areaIds);
+  }
+
+  List<String> selectedAreaNames({required bool isIn}) {
+    final options = isIn ? inGateOptions : outGateOptions;
+    final selected = isIn ? inSelectedAreaIds : outSelectedAreaIds;
+    final names = options
+        .where((area) => selected.contains(area.districtId))
+        .map((area) => area.districtName)
+        .where((name) => name.isNotEmpty)
+        .toList();
+
+    if (names.isNotEmpty) return names;
+    return isIn ? _inDefaultAreaNames : _outDefaultAreaNames;
+  }
+
+  List<String> selectedDeviceNames({required bool isIn}) {
+    final options = isIn ? inGateOptions : outGateOptions;
+    final selected = isIn ? inSelectedDeviceCodes : outSelectedDeviceCodes;
+    final nameMap = <String, String>{};
+
+    for (final area in options) {
+      for (final device in area.deviceList) {
+        if (device.deviceCode.isNotEmpty) {
+          nameMap[device.deviceCode] = device.deviceName;
+        }
+      }
+    }
+
+    final names = selected.map((code) => nameMap[code] ?? code).toList();
+    if (names.isNotEmpty) return names;
+    return isIn ? _inDefaultDeviceNames : _outDefaultDeviceNames;
   }
 
   Future<void> submitApproval({required int parkCheckStatus}) async {
@@ -77,6 +324,14 @@ class WhitelistApprovalApproveController extends GetxController {
     }
     if (validityStart == null || validityEnd == null) {
       AppToast.showError('请选择授权期限');
+      return;
+    }
+    if (inSelectedAreaIds.isEmpty || inSelectedDeviceCodes.isEmpty) {
+      AppToast.showError('请选择授权入口');
+      return;
+    }
+    if (outSelectedAreaIds.isEmpty || outSelectedDeviceCodes.isEmpty) {
+      AppToast.showError('请选择授权出口');
       return;
     }
 
@@ -90,6 +345,10 @@ class WhitelistApprovalApproveController extends GetxController {
       validityBeginTime: _formatDateTime(validityStart!),
       validityEndTime: _formatDateTime(validityEnd!),
       parkCheckDesc: parkCheckDescController.text.trim(),
+      inDistrictIds: inSelectedAreaIds.toList(),
+      outDistrictIds: outSelectedAreaIds.toList(),
+      inDeviceCodes: inSelectedDeviceCodes.toList(),
+      outDeviceCodes: outSelectedDeviceCodes.toList(),
     );
 
     submitting = false;
@@ -127,12 +386,46 @@ class WhitelistApprovalApproveController extends GetxController {
     return '--';
   }
 
-  String get companyText => _firstNonEmpty(item.companyName, item.submitBy);
+  String get companyText =>
+      _firstNonEmpty(detail['companyName'], item.companyName, item.submitBy);
 
-  String get phoneText => _firstNonEmpty(item.userPhone);
+  String get phoneText => _firstNonEmpty(detail['userPhone'], item.userPhone);
 
   String get submitTimeText =>
-      _firstNonEmpty(item.submitDate, item.parkCheckTime);
+      _firstNonEmpty(detail['submitDate'], item.submitDate, item.parkCheckTime);
+
+  List<String> _splitCsv(Object? value) {
+    final text = (value ?? '').toString();
+    if (text.trim().isEmpty) return const <String>[];
+    return text
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty && e.toLowerCase() != 'null')
+        .toList();
+  }
+
+  Set<String> _allDeviceCodesByAreas({
+    required List<CheckpointAreaOption> options,
+    required Set<String> areaIds,
+  }) {
+    return _devicesByAreaIds(options: options, areaIds: areaIds)
+        .map((device) => device.deviceCode)
+        .where((code) => code.isNotEmpty)
+        .toSet();
+  }
+
+  List<CheckpointDeviceOption> _devicesByAreaIds({
+    required List<CheckpointAreaOption> options,
+    required Set<String> areaIds,
+  }) {
+    if (areaIds.isEmpty) return const <CheckpointDeviceOption>[];
+    final list = <CheckpointDeviceOption>[];
+    for (final area in options) {
+      if (!areaIds.contains(area.districtId)) continue;
+      list.addAll(area.deviceList);
+    }
+    return list;
+  }
 
   DateTime? _parseDateTime(Object? value) {
     final text = (value ?? '').toString().trim();
@@ -141,8 +434,7 @@ class WhitelistApprovalApproveController extends GetxController {
   }
 
   String _formatDateTime(DateTime date) {
-    return '${date.year}-${_pad2(date.month)}-${_pad2(date.day)} '
-        '${_pad2(date.hour)}:${_pad2(date.minute)}:${_pad2(date.second)}';
+    return '${date.year}-${_pad2(date.month)}-${_pad2(date.day)} ${_pad2(date.hour)}:${_pad2(date.minute)}:${_pad2(date.second)}';
   }
 
   String _pad2(int value) => value.toString().padLeft(2, '0');

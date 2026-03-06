@@ -33,6 +33,30 @@ WhitelistApprovalItemModel _$WhitelistApprovalItemModelFromJson(
   parkCheckDesc: const NullableStringSafeConverter().fromJson(
     json['parkCheckDesc'],
   ),
+  inDistrictId: const NullableStringSafeConverter().fromJson(
+    json['inDistrictId'],
+  ),
+  outDistrictId: const NullableStringSafeConverter().fromJson(
+    json['outDistrictId'],
+  ),
+  inDeviceCode: const NullableStringSafeConverter().fromJson(
+    json['inDeviceCode'],
+  ),
+  outDeviceCode: const NullableStringSafeConverter().fromJson(
+    json['outDeviceCode'],
+  ),
+  inDistrictName: const NullableStringSafeConverter().fromJson(
+    json['inDistrictName'],
+  ),
+  outDistrictName: const NullableStringSafeConverter().fromJson(
+    json['outDistrictName'],
+  ),
+  inDeviceName: const NullableStringSafeConverter().fromJson(
+    json['inDeviceName'],
+  ),
+  outDeviceName: const NullableStringSafeConverter().fromJson(
+    json['outDeviceName'],
+  ),
   parkCheckStatus: json['parkCheckStatus'] == null
       ? 0
       : const IntSafeConverter().fromJson(json['parkCheckStatus']),
@@ -62,6 +86,30 @@ Map<String, dynamic> _$WhitelistApprovalItemModelToJson(
   ),
   'parkCheckDesc': const NullableStringSafeConverter().toJson(
     instance.parkCheckDesc,
+  ),
+  'inDistrictId': const NullableStringSafeConverter().toJson(
+    instance.inDistrictId,
+  ),
+  'outDistrictId': const NullableStringSafeConverter().toJson(
+    instance.outDistrictId,
+  ),
+  'inDeviceCode': const NullableStringSafeConverter().toJson(
+    instance.inDeviceCode,
+  ),
+  'outDeviceCode': const NullableStringSafeConverter().toJson(
+    instance.outDeviceCode,
+  ),
+  'inDistrictName': const NullableStringSafeConverter().toJson(
+    instance.inDistrictName,
+  ),
+  'outDistrictName': const NullableStringSafeConverter().toJson(
+    instance.outDistrictName,
+  ),
+  'inDeviceName': const NullableStringSafeConverter().toJson(
+    instance.inDeviceName,
+  ),
+  'outDeviceName': const NullableStringSafeConverter().toJson(
+    instance.outDeviceName,
   ),
   'parkCheckStatus': const IntSafeConverter().toJson(instance.parkCheckStatus),
 };

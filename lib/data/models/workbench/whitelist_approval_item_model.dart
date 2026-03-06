@@ -44,6 +44,30 @@ class WhitelistApprovalItemModel {
   @NullableStringSafeConverter()
   final String? parkCheckDesc;
 
+  @NullableStringSafeConverter()
+  final String? inDistrictId;
+
+  @NullableStringSafeConverter()
+  final String? outDistrictId;
+
+  @NullableStringSafeConverter()
+  final String? inDeviceCode;
+
+  @NullableStringSafeConverter()
+  final String? outDeviceCode;
+
+  @NullableStringSafeConverter()
+  final String? inDistrictName;
+
+  @NullableStringSafeConverter()
+  final String? outDistrictName;
+
+  @NullableStringSafeConverter()
+  final String? inDeviceName;
+
+  @NullableStringSafeConverter()
+  final String? outDeviceName;
+
   @IntSafeConverter()
   final int parkCheckStatus;
 
@@ -60,6 +84,14 @@ class WhitelistApprovalItemModel {
     this.validityBeginTime,
     this.validityEndTime,
     this.parkCheckDesc,
+    this.inDistrictId,
+    this.outDistrictId,
+    this.inDeviceCode,
+    this.outDeviceCode,
+    this.inDistrictName,
+    this.outDistrictName,
+    this.inDeviceName,
+    this.outDeviceName,
     this.parkCheckStatus = 0,
   });
 

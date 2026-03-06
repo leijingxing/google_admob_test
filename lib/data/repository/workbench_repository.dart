@@ -135,6 +135,25 @@ class WorkbenchRepository {
     );
   }
 
+  /// 获取白名单详情。
+  Future<Result<Map<String, dynamic>>> getWhitelistDetail({
+    required String id,
+  }) {
+    return _httpService.get<Map<String, dynamic>>(
+      '/api/closed-off/white/one',
+      queryParameters: {'id': id},
+      parser: (json) {
+        if (json is Map) {
+          return Map<String, dynamic>.from(json);
+        }
+        if (json is List && json.isNotEmpty && json.first is Map) {
+          return Map<String, dynamic>.from(json.first as Map);
+        }
+        throw StateError('白名单详情解析失败，期望 Map，实际为 ${json.runtimeType}');
+      },
+    );
+  }
+
   /// 白名单审批。
   Future<Result<void>> approveWhitelist({
     required List<String> ids,
@@ -143,6 +162,10 @@ class WorkbenchRepository {
     required String validityBeginTime,
     required String validityEndTime,
     required String parkCheckDesc,
+    required List<String> inDistrictIds,
+    required List<String> outDistrictIds,
+    required List<String> inDeviceCodes,
+    required List<String> outDeviceCodes,
   }) async {
     final result = await _httpService.put<dynamic>(
       '/api/closed-off/white/approval',
@@ -153,6 +176,10 @@ class WorkbenchRepository {
         'validityBeginTime': validityBeginTime,
         'validityEndTime': validityEndTime,
         'parkCheckDesc': parkCheckDesc,
+        'inDistrictId': inDistrictIds.join(','),
+        'outDistrictId': outDistrictIds.join(','),
+        'inDeviceCode': inDeviceCodes.join(','),
+        'outDeviceCode': outDeviceCodes.join(','),
       },
     );
 
