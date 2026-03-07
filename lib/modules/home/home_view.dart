@@ -21,50 +21,69 @@ class HomeView extends GetView<HomeController> {
             index: logic.currentIndex,
             children: const [DashboardView(), MessageView(), ProfileView()],
           ),
-          bottomNavigationBar: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF103A6F).withValues(alpha: 0.08),
-                  blurRadius: 18,
-                  offset: const Offset(0, -6),
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF103A6F).withValues(alpha: 0.10),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              child: BottomNavigationBar(
-                currentIndex: logic.currentIndex,
-                onTap: logic.switchTab,
-                backgroundColor: Colors.white,
-                selectedItemColor: AppColors.primary,
-                unselectedItemColor: const Color(0xFF8191A8),
-                type: BottomNavigationBarType.fixed,
-                selectedFontSize: 12,
-                unselectedFontSize: 12,
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home_filled),
-                    activeIcon: Icon(Icons.home_filled),
-                    label: '主页',
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: NavigationBarTheme(
+                    data: NavigationBarThemeData(
+                      height: 64,
+                      backgroundColor: Colors.white,
+                      indicatorColor: AppColors.primary.withValues(alpha: 0.14),
+                      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                        final isSelected = states.contains(WidgetState.selected);
+                        return TextStyle(
+                          fontSize: 12,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          color: isSelected ? AppColors.primary : const Color(0xFF8191A8),
+                        );
+                      }),
+                      iconTheme: WidgetStateProperty.resolveWith((states) {
+                        final isSelected = states.contains(WidgetState.selected);
+                        return IconThemeData(
+                          size: 24,
+                          color: isSelected ? AppColors.primary : const Color(0xFF8191A8),
+                        );
+                      }),
+                    ),
+                    child: NavigationBar(
+                      selectedIndex: logic.currentIndex,
+                      onDestinationSelected: logic.switchTab,
+                      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                      destinations: const [
+                        NavigationDestination(
+                          icon: Icon(Icons.home_rounded),
+                          selectedIcon: Icon(Icons.home_filled),
+                          label: '主页',
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.chat_bubble_outline_rounded),
+                          selectedIcon: Icon(Icons.forum_rounded),
+                          label: '消息',
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.person_outline_rounded),
+                          selectedIcon: Icon(Icons.account_circle_rounded),
+                          label: '个人',
+                        ),
+                      ],
+                    ),
                   ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.forum_rounded),
-                    activeIcon: Icon(Icons.forum_rounded),
-                    label: '消息',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.account_circle_rounded),
-                    activeIcon: Icon(Icons.account_circle_rounded),
-                    label: '个人',
-                  ),
-                ],
+                ),
               ),
             ),
           ),
