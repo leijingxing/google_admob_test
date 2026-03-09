@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../../core/components/toast/toast_widget.dart';
-import '../../../../../data/models/workbench/park_inspection_plan_item_model.dart';
 import '../../../../../data/models/workbench/park_inspection_task_item_model.dart';
 import '../../../../../data/repository/workbench_repository.dart';
 import '../widgets/workbench_segment_tabs.dart';
@@ -56,10 +55,7 @@ class ParkInspectionController extends GetxController {
   String? selectedDispatchType;
   DateTimeRange? dateRange;
 
-  bool dispatchLoading = false;
   bool dispatchSubmitting = false;
-  List<ParkInspectionPlanItemModel> dispatchPlans =
-      const <ParkInspectionPlanItemModel>[];
 
   @override
   void onClose() {
@@ -118,23 +114,6 @@ class ParkInspectionController extends GetxController {
     );
   }
 
-  Future<void> loadDispatchPlans() async {
-    if (dispatchLoading) return;
-    dispatchLoading = true;
-    update();
-    final result = await _repository.getParkInspectionPlans();
-    result.when(
-      success: (data) {
-        dispatchPlans = data
-            .where((item) => (item.configStatus ?? '').trim() == 'COMPLETE')
-            .toList();
-      },
-      failure: (error) => AppToast.showError(error.message),
-    );
-    dispatchLoading = false;
-    update();
-  }
-
   Future<bool> dispatchTask({
     required String planId,
     required String taskDate,
@@ -163,6 +142,7 @@ class ParkInspectionController extends GetxController {
 
   void refreshPage() {
     refreshTrigger.value++;
+    update();
   }
 
   String taskStatusText(String? value) {

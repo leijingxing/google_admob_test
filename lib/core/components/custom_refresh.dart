@@ -156,9 +156,8 @@ class _CustomEasyRefreshListState<T> extends State<CustomEasyRefreshList<T>> {
   }
 
   void _handleRefreshTrigger() {
-    if (mounted) {
-      _controller.callRefresh();
-    }
+    if (!mounted || _isDisposed) return;
+    _loadData(isRefresh: true);
   }
 
   /// 核心数据加载逻辑

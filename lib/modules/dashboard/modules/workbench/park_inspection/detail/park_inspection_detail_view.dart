@@ -2,15 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../../../core/components/app_standard_card.dart';
-import '../../../../../../core/components/toast/toast_widget.dart';
-import '../../../../../../core/components/select/custom_picker_photo.dart';
 import '../../../../../../core/constants/dimens.dart';
 import '../../../../../../core/utils/file_service.dart';
 import '../../../../../../data/models/workbench/inspection_abnormal_item_model.dart';
-import '../../../../../../data/models/workbench/park_inspection_record_detail_item_model.dart';
 import '../../../../../../data/models/workbench/park_inspection_task_record_model.dart';
 import '../park_inspection_controller.dart';
+import 'cancel/park_inspection_cancel_binding.dart';
+import 'cancel/park_inspection_cancel_view.dart';
+import 'check_rule/park_inspection_check_rule_binding.dart';
+import 'check_rule/park_inspection_check_rule_view.dart';
+import 'check_in/park_inspection_check_in_binding.dart';
+import 'check_in/park_inspection_check_in_view.dart';
+import 'complete/park_inspection_complete_binding.dart';
+import 'complete/park_inspection_complete_view.dart';
 import 'park_inspection_detail_controller.dart';
+import 'record_detail/park_inspection_record_detail_binding.dart';
+import 'record_detail/park_inspection_record_detail_view.dart';
+import 'report_abnormal/park_inspection_report_abnormal_binding.dart';
+import 'report_abnormal/park_inspection_report_abnormal_view.dart';
 
 class ParkInspectionDetailView extends GetView<ParkInspectionDetailController> {
   const ParkInspectionDetailView({super.key});
@@ -295,7 +304,15 @@ class _ActionSection extends StatelessWidget {
                 ),
               if (controller.taskStatus == ParkInspectionTaskStatus.inProgress)
                 FilledButton.icon(
-                  onPressed: () => _showCheckInSheet(context, controller),
+                  onPressed: () async {
+                    final result = await Get.to<bool>(
+                      () => const ParkInspectionCheckInView(),
+                      binding: ParkInspectionCheckInBinding(),
+                    );
+                    if (result == true) {
+                      Get.forceAppUpdate();
+                    }
+                  },
                   icon: const Icon(Icons.place_outlined),
                   label: const Text('点位打卡'),
                 ),
@@ -303,7 +320,15 @@ class _ActionSection extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: controller.completeLoading
                       ? null
-                      : () => _showCompleteSheet(context, controller),
+                      : () async {
+                          final result = await Get.to<bool>(
+                            () => const ParkInspectionCompleteView(),
+                            binding: ParkInspectionCompleteBinding(),
+                          );
+                          if (result == true) {
+                            Get.forceAppUpdate();
+                          }
+                        },
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF22A06B),
                   ),
@@ -312,7 +337,15 @@ class _ActionSection extends StatelessWidget {
                 ),
               if (controller.taskStatus == ParkInspectionTaskStatus.pending)
                 OutlinedButton.icon(
-                  onPressed: () => _showCancelSheet(context, controller),
+                  onPressed: () async {
+                    final result = await Get.to<bool>(
+                      () => const ParkInspectionCancelView(),
+                      binding: ParkInspectionCancelBinding(),
+                    );
+                    if (result == true) {
+                      Get.forceAppUpdate();
+                    }
+                  },
                   icon: const Icon(Icons.close_rounded),
                   label: const Text('取消任务'),
                 ),
@@ -321,283 +354,6 @@ class _ActionSection extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _showCheckInSheet(
-    BuildContext context,
-    ParkInspectionDetailController controller,
-  ) async {
-    String? selectedPointId;
-    final positionController = TextEditingController();
-    final remarkController = TextEditingController();
-
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            AppDimens.dp16,
-            AppDimens.dp12,
-            AppDimens.dp16,
-            MediaQuery.of(context).viewInsets.bottom + AppDimens.dp16,
-          ),
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '点位打卡',
-                    style: TextStyle(
-                      color: const Color(0xFF223146),
-                      fontSize: AppDimens.sp16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  SizedBox(height: AppDimens.dp12),
-                  DropdownButtonFormField<String>(
-                    initialValue: selectedPointId,
-                    items: controller.planPoints
-                        .map(
-                          (item) => DropdownMenuItem<String>(
-                            value: item.pointId ?? item.id,
-                            child: Text(item.pointName ?? '--'),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      setModalState(() => selectedPointId = value);
-                    },
-                    decoration: const InputDecoration(
-                      labelText: '巡检点位',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: AppDimens.dp10),
-                  TextField(
-                    controller: positionController,
-                    decoration: const InputDecoration(
-                      labelText: '打卡位置',
-                      hintText: '请输入经度,纬度 或描述位置',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: AppDimens.dp10),
-                  TextField(
-                    controller: remarkController,
-                    minLines: 2,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: '备注',
-                      hintText: '请输入打卡备注',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: AppDimens.dp14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.of(sheetContext).pop(),
-                          child: const Text('取消'),
-                        ),
-                      ),
-                      SizedBox(width: AppDimens.dp10),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () async {
-                            if ((selectedPointId ?? '').trim().isEmpty) {
-                              AppToast.showWarning('请选择巡检点位');
-                              return;
-                            }
-                            if (positionController.text.trim().isEmpty) {
-                              AppToast.showWarning('请输入打卡位置');
-                              return;
-                            }
-                            final success = await controller.submitCheckIn(
-                              pointId: selectedPointId!.trim(),
-                              position: positionController.text.trim(),
-                              remark: remarkController.text.trim(),
-                            );
-                            if (success && context.mounted) {
-                              Navigator.of(sheetContext).pop();
-                            }
-                          },
-                          child: const Text('打卡'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-
-    positionController.dispose();
-    remarkController.dispose();
-  }
-
-  Future<void> _showCompleteSheet(
-    BuildContext context,
-    ParkInspectionDetailController controller,
-  ) async {
-    final remarkController = TextEditingController();
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            AppDimens.dp16,
-            AppDimens.dp12,
-            AppDimens.dp16,
-            MediaQuery.of(context).viewInsets.bottom + AppDimens.dp16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '完成巡检',
-                style: TextStyle(
-                  color: const Color(0xFF223146),
-                  fontSize: AppDimens.sp16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              SizedBox(height: AppDimens.dp12),
-              TextField(
-                controller: remarkController,
-                minLines: 3,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  hintText: '请输入完成备注（可选）',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: AppDimens.dp14),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(sheetContext).pop(),
-                      child: const Text('取消'),
-                    ),
-                  ),
-                  SizedBox(width: AppDimens.dp10),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () async {
-                        final success = await controller.completeTask(
-                          completeRemark: remarkController.text.trim(),
-                        );
-                        if (success && context.mounted) {
-                          Navigator.of(sheetContext).pop();
-                        }
-                      },
-                      child: const Text('确认完成'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    remarkController.dispose();
-  }
-
-  Future<void> _showCancelSheet(
-    BuildContext context,
-    ParkInspectionDetailController controller,
-  ) async {
-    final reasonController = TextEditingController();
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            AppDimens.dp16,
-            AppDimens.dp12,
-            AppDimens.dp16,
-            MediaQuery.of(context).viewInsets.bottom + AppDimens.dp16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '取消任务',
-                style: TextStyle(
-                  color: const Color(0xFF223146),
-                  fontSize: AppDimens.sp16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              SizedBox(height: AppDimens.dp12),
-              TextField(
-                controller: reasonController,
-                minLines: 3,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  hintText: '请输入取消原因',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: AppDimens.dp14),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(sheetContext).pop(),
-                      child: const Text('返回'),
-                    ),
-                  ),
-                  SizedBox(width: AppDimens.dp10),
-                  Expanded(
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFFE06A4B),
-                      ),
-                      onPressed: () async {
-                        if (reasonController.text.trim().isEmpty) {
-                          AppToast.showWarning('请输入取消原因');
-                          return;
-                        }
-                        final success = await controller.cancelTask(
-                          cancelReason: reasonController.text.trim(),
-                        );
-                        if (success && context.mounted) {
-                          Navigator.of(sheetContext).pop();
-                        }
-                      },
-                      child: const Text('确认取消'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    reasonController.dispose();
   }
 }
 
@@ -645,19 +401,35 @@ class _RecordCard extends StatelessWidget {
             runSpacing: AppDimens.dp8,
             children: [
               OutlinedButton(
-                onPressed: () => _showDetailSheet(context, controller, record),
+                onPressed: () {
+                  Get.to<void>(
+                    () => const ParkInspectionRecordDetailView(),
+                    binding: ParkInspectionRecordDetailBinding(),
+                    arguments: record,
+                  );
+                },
                 child: const Text('明细'),
               ),
               if (controller.taskStatus == ParkInspectionTaskStatus.inProgress)
                 FilledButton(
-                  onPressed: () =>
-                      _showCheckRuleSheet(context, controller, record),
+                  onPressed: () {
+                    Get.to<void>(
+                      () => const ParkInspectionCheckRuleView(),
+                      binding: ParkInspectionCheckRuleBinding(),
+                      arguments: record,
+                    );
+                  },
                   child: const Text('检查细则'),
                 ),
               if (controller.taskStatus == ParkInspectionTaskStatus.inProgress)
                 FilledButton(
-                  onPressed: () =>
-                      _showReportSheet(context, controller, record),
+                  onPressed: () {
+                    Get.to<void>(
+                      () => const ParkInspectionReportAbnormalView(),
+                      binding: ParkInspectionReportAbnormalBinding(),
+                      arguments: record,
+                    );
+                  },
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFFE06A4B),
                   ),
@@ -673,59 +445,6 @@ class _RecordCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Future<void> _showDetailSheet(
-    BuildContext context,
-    ParkInspectionDetailController controller,
-    ParkInspectionTaskRecordModel record,
-  ) async {
-    final details = await controller.loadRecordDetails(
-      recordId: (record.id ?? '').trim(),
-    );
-    if (!context.mounted) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFFF4F7FB),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.all(AppDimens.dp16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '细则检查结果',
-                  style: TextStyle(
-                    color: const Color(0xFF223146),
-                    fontSize: AppDimens.sp16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                SizedBox(height: AppDimens.dp12),
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: details.length,
-                    separatorBuilder: (context, index) =>
-                        SizedBox(height: AppDimens.dp8),
-                    itemBuilder: (context, index) {
-                      final item = details[index];
-                      return _RecordDetailTile(item: item);
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -779,394 +498,6 @@ class _RecordCard extends StatelessWidget {
         );
       },
     );
-  }
-
-  Future<void> _showCheckRuleSheet(
-    BuildContext context,
-    ParkInspectionDetailController controller,
-    ParkInspectionTaskRecordModel record,
-  ) async {
-    var drafts = await controller.buildRuleDrafts(record: record);
-    if (!context.mounted) return;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFFF4F7FB),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              return Padding(
-                padding: EdgeInsets.fromLTRB(
-                  AppDimens.dp16,
-                  AppDimens.dp12,
-                  AppDimens.dp16,
-                  AppDimens.dp16,
-                ),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.82,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '细则检查',
-                        style: TextStyle(
-                          color: const Color(0xFF223146),
-                          fontSize: AppDimens.sp16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      SizedBox(height: AppDimens.dp12),
-                      Expanded(
-                        child: ListView.separated(
-                          itemCount: drafts.length,
-                          separatorBuilder: (context, index) =>
-                              SizedBox(height: AppDimens.dp10),
-                          itemBuilder: (context, index) {
-                            final item = drafts[index];
-                            return _RuleDraftCard(
-                              item: item,
-                              onChanged: (next) {
-                                setModalState(() => drafts[index] = next);
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                      SizedBox(height: AppDimens.dp12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.of(sheetContext).pop(),
-                              child: const Text('取消'),
-                            ),
-                          ),
-                          SizedBox(width: AppDimens.dp10),
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: () async {
-                                final success = await controller
-                                    .submitCheckRules(
-                                      record: record,
-                                      drafts: drafts,
-                                    );
-                                if (success && context.mounted) {
-                                  Navigator.of(sheetContext).pop();
-                                }
-                              },
-                              child: const Text('批量提交'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _showReportSheet(
-    BuildContext context,
-    ParkInspectionDetailController controller,
-    ParkInspectionTaskRecordModel record,
-  ) async {
-    String? selectedRuleId;
-    final descController = TextEditingController();
-    String isUrgent = '0';
-    List<String> photoIds = <String>[];
-
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                AppDimens.dp16,
-                AppDimens.dp12,
-                AppDimens.dp16,
-                MediaQuery.of(context).viewInsets.bottom + AppDimens.dp16,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '上报异常',
-                      style: TextStyle(
-                        color: const Color(0xFF223146),
-                        fontSize: AppDimens.sp16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: AppDimens.dp12),
-                    Text('巡检点位：${record.pointName ?? '--'}'),
-                    SizedBox(height: AppDimens.dp10),
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedRuleId,
-                      items: controller.planRules
-                          .map(
-                            (item) => DropdownMenuItem<String>(
-                              value: item.ruleId ?? item.id,
-                              child: Text(item.ruleName ?? '--'),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setModalState(() => selectedRuleId = value);
-                      },
-                      decoration: const InputDecoration(
-                        labelText: '巡检细则',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    SizedBox(height: AppDimens.dp10),
-                    TextField(
-                      controller: descController,
-                      minLines: 3,
-                      maxLines: 4,
-                      decoration: const InputDecoration(
-                        labelText: '异常描述',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    SizedBox(height: AppDimens.dp10),
-                    Row(
-                      children: [
-                        Text(
-                          '是否紧急',
-                          style: TextStyle(fontSize: AppDimens.sp12),
-                        ),
-                        SizedBox(width: AppDimens.dp10),
-                        ChoiceChip(
-                          label: const Text('是'),
-                          selected: isUrgent == '1',
-                          onSelected: (_) {
-                            setModalState(() => isUrgent = '1');
-                          },
-                        ),
-                        SizedBox(width: AppDimens.dp8),
-                        ChoiceChip(
-                          label: const Text('否'),
-                          selected: isUrgent == '0',
-                          onSelected: (_) {
-                            setModalState(() => isUrgent = '0');
-                          },
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: AppDimens.dp10),
-                    CustomPickerPhoto(
-                      title: '现场照片',
-                      imagesList: photoIds,
-                      callback: (value) {
-                        setModalState(() => photoIds = value);
-                      },
-                    ),
-                    SizedBox(height: AppDimens.dp14),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(sheetContext).pop(),
-                            child: const Text('取消'),
-                          ),
-                        ),
-                        SizedBox(width: AppDimens.dp10),
-                        Expanded(
-                          child: FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFFE06A4B),
-                            ),
-                            onPressed: () async {
-                              if ((selectedRuleId ?? '').trim().isEmpty) {
-                                AppToast.showWarning('请选择巡检细则');
-                                return;
-                              }
-                              if (descController.text.trim().isEmpty) {
-                                AppToast.showWarning('请输入异常描述');
-                                return;
-                              }
-                              final success = await controller.reportAbnormal(
-                                record: record,
-                                ruleId: selectedRuleId!.trim(),
-                                abnormalDesc: descController.text.trim(),
-                                isUrgent: isUrgent,
-                                photoUrls: photoIds,
-                              );
-                              if (success && context.mounted) {
-                                Navigator.of(sheetContext).pop();
-                              }
-                            },
-                            child: const Text('上报异常'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-    descController.dispose();
-  }
-}
-
-class _RuleDraftCard extends StatelessWidget {
-  const _RuleDraftCard({required this.item, required this.onChanged});
-
-  final ParkInspectionRuleDraft item;
-  final ValueChanged<ParkInspectionRuleDraft> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppStandardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  item.ruleName.isEmpty ? '--' : item.ruleName,
-                  style: TextStyle(
-                    color: const Color(0xFF223146),
-                    fontSize: AppDimens.sp14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              _StatusBadge(
-                text: item.checked ? '已检查' : '待检查',
-                color: item.checked
-                    ? const Color(0xFF22A06B)
-                    : const Color(0xFF8A97A8),
-                soft: true,
-              ),
-            ],
-          ),
-          SizedBox(height: AppDimens.dp8),
-          _InfoLine(
-            label: '检查标准',
-            value: item.checkStandard.isEmpty ? '--' : item.checkStandard,
-          ),
-          _InfoLine(label: '检查方式', value: _checkMethodText(item.checkMethod)),
-          SizedBox(height: AppDimens.dp6),
-          DropdownButtonFormField<String>(
-            initialValue: item.resultStatus.isEmpty ? null : item.resultStatus,
-            items: const [
-              DropdownMenuItem(value: 'PASS', child: Text('通过')),
-              DropdownMenuItem(value: 'FAIL', child: Text('不通过')),
-              DropdownMenuItem(value: 'UNINVOLVED', child: Text('不涉及')),
-            ],
-            onChanged: item.checked
-                ? null
-                : (value) {
-                    onChanged(item.copyWith(resultStatus: value ?? ''));
-                  },
-            decoration: const InputDecoration(
-              labelText: '检查结果',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          SizedBox(height: AppDimens.dp10),
-          TextFormField(
-            initialValue: item.remark,
-            onChanged: item.checked
-                ? null
-                : (value) => onChanged(item.copyWith(remark: value)),
-            minLines: 2,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: '备注',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          SizedBox(height: AppDimens.dp10),
-          if (item.checked)
-            _AttachmentPreview(ids: item.attachments)
-          else if (item.resultStatus == 'FAIL')
-            CustomPickerPhoto(
-              title: '附件',
-              imagesList: item.attachments,
-              callback: (value) {
-                onChanged(item.copyWith(attachments: value));
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  String _checkMethodText(String value) {
-    switch (value) {
-      case 'VISUAL':
-        return '目视检查';
-      case 'PHOTO':
-        return '拍照检查';
-      case 'VIDEO':
-        return '录制视频';
-      default:
-        return '--';
-    }
-  }
-}
-
-class _RecordDetailTile extends StatelessWidget {
-  const _RecordDetailTile({required this.item});
-
-  final ParkInspectionRecordDetailItemModel item;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppStandardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            item.ruleName ?? item.ruleId ?? '--',
-            style: TextStyle(
-              color: const Color(0xFF223146),
-              fontSize: AppDimens.sp14,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(height: AppDimens.dp8),
-          _InfoLine(label: '检查结果', value: _resultText(item.resultStatus)),
-          _InfoLine(label: '备注', value: item.remark ?? '--'),
-          _AttachmentPreview(ids: item.attachments ?? const <String>[]),
-        ],
-      ),
-    );
-  }
-
-  String _resultText(String? value) {
-    switch ((value ?? '').trim()) {
-      case 'PASS':
-        return '通过';
-      case 'UNINVOLVED':
-        return '不涉及';
-      default:
-        return '不通过';
-    }
   }
 }
 

@@ -1254,6 +1254,39 @@ class WorkbenchRepository {
     );
   }
 
+  /// 获取园区巡检人员关联计划分页列表，并兼容返回原始列表的场景。
+  Future<Result<List<ParkInspectionPlanItemModel>>>
+  getParkInspectionPersonnelPlans({
+    String status = 'ENABLED',
+    int current = 1,
+    int size = 500,
+  }) {
+    return _httpService.post<List<ParkInspectionPlanItemModel>>(
+      '/api/closed-off/inspectionPlanPersonnel/page',
+      data: {'status': status, 'pageIndex': current, 'pageSize': size},
+      parser: (json) {
+        if (json is List) {
+          return json
+              .whereType<Map>()
+              .map(
+                (item) => ParkInspectionPlanItemModel.fromJson(
+                  Map<String, dynamic>.from(item),
+                ),
+              )
+              .toList();
+        }
+        final page = parsePaginatedResult<ParkInspectionPlanItemModel>(
+          json: json,
+          requestPageIndex: current,
+          requestPageSize: size,
+          itemParser: (itemJson) =>
+              ParkInspectionPlanItemModel.fromJson(itemJson),
+        );
+        return page.items;
+      },
+    );
+  }
+
   /// 获取计划关联点位列表。
   Future<Result<List<ParkInspectionPointItemModel>>>
   getParkInspectionPlanPoints({required String planId}) {
