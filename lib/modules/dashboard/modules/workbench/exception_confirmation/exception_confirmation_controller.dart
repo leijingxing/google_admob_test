@@ -62,7 +62,9 @@ class ExceptionConfirmationController extends GetxController {
     );
 
     return result.when(
-      success: (pageData) => pageData.items,
+      success: (pageData) => pageData.items
+          .where((item) => _matchesTabStatus(tabIndex, item.confirmStatus))
+          .toList(),
       failure: (error) {
         AppToast.showError(error.message);
         throw Exception(error.message);
@@ -97,6 +99,13 @@ class ExceptionConfirmationController extends GetxController {
   bool canConfirm(ExceptionConfirmationItemModel item) {
     return item.confirmStatus != 1 &&
         (item.confirmerId == null || item.confirmerId!.trim().isEmpty);
+  }
+
+  bool _matchesTabStatus(int tabIndex, int confirmStatus) {
+    if (tabIndex == 1) {
+      return confirmStatus == 1;
+    }
+    return confirmStatus != 1;
   }
 
   String statusText(int value) => value == 1 ? '已确认' : '待确认';

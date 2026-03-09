@@ -1,15 +1,12 @@
 import 'http_paginated_result.dart';
 
 /// 通用分页请求参数构建：
-/// 同时兼容不同后端常见字段命名。
+/// 默认同时兼容不同后端常见字段命名。
 Map<String, dynamic> buildPagePayload({
   required int pageIndex,
   required int pageSize,
 }) {
-  return {
-    'current': pageIndex,
-    'size': pageSize,
-    'pageNum': pageIndex,
+  return <String, dynamic>{
     'pageIndex': pageIndex,
     'pageSize': pageSize,
   };

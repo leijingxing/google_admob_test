@@ -677,7 +677,10 @@ class WorkbenchRepository {
     String? reportTimeEnd,
   }) {
     final payload = <String, dynamic>{
-      ...buildPagePayload(pageIndex: current, pageSize: size),
+      ...buildPagePayload(
+        pageIndex: current,
+        pageSize: size,
+      ),
       'confirmStatus': confirmStatus,
       'keyword': keyword,
       'customParams': <Map<String, dynamic>>[
