@@ -12,41 +12,33 @@ class WorkbenchContentSection extends StatelessWidget {
   static const List<_WorkbenchEntry> _entries = [
     _WorkbenchEntry(
       title: '白名单审批',
-      count: 12,
+      count: 0,
       icon: Icons.verified_user_outlined,
     ),
-    _WorkbenchEntry(title: '黑名单审批', count: 12, icon: Icons.gpp_bad_outlined),
+    _WorkbenchEntry(title: '黑名单审批', count: 0, icon: Icons.gpp_bad_outlined),
     _WorkbenchEntry(
       title: '车辆抽检',
-      count: 12,
+      count: 0,
       icon: Icons.directions_car_filled_outlined,
     ),
     _WorkbenchEntry(
       title: '园区巡检',
-      count: 12,
+      count: 0,
       icon: Icons.camera_outdoor_outlined,
     ),
-    _WorkbenchEntry(
-      title: '隐患治理',
-      count: 12,
-      icon: Icons.build_circle_outlined,
-    ),
+    _WorkbenchEntry(title: '隐患治理', count: 0, icon: Icons.build_circle_outlined),
     _WorkbenchEntry(
       title: '异常确认',
-      count: 12,
+      count: 0,
       icon: Icons.report_problem_outlined,
     ),
-    _WorkbenchEntry(title: '申诉回复', count: 12, icon: Icons.message_outlined),
+    _WorkbenchEntry(title: '申诉回复', count: 0, icon: Icons.message_outlined),
     _WorkbenchEntry(
       title: '报警处置',
-      count: 12,
+      count: 0,
       icon: Icons.notifications_active_outlined,
     ),
-    _WorkbenchEntry(
-      title: '预警处置',
-      count: 12,
-      icon: Icons.warning_amber_rounded,
-    ),
+    _WorkbenchEntry(title: '预警处置', count: 0, icon: Icons.warning_amber_rounded),
   ];
 
   static const List<Color> _entryColors = [
@@ -88,7 +80,7 @@ class WorkbenchContentSection extends StatelessWidget {
               SizedBox(height: AppDimens.dp16),
               _PrimaryApprovalCard(
                 title: '预约审批',
-                count: 12,
+                count: 0,
                 onTap: WorkbenchRoutes.toAppointmentApproval,
               ),
               SizedBox(height: AppDimens.dp16),

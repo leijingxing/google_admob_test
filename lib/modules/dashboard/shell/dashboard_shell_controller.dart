@@ -3,6 +3,11 @@ import 'package:get/get.dart';
 
 /// Dashboard 封闭式容器页控制器。
 class DashboardShellController extends GetxController {
+  static const double sidebarWidth = 54;
+  static const double sidebarItemHeight = 68;
+  static const double sidebarItemIconBoxSize = 30;
+  static const double sidebarItemIconSize = 15;
+
   final List<DashboardShellModuleItem> modules = const [
     DashboardShellModuleItem(
       title: '工作台',
@@ -34,7 +39,6 @@ class DashboardShellController extends GetxController {
       icon: Icons.local_shipping_rounded,
       color: Color(0xFF6A1B9A),
     ),
-
   ];
 
   int currentIndex = 0;

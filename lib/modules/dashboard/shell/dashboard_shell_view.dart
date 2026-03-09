@@ -30,32 +30,32 @@ class DashboardShellView extends GetView<DashboardShellController> {
           body: SafeArea(
             top: false,
             child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _Sidebar(
-                    items: logic.modules,
-                    currentIndex: logic.currentIndex,
-                    onTap: logic.switchModule,
-                  ),
-                  Expanded(
-                    child: _ContentPanel(
-                      title: logic.currentModule.title,
-                      subtitle: logic.currentModule.subtitle,
-                      color: logic.currentModule.color,
-                      child: IndexedStack(
-                        index: logic.currentIndex,
-                        children: const [
-                          _WorkbenchPane(),
-                          _VehicleQueryPane(),
-                          _PersonnelQueryPane(),
-                          _LogisticsQueryPane(),
-                          _OverviewPane(),
-                        ],
-                      ),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _Sidebar(
+                  items: logic.modules,
+                  currentIndex: logic.currentIndex,
+                  onTap: logic.switchModule,
+                ),
+                Expanded(
+                  child: _ContentPanel(
+                    title: logic.currentModule.title,
+                    subtitle: logic.currentModule.subtitle,
+                    color: logic.currentModule.color,
+                    child: IndexedStack(
+                      index: logic.currentIndex,
+                      children: const [
+                        _WorkbenchPane(),
+                        _OverviewPane(),
+                        _VehicleQueryPane(),
+                        _PersonnelQueryPane(),
+                        _LogisticsQueryPane(),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -77,20 +77,24 @@ class _Sidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: AppDimens.dp48,
+      width: DashboardShellController.sidebarWidth,
       padding: EdgeInsets.symmetric(
-        horizontal: AppDimens.dp0,
-        vertical: AppDimens.dp8,
+        horizontal: AppDimens.dp4,
+        vertical: AppDimens.dp10,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimens.dp18),
-        border: Border.all(color: const Color(0xFFE1EAF5)),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFFCFDFF), Color(0xFFF2F6FC)],
+        ),
+        borderRadius: BorderRadius.circular(AppDimens.dp20),
+        border: Border.all(color: const Color(0xFFDDE7F3)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x120F2A4A),
-            blurRadius: 16,
-            offset: Offset(0, 8),
+            blurRadius: 18,
+            offset: Offset(0, 10),
           ),
         ],
       ),
@@ -133,6 +137,12 @@ class _SidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color accentEnd =
+        Color.lerp(item.color, const Color(0xFF7C4DFF), 0.22) ?? item.color;
+    final Color iconSurface = selected
+        ? Colors.white.withValues(alpha: 0.20)
+        : item.color.withValues(alpha: 0.10);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -140,62 +150,75 @@ class _SidebarItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppDimens.dp14),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: EdgeInsets.fromLTRB(
-            AppDimens.dp0,
-            AppDimens.dp4,
-            AppDimens.dp0,
-            AppDimens.dp4,
+          height: DashboardShellController.sidebarItemHeight,
+          padding: EdgeInsets.symmetric(
+            horizontal: AppDimens.dp3,
+            vertical: AppDimens.dp5,
           ),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFFEEF5FF) : const Color(0xFFF8FBFF),
+            gradient: selected
+                ? LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [item.color, accentEnd],
+                  )
+                : const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFF8FAFD), Color(0xFFF1F5FA)],
+                  ),
             borderRadius: BorderRadius.circular(AppDimens.dp14),
             border: Border.all(
               color: selected
-                  ? const Color(0xFFBFD7FA)
-                  : const Color(0xFFE3ECF8),
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : const Color(0xFFE3EAF4),
             ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: item.color.withValues(alpha: 0.22),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : null,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                width: AppDimens.dp18,
-                height: AppDimens.dp3,
+                width: DashboardShellController.sidebarItemIconBoxSize,
+                height: DashboardShellController.sidebarItemIconBoxSize,
                 decoration: BoxDecoration(
-                  color: selected
-                      ? const Color(0xFF2267C0)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-              SizedBox(height: AppDimens.dp3),
-              Container(
-                width: AppDimens.dp26,
-                height: AppDimens.dp26,
-                decoration: BoxDecoration(
-                  color: selected
-                      ? item.color.withValues(alpha: 0.12)
-                      : item.color.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(AppDimens.dp9),
+                  color: iconSurface,
+                  borderRadius: BorderRadius.circular(AppDimens.dp12),
+                  border: Border.all(
+                    color: selected
+                        ? Colors.white.withValues(alpha: 0.14)
+                        : item.color.withValues(alpha: 0.12),
+                  ),
                 ),
                 child: Icon(
                   item.icon,
-                  color: selected ? const Color(0xFF2267C0) : item.color,
-                  size: AppDimens.sp14,
+                  color: selected ? Colors.white : item.color,
+                  size: DashboardShellController.sidebarItemIconSize,
                 ),
               ),
-              SizedBox(height: AppDimens.dp2),
-              Text(
-                item.title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: selected
-                      ? const Color(0xFF2267C0)
-                      : const Color(0xFF6D86A2),
-                  fontSize: AppDimens.sp10,
-                  fontWeight: FontWeight.w600,
-                  height: 1.05,
+              SizedBox(height: AppDimens.dp5),
+              SizedBox(
+                width: double.infinity,
+                child: Text(
+                  _formatSidebarLabel(item.title),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.clip,
+                  style: TextStyle(
+                    color: selected ? Colors.white : const Color(0xFF5E728C),
+                    fontSize: AppDimens.sp8,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                    height: 1.15,
+                  ),
                 ),
               ),
             ],
@@ -204,6 +227,15 @@ class _SidebarItem extends StatelessWidget {
       ),
     );
   }
+}
+
+String _formatSidebarLabel(String title) {
+  if (title.runes.length <= 2) return title;
+  final int splitIndex = (title.runes.length / 2).ceil();
+  final List<int> runes = title.runes.toList();
+  final String firstLine = String.fromCharCodes(runes.take(splitIndex));
+  final String secondLine = String.fromCharCodes(runes.skip(splitIndex));
+  return '$firstLine\n$secondLine';
 }
 
 class _ContentPanel extends StatelessWidget {
@@ -239,9 +271,9 @@ class _ContentPanel extends StatelessWidget {
         children: [
           Container(
             padding: EdgeInsets.fromLTRB(
-              AppDimens.dp18,
-              AppDimens.dp18,
-              AppDimens.dp18,
+              AppDimens.dp14,
+              AppDimens.dp14,
+              AppDimens.dp14,
               AppDimens.dp14,
             ),
             decoration: BoxDecoration(
@@ -326,10 +358,10 @@ class _WorkbenchPane extends StatelessWidget {
       ),
       child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
+          AppDimens.dp12,
+          AppDimens.dp12,
+          AppDimens.dp12,
           AppDimens.dp16,
-          AppDimens.dp16,
-          AppDimens.dp16,
-          AppDimens.dp24,
         ),
         child: const WorkbenchContentSection(),
       ),
@@ -380,10 +412,10 @@ class _OverviewPane extends StatelessWidget {
       ),
       child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
+          AppDimens.dp12,
+          AppDimens.dp12,
+          AppDimens.dp12,
           AppDimens.dp16,
-          AppDimens.dp16,
-          AppDimens.dp16,
-          AppDimens.dp24,
         ),
         child: const DashboardStatisticsSection(),
       ),
@@ -409,10 +441,10 @@ class _SectionPane extends StatelessWidget {
       ),
       child: Padding(
         padding: EdgeInsets.fromLTRB(
-          AppDimens.dp16,
-          AppDimens.dp16,
-          AppDimens.dp16,
           AppDimens.dp12,
+          AppDimens.dp12,
+          AppDimens.dp12,
+          AppDimens.dp16,
         ),
         child: Column(children: [Expanded(child: child)]),
       ),
