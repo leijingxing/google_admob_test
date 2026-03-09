@@ -3,9 +3,9 @@ import 'package:get/get.dart';
 import '../../data/models/workbench/appeal_reply_item_model.dart';
 import '../../data/models/workbench/appointment_approval_item_model.dart';
 import '../../data/models/workbench/blacklist_approval_item_model.dart';
-import '../../data/models/workbench/risk_warning_disposal_item_model.dart';
 import '../../data/models/workbench/inspection_abnormal_item_model.dart';
 import '../../data/models/workbench/park_inspection_task_item_model.dart';
+import '../../data/models/workbench/risk_warning_disposal_item_model.dart';
 import '../../data/models/workbench/spot_inspection_item_model.dart';
 import '../../modules/dashboard/modules/workbench/alarm_disposal/detail/alarm_disposal_detail_binding.dart';
 import '../../modules/dashboard/modules/workbench/alarm_disposal/detail/alarm_disposal_detail_view.dart';
@@ -29,6 +29,8 @@ import '../../modules/dashboard/modules/workbench/blacklist_approval/blacklist_a
 import '../../modules/dashboard/modules/workbench/blacklist_approval/blacklist_approval_view.dart';
 import '../../modules/dashboard/modules/workbench/blacklist_approval/detail/blacklist_approval_detail_binding.dart';
 import '../../modules/dashboard/modules/workbench/blacklist_approval/detail/blacklist_approval_detail_view.dart';
+import '../../modules/dashboard/modules/workbench/exception_confirmation/exception_confirmation_binding.dart';
+import '../../modules/dashboard/modules/workbench/exception_confirmation/exception_confirmation_view.dart';
 import '../../modules/dashboard/modules/workbench/spot_inspection/detail/spot_inspection_detail_binding.dart';
 import '../../modules/dashboard/modules/workbench/spot_inspection/detail/spot_inspection_detail_view.dart';
 import '../../modules/dashboard/modules/workbench/spot_inspection/fill/spot_inspection_fill_binding.dart';
@@ -102,6 +104,14 @@ abstract class WorkbenchRoutes {
     return Get.to<T>(
       () => const HiddenDangerGovernanceView(),
       binding: HiddenDangerGovernanceBinding(),
+    );
+  }
+
+  /// 异常确认。
+  static Future<T?>? toExceptionConfirmation<T>() {
+    return Get.to<T>(
+      () => const ExceptionConfirmationView(),
+      binding: ExceptionConfirmationBinding(),
     );
   }
 

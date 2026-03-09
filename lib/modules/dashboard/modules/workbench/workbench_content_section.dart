@@ -2,56 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/constants/dimens.dart';
-import '../../../../router/module_routes/workbench_routes.dart';
 import 'workbench_controller.dart';
 
 /// 工作台业务内容区。
 class WorkbenchContentSection extends StatelessWidget {
   const WorkbenchContentSection({super.key});
-
-  static const List<_WorkbenchEntry> _entries = [
-    _WorkbenchEntry(
-      title: '白名单审批',
-      count: 0,
-      icon: Icons.verified_user_outlined,
-    ),
-    _WorkbenchEntry(title: '黑名单审批', count: 0, icon: Icons.gpp_bad_outlined),
-    _WorkbenchEntry(
-      title: '车辆抽检',
-      count: 0,
-      icon: Icons.directions_car_filled_outlined,
-    ),
-    _WorkbenchEntry(
-      title: '园区巡检',
-      count: 0,
-      icon: Icons.camera_outdoor_outlined,
-    ),
-    _WorkbenchEntry(title: '隐患治理', count: 0, icon: Icons.build_circle_outlined),
-    _WorkbenchEntry(
-      title: '异常确认',
-      count: 0,
-      icon: Icons.report_problem_outlined,
-    ),
-    _WorkbenchEntry(title: '申诉回复', count: 0, icon: Icons.message_outlined),
-    _WorkbenchEntry(
-      title: '报警处置',
-      count: 0,
-      icon: Icons.notifications_active_outlined,
-    ),
-    _WorkbenchEntry(title: '预警处置', count: 0, icon: Icons.warning_amber_rounded),
-  ];
-
-  static const List<Color> _entryColors = [
-    Color(0xFF3C84F6),
-    Color(0xFF4694FF),
-    Color(0xFF5DA3FF),
-    Color(0xFF4B8EF7),
-    Color(0xFF6AA9FF),
-    Color(0xFF55A0FF),
-    Color(0xFF3F90F0),
-    Color(0xFF5A98F3),
-    Color(0xFF73B1FF),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -59,86 +14,88 @@ class WorkbenchContentSection extends StatelessWidget {
       init: Get.isRegistered<WorkbenchController>()
           ? Get.find<WorkbenchController>()
           : WorkbenchController(),
-      builder: (controller) => SingleChildScrollView(
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.only(bottom: AppDimens.dp10),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFF8FCFF), Color(0xFFF1F7FF), Color(0xFFF8FCFF)],
-            ),
-            borderRadius: BorderRadius.circular(AppDimens.dp18),
+      builder: (controller) => Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF8FCFF), Color(0xFFF1F7FF), Color(0xFFF8FCFF)],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _TaskProgressCard(
-                progressPercent: controller.taskProgressPercent,
-              ),
-              SizedBox(height: AppDimens.dp16),
-              _PrimaryApprovalCard(
-                title: '预约审批',
-                count: 0,
-                onTap: WorkbenchRoutes.toAppointmentApproval,
-              ),
-              SizedBox(height: AppDimens.dp16),
-              GridView.builder(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _entries.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: AppDimens.dp12,
-                  crossAxisSpacing: AppDimens.dp12,
-                  childAspectRatio: 0.95,
-                ),
-                itemBuilder: (context, index) {
-                  final entry = _entries[index];
-                  final color = _entryColors[index % _entryColors.length];
-                  return _GridActionCard(
-                    title: entry.title,
-                    count: entry.count,
-                    color: color,
-                    icon: entry.icon,
-                    onTap: () {
-                      switch (entry.title) {
-                        case '白名单审批':
-                          WorkbenchRoutes.toWhitelistApproval();
-                          break;
-                        case '黑名单审批':
-                          WorkbenchRoutes.toBlacklistApproval();
-                          break;
-                        case '车辆抽检':
-                          WorkbenchRoutes.toSpotInspection();
-                          break;
-                        case '园区巡检':
-                          WorkbenchRoutes.toParkInspection();
-                          break;
-                        case '隐患治理':
-                          WorkbenchRoutes.toHiddenDangerGovernance();
-                          break;
-                        case '申诉回复':
-                          WorkbenchRoutes.toAppealReply();
-                          break;
-                        case '报警处置':
-                          WorkbenchRoutes.toAlarmDisposal();
-                          break;
-                        case '预警处置':
-                          WorkbenchRoutes.toWarningDisposal();
-                          break;
-                        default:
-                          break;
-                      }
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
+          borderRadius: BorderRadius.circular(AppDimens.dp18),
         ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _TaskProgressCard(progressPercent: controller.taskProgressPercent),
+            SizedBox(height: AppDimens.dp16),
+            _PrimaryApprovalCard(
+              title: '预约审批',
+              count: controller.appointmentApprovalCount,
+              onTap: controller.openAppointmentApproval,
+            ),
+            SizedBox(height: AppDimens.dp16),
+            _SectionHeader(title: '业务快捷入口', subtitle: '按业务类型快速进入对应处理页面'),
+            SizedBox(height: AppDimens.dp12),
+            GridView.builder(
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.entries.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: AppDimens.dp12,
+                crossAxisSpacing: AppDimens.dp12,
+                childAspectRatio: 0.95,
+              ),
+              itemBuilder: (context, index) {
+                final entry = controller.entries[index];
+                return _GridActionCard(
+                  title: entry.title,
+                  count: entry.count,
+                  color: entry.color,
+                  icon: entry.icon,
+                  onTap: () => controller.openEntry(entry),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, required this.subtitle});
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: AppDimens.dp4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: const Color(0xFF1E3858),
+              fontSize: AppDimens.sp14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: AppDimens.dp4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              color: const Color(0xFF6C819A),
+              fontSize: AppDimens.sp10,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -452,16 +409,4 @@ class _GridActionCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _WorkbenchEntry {
-  const _WorkbenchEntry({
-    required this.title,
-    required this.count,
-    required this.icon,
-  });
-
-  final String title;
-  final int count;
-  final IconData icon;
 }

@@ -3,33 +3,81 @@ import 'package:get/get.dart';
 
 import '../../../../core/components/toast/toast_widget.dart';
 import '../../../../data/repository/workbench_repository.dart';
+import '../../../../router/module_routes/workbench_routes.dart';
 
 /// 工作台页面控制器。
 class WorkbenchController extends GetxController {
   final WorkbenchRepository _workbenchRepository = WorkbenchRepository();
+  static const int defaultPendingCount = 0;
 
   /// 任务进度百分比（0~100），用于展示文案与进度圈。
   double taskProgressPercent = 0;
+  int appointmentApprovalCount = defaultPendingCount;
 
-  /// 工作台快捷入口（演示数据）。
-  final List<WorkbenchQuickAction> quickActions = const [
-    WorkbenchQuickAction(
-      title: '待处理任务',
-      subtitle: '查看今日待办事项',
-      icon: Icons.assignment_turned_in_rounded,
-      color: Color(0xFF1E88E5),
+  /// 工作台入口配置。
+  final List<WorkbenchEntry> entries = const [
+    WorkbenchEntry(
+      title: '白名单审批',
+      count: defaultPendingCount,
+      icon: Icons.verified_user_outlined,
+      color: Color(0xFF3C84F6),
+      onTap: WorkbenchRoutes.toWhitelistApproval,
     ),
-    WorkbenchQuickAction(
-      title: '消息通知',
-      subtitle: '查看系统预警和公告',
-      icon: Icons.notifications_active_rounded,
-      color: Color(0xFFEF6C00),
+    WorkbenchEntry(
+      title: '黑名单审批',
+      count: defaultPendingCount,
+      icon: Icons.gpp_bad_outlined,
+      color: Color(0xFF4694FF),
+      onTap: WorkbenchRoutes.toBlacklistApproval,
     ),
-    WorkbenchQuickAction(
-      title: '快捷查询',
-      subtitle: '按条件快速检索业务数据',
-      icon: Icons.manage_search_rounded,
-      color: Color(0xFF2E7D32),
+    WorkbenchEntry(
+      title: '车辆抽检',
+      count: defaultPendingCount,
+      icon: Icons.directions_car_filled_outlined,
+      color: Color(0xFF5DA3FF),
+      onTap: WorkbenchRoutes.toSpotInspection,
+    ),
+    WorkbenchEntry(
+      title: '园区巡检',
+      count: defaultPendingCount,
+      icon: Icons.camera_outdoor_outlined,
+      color: Color(0xFF4B8EF7),
+      onTap: WorkbenchRoutes.toParkInspection,
+    ),
+    WorkbenchEntry(
+      title: '隐患治理',
+      count: defaultPendingCount,
+      icon: Icons.build_circle_outlined,
+      color: Color(0xFF6AA9FF),
+      onTap: WorkbenchRoutes.toHiddenDangerGovernance,
+    ),
+    WorkbenchEntry(
+      title: '异常确认',
+      count: defaultPendingCount,
+      icon: Icons.report_problem_outlined,
+      color: Color(0xFF55A0FF),
+      onTap: WorkbenchRoutes.toExceptionConfirmation,
+    ),
+    WorkbenchEntry(
+      title: '申诉回复',
+      count: defaultPendingCount,
+      icon: Icons.message_outlined,
+      color: Color(0xFF3F90F0),
+      onTap: WorkbenchRoutes.toAppealReply,
+    ),
+    WorkbenchEntry(
+      title: '报警处置',
+      count: defaultPendingCount,
+      icon: Icons.notifications_active_outlined,
+      color: Color(0xFF5A98F3),
+      onTap: WorkbenchRoutes.toAlarmDisposal,
+    ),
+    WorkbenchEntry(
+      title: '预警处置',
+      count: defaultPendingCount,
+      icon: Icons.warning_amber_rounded,
+      color: Color(0xFF73B1FF),
+      onTap: WorkbenchRoutes.toWarningDisposal,
     ),
   ];
 
@@ -53,19 +101,31 @@ class WorkbenchController extends GetxController {
       },
     );
   }
+
+  /// 进入预约审批。
+  void openAppointmentApproval() {
+    WorkbenchRoutes.toAppointmentApproval();
+  }
+
+  /// 进入工作台入口。
+  void openEntry(WorkbenchEntry entry) {
+    entry.onTap();
+  }
 }
 
-/// 工作台快捷入口卡片数据。
-class WorkbenchQuickAction {
+/// 工作台入口卡片数据。
+class WorkbenchEntry {
   final String title;
-  final String subtitle;
+  final int count;
   final IconData icon;
   final Color color;
+  final VoidCallback onTap;
 
-  const WorkbenchQuickAction({
+  const WorkbenchEntry({
     required this.title,
-    required this.subtitle,
+    required this.count,
     required this.icon,
     required this.color,
+    required this.onTap,
   });
 }

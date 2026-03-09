@@ -11,23 +11,14 @@ class WorkbenchView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('工作台')),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFF3F8FF), Color(0xFFEAF2FF)],
-          ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          AppDimens.dp16,
+          AppDimens.dp16,
+          AppDimens.dp16,
+          AppDimens.dp24,
         ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            AppDimens.dp16,
-            AppDimens.dp16,
-            AppDimens.dp16,
-            AppDimens.dp24,
-          ),
-          child: const WorkbenchContentSection(),
-        ),
+        child: const WorkbenchContentSection(),
       ),
     );
   }

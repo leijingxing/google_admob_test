@@ -5,6 +5,7 @@ import '../models/workbench/appeal_reply_item_model.dart';
 import '../models/workbench/appointment_approval_item_model.dart';
 import '../models/workbench/blacklist_approval_item_model.dart';
 import '../models/workbench/checkpoint_area_option_model.dart';
+import '../models/workbench/exception_confirmation_item_model.dart';
 import '../models/workbench/inspection_abnormal_item_model.dart';
 import '../models/workbench/inspection_rectification_item_model.dart';
 import '../models/workbench/risk_warning_disposal_item_model.dart';
@@ -665,6 +666,49 @@ class WorkbenchRepository {
     );
   }
 
+  /// 获取异常确认分页列表。
+  Future<Result<PaginatedResult<ExceptionConfirmationItemModel>>>
+  getExceptionConfirmationPage({
+    required int confirmStatus,
+    int current = 1,
+    int size = 20,
+    String? keyword,
+    String? reportTimeBegin,
+    String? reportTimeEnd,
+  }) {
+    final payload = <String, dynamic>{
+      ...buildPagePayload(pageIndex: current, pageSize: size),
+      'confirmStatus': confirmStatus,
+      'keyword': keyword,
+      'customParams': <Map<String, dynamic>>[
+        if (reportTimeBegin != null && reportTimeEnd != null)
+          <String, dynamic>{
+            'name': 'reportTime',
+            'operator': 'BETWEEN',
+            'values': <String>[reportTimeBegin, reportTimeEnd],
+          },
+      ],
+    };
+    payload.removeWhere((_, value) {
+      if (value == null) return true;
+      if (value is String && value.trim().isEmpty) return true;
+      if (value is List && value.isEmpty) return true;
+      return false;
+    });
+
+    return _httpService.post<PaginatedResult<ExceptionConfirmationItemModel>>(
+      '/api/closed-off/exceptionReport/page',
+      data: payload,
+      parser: (json) => parsePaginatedResult<ExceptionConfirmationItemModel>(
+        json: json,
+        requestPageIndex: current,
+        requestPageSize: size,
+        itemParser: (itemJson) =>
+            ExceptionConfirmationItemModel.fromJson(itemJson),
+      ),
+    );
+  }
+
   /// 获取巡检点位名称映射（id -> pointName）。
   Future<Result<Map<String, String>>> getInspectionPointNameMap() {
     return _httpService.get<Map<String, String>>(
@@ -874,6 +918,23 @@ class WorkbenchRepository {
       '/api/closed-off/inspectionAbnormal/confirm',
       data: payload,
     );
+    return result.when(
+      success: (_) => const Success<void>(null),
+      failure: (error) => Failure<void>(error),
+    );
+  }
+
+  /// 确认异常上报。
+  Future<Result<void>> confirmExceptionReport({
+    required String id,
+    required int isValid,
+    required String remark,
+  }) async {
+    final result = await _httpService.post<dynamic>(
+      '/api/closed-off/exceptionReport/confirm',
+      data: {'id': id, 'isValid': isValid, 'remark': remark},
+    );
+
     return result.when(
       success: (_) => const Success<void>(null),
       failure: (error) => Failure<void>(error),
