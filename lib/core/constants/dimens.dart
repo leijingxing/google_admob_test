@@ -35,6 +35,7 @@ abstract class AppDimens {
   static double dp58 = 58.w;
   static double dp60 = 60.w;
   static double dp64 = 64.w;
+  static double dp72 = 72.w;
   static double dp80 = 80.w;
   static double dp84 = 84.w;
   static double dp88 = 88.w;
@@ -61,12 +62,17 @@ abstract class AppDimens {
   static double sp12 = 12.sp;
   static double sp13 = 13.sp;
   static double sp14 = 14.sp;
+  static double sp15 = 15.sp;
   static double sp16 = 16.sp;
   static double sp18 = 18.sp;
   static double sp20 = 20.sp;
   static double sp22 = 22.sp;
   static double sp24 = 24.sp;
+  static double sp26 = 26.sp;
+  static double sp28 = 28.sp;
   static double sp30 = 30.sp;
+  static double sp32 = 32.sp;
+  static double sp36 = 36.sp;
 
   /// 屏幕高度
   static double get sh => ScreenUtil().screenHeight;

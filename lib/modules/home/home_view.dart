@@ -16,7 +16,7 @@ class HomeView extends GetView<HomeController> {
     return GetBuilder<HomeController>(
       builder: (logic) {
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F8FC),
+          backgroundColor: AppColors.background,
           body: IndexedStack(
             index: logic.currentIndex,
             children: const [DashboardView(), MessageView(), ProfileView()],
@@ -27,11 +27,11 @@ class HomeView extends GetView<HomeController> {
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF103A6F).withValues(alpha: 0.10),
+                      color: AppColors.navShadow,
                       blurRadius: 18,
                       offset: const Offset(0, 6),
                     ),
@@ -42,21 +42,21 @@ class HomeView extends GetView<HomeController> {
                   child: NavigationBarTheme(
                     data: NavigationBarThemeData(
                       height: 64,
-                      backgroundColor: Colors.white,
+                      backgroundColor: AppColors.surface,
                       indicatorColor: AppColors.primary.withValues(alpha: 0.14),
                       labelTextStyle: WidgetStateProperty.resolveWith((states) {
                         final isSelected = states.contains(WidgetState.selected);
                         return TextStyle(
                           fontSize: 12,
                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          color: isSelected ? AppColors.primary : const Color(0xFF8191A8),
+                          color: isSelected ? AppColors.primary : AppColors.navUnselected,
                         );
                       }),
                       iconTheme: WidgetStateProperty.resolveWith((states) {
                         final isSelected = states.contains(WidgetState.selected);
                         return IconThemeData(
                           size: 24,
-                          color: isSelected ? AppColors.primary : const Color(0xFF8191A8),
+                          color: isSelected ? AppColors.primary : AppColors.navUnselected,
                         );
                       }),
                     ),

@@ -37,8 +37,6 @@ class DashboardView extends GetView<DashboardController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const _DashboardHeader(),
-                      SizedBox(height: AppDimens.dp16),
                       Text(
                         '业务模块',
                         style: TextStyle(
@@ -84,78 +82,6 @@ class DashboardView extends GetView<DashboardController> {
           ),
         );
       },
-    );
-  }
-}
-
-class _DashboardHeader extends StatelessWidget {
-  const _DashboardHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(AppDimens.dp14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7FAFF),
-        borderRadius: BorderRadius.circular(AppDimens.dp18),
-        border: Border.all(color: const Color(0xFFD9E7FB)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '智慧园区',
-                  style: TextStyle(
-                    color: const Color(0xFF1D4F91),
-                    fontSize: AppDimens.sp11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: AppDimens.dp6),
-                Text(
-                  '业务入口总览',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: AppDimens.sp18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                SizedBox(height: AppDimens.dp6),
-                Text(
-                  '常用业务已集中展示，优先从工作台进入高频操作。',
-                  style: TextStyle(
-                    color: const Color(0xFF5E738E),
-                    fontSize: AppDimens.sp11,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: AppDimens.dp12),
-          Container(
-            width: AppDimens.dp54,
-            height: AppDimens.dp54,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFFE5F0FF), Color(0xFFD3E5FF)],
-              ),
-              borderRadius: BorderRadius.circular(AppDimens.dp16),
-            ),
-            child: Icon(
-              Icons.grid_view_rounded,
-              color: const Color(0xFF2D6FD2),
-              size: AppDimens.sp24,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
