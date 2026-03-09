@@ -21,12 +21,16 @@ class CustomDateRangePicker extends StatelessWidget {
   /// 是否使用紧凑模式（更小的高度与字号）
   final bool compact;
 
+  /// 是否显示并选择时分秒。
+  final bool showTime;
+
   const CustomDateRangePicker({
     super.key,
     this.startDate,
     this.endDate,
     required this.onDateRangeSelected,
     this.compact = false,
+    this.showTime = false,
   });
 
   @override
@@ -62,6 +66,13 @@ class CustomDateRangePicker extends StatelessWidget {
     return '$year年$month月$day日';
   }
 
+  static String _displayDateTime(DateTime date) {
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    final second = date.second.toString().padLeft(2, '0');
+    return '${_displayDate(date)} $hour:$minute:$second';
+  }
+
   /// 构建单个日期显示框
   Widget _buildDateDisplay({
     required BuildContext context,
@@ -70,7 +81,9 @@ class CustomDateRangePicker extends StatelessWidget {
   }) {
     final bool hasValue = date != null;
     final DateTime safeDate = date ?? _today;
-    final String displayText = hasValue ? _displayDate(safeDate) : label;
+    final String displayText = hasValue
+        ? (showTime ? _displayDateTime(safeDate) : _displayDate(safeDate))
+        : label;
 
     return InkWell(
       onTap: () => _showDatePickerSheet(context),
@@ -111,6 +124,7 @@ class CustomDateRangePicker extends StatelessWidget {
         return _DatePickerSheet(
           initialStartDate: startDate ?? _today,
           initialEndDate: endDate,
+          showTime: showTime,
           onConfirm: (start, end) {
             onDateRangeSelected(start, end);
             Navigator.of(context).pop();
@@ -125,11 +139,13 @@ class CustomDateRangePicker extends StatelessWidget {
 class _DatePickerSheet extends StatefulWidget {
   final DateTime? initialStartDate;
   final DateTime? initialEndDate;
+  final bool showTime;
   final Function(DateTime?, DateTime?) onConfirm;
 
   const _DatePickerSheet({
     this.initialStartDate,
     this.initialEndDate,
+    this.showTime = false,
     required this.onConfirm,
   });
 
@@ -188,7 +204,10 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
           SizedBox(
             height: 220,
             child: CupertinoDatePicker(
-              mode: CupertinoDatePickerMode.date,
+              mode: widget.showTime
+                  ? CupertinoDatePickerMode.dateAndTime
+                  : CupertinoDatePickerMode.date,
+              use24hFormat: true,
               initialDateTime: initialDateTime,
               minimumDate: minimumDate,
               maximumDate: DateTime(2101),
@@ -225,6 +244,7 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
             child: _buildToggleChild(
               label: '开始时间',
               date: _startDate,
+              showTime: widget.showTime,
               isSelected: _isSelectingStart,
               onTap: () => setState(() => _isSelectingStart = true),
             ),
@@ -234,6 +254,7 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
             child: _buildToggleChild(
               label: '结束时间',
               date: _endDate,
+              showTime: widget.showTime,
               isSelected: !_isSelectingStart,
               onTap: () => setState(() => _isSelectingStart = false),
             ),
@@ -246,6 +267,7 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
   Widget _buildToggleChild({
     required String label,
     required DateTime? date,
+    required bool showTime,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -323,7 +345,11 @@ class _DatePickerSheetState extends State<_DatePickerSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              date != null ? CustomDateRangePicker._displayDate(date) : '未设置',
+              date != null
+                  ? (showTime
+                        ? CustomDateRangePicker._displayDateTime(date)
+                        : CustomDateRangePicker._displayDate(date))
+                  : '未设置',
               style: TextStyle(
                 color: valueColor,
                 fontSize: 16,

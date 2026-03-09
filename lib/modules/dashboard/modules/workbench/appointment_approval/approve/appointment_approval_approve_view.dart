@@ -72,6 +72,7 @@ class AppointmentApprovalApproveView
                         endDate: logic.validityEnd,
                         onDateRangeSelected: logic.onValidityDateChanged,
                         compact: true,
+                        showTime: true,
                       ),
                       SizedBox(height: AppDimens.dp12),
                       _GateSelectorField(

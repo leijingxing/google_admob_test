@@ -18,8 +18,7 @@ AppointmentApprovalItemModel _$AppointmentApprovalItemModelFromJson(
   parkCheckStatus: json['parkCheckStatus'] == null
       ? 0
       : const IntSafeConverter().fromJson(json['parkCheckStatus']),
-  submitTime: const NullableStringSafeConverter().fromJson(json['submitTime']),
-  createTime: const NullableStringSafeConverter().fromJson(json['createTime']),
+  createDate: const NullableStringSafeConverter().fromJson(json['createDate']),
   parkCheckTime: const NullableStringSafeConverter().fromJson(
     json['parkCheckTime'],
   ),
@@ -33,8 +32,7 @@ Map<String, dynamic> _$AppointmentApprovalItemModelToJson(
   'carNumb': const NullableStringSafeConverter().toJson(instance.carNumb),
   'realName': const NullableStringSafeConverter().toJson(instance.realName),
   'parkCheckStatus': const IntSafeConverter().toJson(instance.parkCheckStatus),
-  'submitTime': const NullableStringSafeConverter().toJson(instance.submitTime),
-  'createTime': const NullableStringSafeConverter().toJson(instance.createTime),
+  'createDate': const NullableStringSafeConverter().toJson(instance.createDate),
   'parkCheckTime': const NullableStringSafeConverter().toJson(
     instance.parkCheckTime,
   ),

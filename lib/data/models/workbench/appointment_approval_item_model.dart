@@ -27,13 +27,9 @@ class AppointmentApprovalItemModel {
   @IntSafeConverter()
   final int parkCheckStatus;
 
-  /// 提交时间（接口字段可能不统一，当前优先读取 submitTime）。
+  /// 创建时间（文档字段：createDate）。
   @NullableStringSafeConverter()
-  final String? submitTime;
-
-  /// 创建时间（submitTime 缺失时兜底）。
-  @NullableStringSafeConverter()
-  final String? createTime;
+  final String? createDate;
 
   /// 审批时间。
   @NullableStringSafeConverter()
@@ -45,8 +41,7 @@ class AppointmentApprovalItemModel {
     this.carNumb,
     this.realName,
     this.parkCheckStatus = 0,
-    this.submitTime,
-    this.createTime,
+    this.createDate,
     this.parkCheckTime,
   });
 

@@ -34,7 +34,7 @@ class AppointmentApprovalController extends GetxController {
 
   /// 预约类型选项。
   final List<WorkbenchFilterOption<int?>> reservationTypeOptions = const [
-    WorkbenchFilterOption(label: '预约类型', value: null),
+    WorkbenchFilterOption(label: '全部', value: null),
     WorkbenchFilterOption(label: '来访人员', value: 1),
     WorkbenchFilterOption(label: '普通车辆', value: 2),
     WorkbenchFilterOption(label: '危化车辆', value: 3),
@@ -43,13 +43,20 @@ class AppointmentApprovalController extends GetxController {
   ];
 
   /// 状态选项。
-  final List<WorkbenchFilterOption<int?>> statusOptions = const [
-    WorkbenchFilterOption(label: '状态', value: null),
-    WorkbenchFilterOption(label: '待审批', value: 0),
-    WorkbenchFilterOption(label: '已审批', value: 1),
-    WorkbenchFilterOption(label: '已拒绝', value: 2),
-    WorkbenchFilterOption(label: '已过期', value: 3),
+  static const List<WorkbenchFilterOption<int?>> _pendingStatusOptions = [
+    WorkbenchFilterOption(label: '全部', value: null),
+    WorkbenchFilterOption(label: '待审核', value: 0),
   ];
+
+  /// 已审批页状态选项。
+  static const List<WorkbenchFilterOption<int?>> _approvedStatusOptions = [
+    WorkbenchFilterOption(label: '全部', value: null),
+    WorkbenchFilterOption(label: '通过', value: 1),
+    WorkbenchFilterOption(label: '拒绝', value: 2),
+  ];
+
+  List<WorkbenchFilterOption<int?>> get statusOptions =>
+      currentTabIndex == 0 ? _pendingStatusOptions : _approvedStatusOptions;
 
   @override
   void onClose() {
@@ -61,6 +68,7 @@ class AppointmentApprovalController extends GetxController {
   Future<void> onTabChanged(int index) async {
     if (currentTabIndex == index) return;
     currentTabIndex = index;
+    parkCheckStatus = _normalizeParkCheckStatus(parkCheckStatus, index);
     update();
   }
 
@@ -70,7 +78,7 @@ class AppointmentApprovalController extends GetxController {
     required int? nextStatus,
   }) {
     reservationType = nextReservationType;
-    parkCheckStatus = nextStatus;
+    parkCheckStatus = _normalizeParkCheckStatus(nextStatus, currentTabIndex);
     update();
     _triggerRefresh();
   }
@@ -110,7 +118,7 @@ class AppointmentApprovalController extends GetxController {
       current: pageIndex,
       size: pageSize,
       reservationType: reservationType,
-      parkCheckStatus: parkCheckStatus,
+      parkCheckStatus: _effectiveParkCheckStatus(tabIndex),
       keywords: keywords,
       beginTime: dateRange == null ? null : _formatDateTime(dateRange!.start),
       endTime: dateRange == null ? null : _formatDateTime(dateRange!.end),
@@ -153,21 +161,19 @@ class AppointmentApprovalController extends GetxController {
   String statusText(int status) {
     switch (status) {
       case 0:
-        return '待园区审批';
+        return '待审核';
       case 1:
-        return '已审批';
+        return '通过';
       case 2:
-        return '已拒绝';
-      case 3:
-        return '已过期';
+        return '拒绝';
       default:
         return '未知状态';
     }
   }
 
-  /// 提交时间文案，优先 submitTime。
+  /// 提交时间文案，按文档优先取 `createDate`。
   String submitTimeText(AppointmentApprovalItemModel item) {
-    return item.submitTime ?? item.createTime ?? '--';
+    return item.createDate ?? '--';
   }
 
   String _formatDateTime(DateTime date) {
@@ -179,6 +185,20 @@ class AppointmentApprovalController extends GetxController {
   }
 
   String _pad2(int value) => value.toString().padLeft(2, '0');
+
+  int? _effectiveParkCheckStatus(int tabIndex) {
+    return tabIndex == 0 ? 0 : _normalizeParkCheckStatus(parkCheckStatus, 1);
+  }
+
+  int? _normalizeParkCheckStatus(int? status, int tabIndex) {
+    if (tabIndex == 0) {
+      return status == 0 ? 0 : null;
+    }
+    if (status == 1 || status == 2) {
+      return status;
+    }
+    return null;
+  }
 
   void _triggerRefresh() {
     refreshTrigger.value++;

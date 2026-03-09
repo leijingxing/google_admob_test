@@ -238,15 +238,17 @@ class _TopFilterSection extends StatelessWidget {
                         setModalState(() => tempReservationType = value);
                       },
                     ),
-                    SizedBox(height: AppDimens.dp10),
-                    _FilterDropdownField(
-                      title: '状态',
-                      value: tempParkCheckStatus,
-                      options: controller.statusOptions,
-                      onChanged: (value) {
-                        setModalState(() => tempParkCheckStatus = value);
-                      },
-                    ),
+                    if (controller.currentTabIndex != 0) ...[
+                      SizedBox(height: AppDimens.dp10),
+                      _FilterDropdownField(
+                        title: '状态',
+                        value: tempParkCheckStatus,
+                        options: controller.statusOptions,
+                        onChanged: (value) {
+                          setModalState(() => tempParkCheckStatus = value);
+                        },
+                      ),
+                    ],
                     SizedBox(height: AppDimens.dp14),
                     Row(
                       children: [
@@ -469,12 +471,6 @@ class _ApprovalCard extends StatelessWidget {
           textColor: Color(0xFFDA5A18),
           backgroundColor: Color(0xFFFFF1E8),
           borderColor: Color(0xFFF6D0B8),
-        );
-      case 3:
-        return const AppCardStatusStyle(
-          textColor: Color(0xFF64748B),
-          backgroundColor: Color(0xFFF0F3F7),
-          borderColor: Color(0xFFD6DFEA),
         );
       default:
         return const AppCardStatusStyle(

@@ -83,23 +83,24 @@ class AppointmentApprovalApproveController extends GetxController {
   }
 
   void _applyDetailDefaults() {
-    validityStart = _parseDateTime(detail['validityBeginTime']);
-    validityEnd = _parseDateTime(detail['validityEndTime']);
-    sampleCheck = _toInt(detail['sampleCheck']) == 1;
+    final data = _detailData();
+    validityStart = _parseDateTime(data['validityBeginTime']);
+    validityEnd = _parseDateTime(data['validityEndTime']);
+    sampleCheck = _toInt(data['sampleCheck']) == 1;
 
-    final desc = (detail['parkCheckDesc'] ?? '').toString().trim();
+    final desc = (data['parkCheckDesc'] ?? '').toString().trim();
     if (desc.isNotEmpty && parkCheckDescController.text.trim().isEmpty) {
       parkCheckDescController.text = desc;
     }
 
-    _inDefaultAreaIds = _splitCsv(detail['inDistrictId']);
-    _outDefaultAreaIds = _splitCsv(detail['outDistrictId']);
-    _inDefaultDeviceCodes = _splitCsv(detail['inDeviceCode']);
-    _outDefaultDeviceCodes = _splitCsv(detail['outDeviceCode']);
-    _inDefaultAreaNames = _splitCsv(detail['inDistrictName']);
-    _outDefaultAreaNames = _splitCsv(detail['outDistrictName']);
-    _inDefaultDeviceNames = _splitCsv(detail['inDeviceName']);
-    _outDefaultDeviceNames = _splitCsv(detail['outDeviceName']);
+    _inDefaultAreaIds = _splitCsv(data['inDistrictId']);
+    _outDefaultAreaIds = _splitCsv(data['outDistrictId']);
+    _inDefaultDeviceCodes = _splitCsv(data['inDeviceCode']);
+    _outDefaultDeviceCodes = _splitCsv(data['outDeviceCode']);
+    _inDefaultAreaNames = _splitCsv(data['inDistrictName']);
+    _outDefaultAreaNames = _splitCsv(data['outDistrictName']);
+    _inDefaultDeviceNames = _splitCsv(data['inDeviceName']);
+    _outDefaultDeviceNames = _splitCsv(data['outDeviceName']);
   }
 
   Future<void> onValidityDateChanged(DateTime? start, DateTime? end) async {
@@ -109,22 +110,6 @@ class AppointmentApprovalApproveController extends GetxController {
     } else {
       validityStart = start.isBefore(end) ? start : end;
       validityEnd = start.isBefore(end) ? end : start;
-      validityStart = DateTime(
-        validityStart!.year,
-        validityStart!.month,
-        validityStart!.day,
-        0,
-        0,
-        0,
-      );
-      validityEnd = DateTime(
-        validityEnd!.year,
-        validityEnd!.month,
-        validityEnd!.day,
-        23,
-        59,
-        59,
-      );
     }
     update();
     await _reloadGateOptions();
@@ -391,7 +376,7 @@ class AppointmentApprovalApproveController extends GetxController {
   }
 
   List<AppointmentApproveDetailLine> buildDetailLines() {
-    final data = detail;
+    final data = _detailData();
     return <AppointmentApproveDetailLine>[
       AppointmentApproveDetailLine(
         label: '预约类型',
@@ -415,13 +400,17 @@ class AppointmentApprovalApproveController extends GetxController {
       ),
       AppointmentApproveDetailLine(
         label: '提交时间',
-        value: _firstNonEmpty(
-          data['submitTime'],
-          item.submitTime,
-          item.createTime,
-        ),
+        value: _firstNonEmpty(data['createDate'], item.createDate),
       ),
     ].where((e) => e.value != '--').toList();
+  }
+
+  Map<String, dynamic> _detailData() {
+    final specific = detail['specificData'];
+    if (specific is Map) {
+      return Map<String, dynamic>.from(specific);
+    }
+    return detail;
   }
 
   List<String> _splitCsv(Object? value) {
