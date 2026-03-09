@@ -4,6 +4,8 @@ import '../../../data/models/workbench/system_department_tree_model.dart';
 import '../../../data/models/workbench/system_post_item_model.dart';
 import '../../../data/models/workbench/system_user_item_model.dart';
 import '../../../data/repository/workbench_repository.dart';
+import '../../components/app_form_styles.dart';
+import '../../components/app_standard_card.dart';
 import '../../constants/dimens.dart';
 import '../toast/toast_widget.dart';
 
@@ -59,8 +61,10 @@ class AppUserSelectField extends StatelessWidget {
   Widget build(BuildContext context) {
     final selected = value;
     final hasValue = selected != null;
-    final resolvedBorderRadius = borderRadius ?? BorderRadius.circular(AppDimens.dp6);
-    final resolvedBorderColor = borderColor ?? const Color(0xFFC9D2DF);
+    final resolvedBorderRadius = borderRadius ?? AppFormStyles.borderRadius;
+    final resolvedBorderColor = borderColor ?? AppFormStyles.borderColor;
+    final backgroundColor = enabled ? AppFormStyles.fillColor : AppFormStyles.disabledFillColor;
+    final titleColor = enabled ? const Color(0xFF2E3B4D) : AppFormStyles.disabledTextColor;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,10 +76,13 @@ class AppUserSelectField extends StatelessWidget {
                 '* ',
                 style: TextStyle(color: Color(0xFFE55E59), fontWeight: FontWeight.w700),
               ),
-            Text(label, style: TextStyle(fontSize: AppDimens.sp12)),
+            Text(
+              label,
+              style: TextStyle(color: titleColor, fontSize: AppDimens.sp12, fontWeight: FontWeight.w700),
+            ),
           ],
         ),
-        SizedBox(height: AppDimens.dp4),
+        SizedBox(height: AppDimens.dp8),
         InkWell(
           onTap: enabled
               ? () async {
@@ -88,53 +95,77 @@ class AppUserSelectField extends StatelessWidget {
           borderRadius: resolvedBorderRadius,
           child: Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: AppDimens.dp10, vertical: AppDimens.dp10),
+            padding: EdgeInsets.symmetric(horizontal: AppDimens.dp12, vertical: AppDimens.dp12),
             decoration: BoxDecoration(
-              color: enabled ? Colors.white : const Color(0xFFF5F6F8),
+              color: backgroundColor,
               borderRadius: resolvedBorderRadius,
               border: Border.all(color: resolvedBorderColor),
+              boxShadow: enabled ? const [BoxShadow(color: Color(0x080F172A), blurRadius: 10, offset: Offset(0, 4))] : null,
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                Container(
+                  width: AppDimens.dp30,
+                  height: AppDimens.dp30,
+                  decoration: BoxDecoration(color: enabled ? const Color(0xFFF2F6FD) : const Color(0xFFE9EEF5), borderRadius: BorderRadius.circular(AppDimens.dp9)),
+                  child: Icon(Icons.person_search_rounded, size: 18, color: enabled ? const Color(0xFF5A6C84) : const Color(0xFF98A5B5)),
+                ),
+                SizedBox(width: AppDimens.dp10),
                 Expanded(
                   child: hasValue
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              selected.displayName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: AppDimens.sp13, color: const Color(0xFF2B3A4F), fontWeight: FontWeight.w600),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    selected.displayName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(fontSize: AppDimens.sp13, color: enabled ? const Color(0xFF223146) : AppFormStyles.disabledTextColor, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                if (selected.companyName.isNotEmpty) ...[SizedBox(width: AppDimens.dp6), _MetaTag(text: '已选择', enabled: enabled)],
+                              ],
                             ),
-                            if (selected.postName.isNotEmpty || selected.phone.isNotEmpty)
+                            if (selected.postName.isNotEmpty || selected.phone.isNotEmpty || selected.companyName.isNotEmpty)
                               Padding(
-                                padding: EdgeInsets.only(top: AppDimens.dp2),
+                                padding: EdgeInsets.only(top: AppDimens.dp4),
                                 child: Text(
                                   _buildSubLine(selected),
-                                  maxLines: 1,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: AppDimens.sp11, color: const Color(0xFF8A97A8)),
+                                  style: TextStyle(fontSize: AppDimens.sp11, color: enabled ? const Color(0xFF8A97A8) : AppFormStyles.disabledHintColor, height: 1.45),
                                 ),
                               ),
                           ],
                         )
                       : Text(
                           hintText,
-                          style: TextStyle(fontSize: AppDimens.sp12, color: const Color(0xFF9AA7B8)),
+                          style: TextStyle(fontSize: AppDimens.sp12, color: enabled ? AppFormStyles.hintColor : AppFormStyles.disabledHintColor, fontWeight: FontWeight.w500),
                         ),
                 ),
                 if (hasValue && clearable && enabled)
                   GestureDetector(
                     onTap: () => onChanged(null),
                     behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: EdgeInsets.only(right: AppDimens.dp8),
-                      child: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF9AA7B8)),
+                    child: Container(
+                      width: AppDimens.dp24,
+                      height: AppDimens.dp24,
+                      margin: EdgeInsets.only(right: AppDimens.dp8),
+                      decoration: BoxDecoration(color: const Color(0xFFF2F5FA), borderRadius: BorderRadius.circular(AppDimens.dp12)),
+                      child: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF90A0B3)),
                     ),
                   ),
-                Icon(Icons.keyboard_arrow_down_rounded, color: enabled ? const Color(0xFF7E8EA4) : const Color(0xFFB7C0CE)),
+                Container(
+                  width: AppDimens.dp24,
+                  height: AppDimens.dp24,
+                  decoration: BoxDecoration(color: enabled ? const Color(0xFFF2F5FA) : const Color(0xFFE9EEF5), borderRadius: BorderRadius.circular(AppDimens.dp12)),
+                  child: Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: enabled ? const Color(0xFF7E8EA4) : const Color(0xFFB7C0CE)),
+                ),
               ],
             ),
           ),
@@ -151,7 +182,29 @@ class AppUserSelectField extends StatelessWidget {
     if (selected.phone.isNotEmpty) {
       parts.add('电话：${selected.phone}');
     }
+    if (selected.companyName.isNotEmpty) {
+      parts.add('单位：${selected.companyName}');
+    }
     return parts.join('  ');
+  }
+}
+
+class _MetaTag extends StatelessWidget {
+  const _MetaTag({required this.text, required this.enabled});
+
+  final String text;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: AppDimens.dp8, vertical: AppDimens.dp3),
+      decoration: BoxDecoration(color: enabled ? const Color(0xFFE9F1FF) : const Color(0xFFEAEFF5), borderRadius: BorderRadius.circular(999)),
+      child: Text(
+        text,
+        style: TextStyle(color: enabled ? const Color(0xFF3A78F2) : const Color(0xFF8FA0B4), fontSize: AppDimens.sp10, fontWeight: FontWeight.w700),
+      ),
+    );
   }
 }
 
@@ -317,32 +370,77 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
             children: [
               _buildTypeSwitcher(),
               SizedBox(height: AppDimens.dp10),
-              _buildFilterPanel(),
+              AppStandardCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _SelectSectionTitle(text: '筛选条件'),
+                    SizedBox(height: AppDimens.dp12),
+                    _buildFilterPanel(),
+                    SizedBox(height: AppDimens.dp10),
+                    _buildSearchBar(),
+                  ],
+                ),
+              ),
               SizedBox(height: AppDimens.dp10),
-              _buildSearchBar(),
-              SizedBox(height: AppDimens.dp10),
-              Expanded(child: _buildUserList()),
-              SizedBox(height: AppDimens.dp10),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text('取消')),
+              Expanded(
+                child: AppStandardCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _SelectSectionTitle(text: '人员列表', suffix: '${_users.length}人'),
+                      SizedBox(height: AppDimens.dp12),
+                      Expanded(child: _buildUserList()),
+                    ],
                   ),
-                  SizedBox(width: AppDimens.dp10),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () {
-                        final selected = _selectedUser;
-                        if (selected == null) {
-                          AppToast.showWarning('请选择人员');
-                          return;
-                        }
-                        Navigator.of(context).pop(selected);
-                      },
-                      child: const Text('确定'),
-                    ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          padding: EdgeInsets.fromLTRB(AppDimens.dp12, AppDimens.dp10, AppDimens.dp12, AppDimens.dp10),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Color(0xFFE7EDF5))),
+            boxShadow: [BoxShadow(color: Color(0x0A0F172A), blurRadius: 14, offset: Offset(0, -2))],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: Size.fromHeight(AppDimens.dp44),
+                    side: const BorderSide(color: Color(0xFFD7DFEB)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.dp10)),
+                    foregroundColor: const Color(0xFF5C6B7D),
                   ),
-                ],
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('取消'),
+                ),
+              ),
+              SizedBox(width: AppDimens.dp10),
+              Expanded(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    minimumSize: Size.fromHeight(AppDimens.dp44),
+                    backgroundColor: const Color(0xFF3A78F2),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.dp10)),
+                    elevation: 0,
+                  ),
+                  onPressed: () {
+                    final selected = _selectedUser;
+                    if (selected == null) {
+                      AppToast.showWarning('请选择人员');
+                      return;
+                    }
+                    Navigator.of(context).pop(selected);
+                  },
+                  child: const Text('确定'),
+                ),
               ),
             ],
           ),
@@ -366,6 +464,8 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
             style: FilledButton.styleFrom(
               backgroundColor: _treeType == _UserTreeType.role ? const Color(0xFF3A78F2) : const Color(0xFFEFF3FA),
               foregroundColor: _treeType == _UserTreeType.role ? Colors.white : const Color(0xFF4A5A70),
+              padding: EdgeInsets.symmetric(vertical: AppDimens.dp12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.dp12)),
             ),
             child: const Text('按岗位'),
           ),
@@ -383,6 +483,8 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
             style: FilledButton.styleFrom(
               backgroundColor: _treeType == _UserTreeType.organization ? const Color(0xFF3A78F2) : const Color(0xFFEFF3FA),
               foregroundColor: _treeType == _UserTreeType.organization ? Colors.white : const Color(0xFF4A5A70),
+              padding: EdgeInsets.symmetric(vertical: AppDimens.dp12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.dp12)),
             ),
             child: const Text('按组织架构'),
           ),
@@ -404,14 +506,15 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
     if (_treeType == _UserTreeType.organization) {
       return DropdownButtonFormField<String>(
         initialValue: _selectedDepartmentId,
-        items: _departmentOptions
-            .map(
-              (item) => DropdownMenuItem<String>(
-                value: item.value,
-                child: Text(item.label, maxLines: 1, overflow: TextOverflow.ellipsis),
-              ),
-            )
-            .toList(),
+        isExpanded: true,
+        itemHeight: null,
+        borderRadius: AppFormStyles.dropdownBorderRadius,
+        dropdownColor: AppFormStyles.dropdownBackgroundColor,
+        menuMaxHeight: AppFormStyles.dropdownMenuMaxHeight,
+        items: _departmentOptions.map((item) => DropdownMenuItem<String>(value: item.value, child: AppDropdownMenuText(item.label))).toList(),
+        selectedItemBuilder: (context) {
+          return _departmentOptions.map((item) => AppDropdownSelectedText(item.label)).toList();
+        },
         onChanged: (value) {
           if (value == null) return;
           setState(() {
@@ -419,12 +522,16 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
           });
           _loadUsers();
         },
-        decoration: const InputDecoration(isDense: true, labelText: '部门筛选', border: OutlineInputBorder()),
+        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF7B8798)),
+        decoration: AppFormStyles.editableInputDecoration(
+          hintText: '部门筛选',
+          prefixIcon: const Icon(Icons.account_tree_outlined, size: 18, color: Color(0xFF7B8798)),
+        ),
       );
     }
 
     final postItems = <DropdownMenuItem<String>>[
-      const DropdownMenuItem<String>(value: _allOptionValue, child: Text('全部岗位')),
+      const DropdownMenuItem<String>(value: _allOptionValue, child: AppDropdownMenuText('全部岗位')),
       ..._posts
           .map((item) {
             final id = (item.id ?? '').trim();
@@ -432,14 +539,22 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
             if (id.isEmpty) {
               return const DropdownMenuItem<String>(value: '', child: SizedBox());
             }
-            return DropdownMenuItem<String>(value: id, child: Text(postName.isEmpty ? id : postName));
+            return DropdownMenuItem<String>(value: id, child: AppDropdownMenuText(postName.isEmpty ? id : postName));
           })
           .where((item) => item.value != ''),
     ];
 
     return DropdownButtonFormField<String>(
       initialValue: _selectedPostId,
+      isExpanded: true,
+      itemHeight: null,
+      borderRadius: AppFormStyles.dropdownBorderRadius,
+      dropdownColor: AppFormStyles.dropdownBackgroundColor,
+      menuMaxHeight: AppFormStyles.dropdownMenuMaxHeight,
       items: postItems,
+      selectedItemBuilder: (context) {
+        return postItems.map((item) => AppDropdownSelectedText(_dropdownItemText(item))).toList();
+      },
       onChanged: (value) {
         if (value == null) return;
         setState(() {
@@ -447,27 +562,24 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
         });
         _loadUsers();
       },
-      decoration: const InputDecoration(isDense: true, labelText: '岗位筛选', border: OutlineInputBorder()),
+      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF7B8798)),
+      decoration: AppFormStyles.editableInputDecoration(
+        hintText: '岗位筛选',
+        prefixIcon: const Icon(Icons.badge_outlined, size: 18, color: Color(0xFF7B8798)),
+      ),
     );
   }
 
   Widget _buildSearchBar() {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _keywordController,
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => _loadUsers(),
-            decoration: InputDecoration(
-              hintText: '请输入姓名/关键字',
-              isDense: true,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDimens.dp6)),
-              suffixIcon: IconButton(onPressed: _loadUsers, icon: const Icon(Icons.search_rounded), tooltip: '查询'),
-            ),
-          ),
-        ),
-      ],
+    return TextField(
+      controller: _keywordController,
+      textInputAction: TextInputAction.search,
+      onSubmitted: (_) => _loadUsers(),
+      decoration: AppFormStyles.editableInputDecoration(
+        hintText: '请输入姓名/关键字',
+        prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF7B8798)),
+        suffixIcon: IconButton(onPressed: _loadUsers, icon: const Icon(Icons.arrow_forward_rounded), tooltip: '查询'),
+      ),
     );
   }
 
@@ -476,17 +588,12 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_users.isEmpty) {
-      return Center(
-        child: Text(
-          '暂无人员数据',
-          style: TextStyle(fontSize: AppDimens.sp12, color: const Color(0xFF8A97A8)),
-        ),
-      );
+      return const _UserEmptyState();
     }
 
     return ListView.separated(
       itemCount: _users.length,
-      separatorBuilder: (_, _) => SizedBox(height: AppDimens.dp8),
+      separatorBuilder: (_, index) => SizedBox(height: AppDimens.dp8),
       itemBuilder: (context, index) {
         final row = _users[index];
         final id = (row.id ?? '').trim();
@@ -500,41 +607,60 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
                     _selectedUser = AppSelectedUser.fromSystemUser(row);
                   });
                 },
-          borderRadius: BorderRadius.circular(AppDimens.dp8),
-          child: Container(
-            padding: EdgeInsets.all(AppDimens.dp10),
+          borderRadius: BorderRadius.circular(AppDimens.dp12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: EdgeInsets.all(AppDimens.dp12),
             decoration: BoxDecoration(
               color: selected ? const Color(0xFFEAF1FF) : Colors.white,
-              borderRadius: BorderRadius.circular(AppDimens.dp8),
+              borderRadius: BorderRadius.circular(AppDimens.dp12),
               border: Border.all(color: selected ? const Color(0xFF3A78F2) : const Color(0xFFDCE3EE)),
+              boxShadow: [BoxShadow(color: selected ? const Color(0x143A78F2) : const Color(0x080F172A), blurRadius: selected ? 12 : 8, offset: const Offset(0, 3))],
             ),
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _nonEmpty((row.userName ?? '').trim(), fallback: id),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: AppDimens.sp13, color: const Color(0xFF2E3B4D), fontWeight: FontWeight.w700),
+                Container(
+                  width: AppDimens.dp36,
+                  height: AppDimens.dp36,
+                  decoration: BoxDecoration(color: selected ? const Color(0xFFDDEAFF) : const Color(0xFFF3F6FB), borderRadius: BorderRadius.circular(AppDimens.dp12)),
+                  child: Icon(Icons.person_outline_rounded, size: 20, color: selected ? const Color(0xFF3A78F2) : const Color(0xFF8DA0B5)),
+                ),
+                SizedBox(width: AppDimens.dp10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _nonEmpty((row.userName ?? '').trim(), fallback: id),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: AppDimens.sp13, color: const Color(0xFF223146), fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          Container(
+                            width: AppDimens.dp24,
+                            height: AppDimens.dp24,
+                            decoration: BoxDecoration(color: selected ? const Color(0xFFE1ECFF) : const Color(0xFFF3F6FB), borderRadius: BorderRadius.circular(AppDimens.dp12)),
+                            child: Icon(
+                              selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
+                              size: 18,
+                              color: selected ? const Color(0xFF3A78F2) : const Color(0xFF9AA7B8),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    Icon(selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded, size: 18, color: selected ? const Color(0xFF3A78F2) : const Color(0xFF9AA7B8)),
-                  ],
-                ),
-                SizedBox(height: AppDimens.dp4),
-                Text(
-                  '岗位：${_nonEmpty((row.postName ?? '').trim())}   手机：${_nonEmpty((row.phone ?? '').trim())}',
-                  style: TextStyle(fontSize: AppDimens.sp11, color: const Color(0xFF7E8DA1)),
-                ),
-                SizedBox(height: AppDimens.dp2),
-                Text(
-                  '单位：${_nonEmpty((row.companyName ?? '').trim())}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: AppDimens.sp11, color: const Color(0xFF7E8DA1)),
+                      SizedBox(height: AppDimens.dp4),
+                      _UserMetaLine(label: '岗位', value: _nonEmpty((row.postName ?? '').trim())),
+                      SizedBox(height: AppDimens.dp3),
+                      _UserMetaLine(label: '手机', value: _nonEmpty((row.phone ?? '').trim())),
+                      SizedBox(height: AppDimens.dp3),
+                      _UserMetaLine(label: '单位', value: _nonEmpty((row.companyName ?? '').trim())),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -547,6 +673,111 @@ class _AppUserSelectPageState extends State<_AppUserSelectPage> {
   String _nonEmpty(String value, {String fallback = '--'}) {
     if (value.trim().isEmpty) return fallback;
     return value;
+  }
+
+  String _dropdownItemText(DropdownMenuItem<String> item) {
+    final child = item.child;
+    if (child is AppDropdownMenuText) {
+      return child.text;
+    }
+    if (child is Text) {
+      return child.data ?? '';
+    }
+    return item.value ?? '';
+  }
+}
+
+class _SelectSectionTitle extends StatelessWidget {
+  const _SelectSectionTitle({required this.text, this.suffix});
+
+  final String text;
+  final String? suffix;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: AppDimens.dp4,
+          height: AppDimens.dp14,
+          decoration: BoxDecoration(color: const Color(0xFF3A78F2), borderRadius: BorderRadius.circular(999)),
+        ),
+        SizedBox(width: AppDimens.dp8),
+        Text(
+          text,
+          style: TextStyle(color: const Color(0xFF223146), fontSize: AppDimens.sp13, fontWeight: FontWeight.w700),
+        ),
+        if ((suffix ?? '').isNotEmpty) ...[
+          SizedBox(width: AppDimens.dp8),
+          Text(
+            suffix!,
+            style: TextStyle(color: const Color(0xFF7B8798), fontSize: AppDimens.sp11),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _UserMetaLine extends StatelessWidget {
+  const _UserMetaLine({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: AppDimens.dp34,
+          child: Text(
+            '$label：',
+            style: TextStyle(fontSize: AppDimens.sp11, color: const Color(0xFF8A97A8)),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: AppDimens.sp11, color: const Color(0xFF66768B)),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _UserEmptyState extends StatelessWidget {
+  const _UserEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: AppDimens.dp54,
+            height: AppDimens.dp54,
+            decoration: BoxDecoration(color: const Color(0xFFEFF4FB), borderRadius: BorderRadius.circular(AppDimens.dp18)),
+            child: const Icon(Icons.inbox_outlined, color: Color(0xFF8A97A8), size: 28),
+          ),
+          SizedBox(height: AppDimens.dp12),
+          Text(
+            '暂无人员数据',
+            style: TextStyle(fontSize: AppDimens.sp13, color: const Color(0xFF223146), fontWeight: FontWeight.w700),
+          ),
+          SizedBox(height: AppDimens.dp6),
+          Text(
+            '请调整筛选条件后重试',
+            style: TextStyle(fontSize: AppDimens.sp11, color: const Color(0xFF8A97A8)),
+          ),
+        ],
+      ),
+    );
   }
 }
 

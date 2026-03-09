@@ -24,18 +24,75 @@ class HiddenDangerGovernanceDetailView extends GetView<HiddenDangerGovernanceDet
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _IntroCard(statusText: logic.statusText),
+                      SizedBox(height: AppDimens.dp12),
                       _DetailOverviewCard(controller: logic),
                       SizedBox(height: AppDimens.dp12),
                       _InfoSectionCard(controller: logic),
                       SizedBox(height: AppDimens.dp12),
-                      _SectionHeader(title: '整改记录', subtitle: '${logic.rectifications.length}条'),
-                      SizedBox(height: AppDimens.dp8),
-                      _TimelineSection(nodes: logic.timelineNodes),
+                      AppStandardCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _SectionHeader(title: '整改记录', subtitle: '${logic.rectifications.length}条'),
+                            SizedBox(height: AppDimens.dp10),
+                            _TimelineSection(nodes: logic.timelineNodes),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
         );
       },
+    );
+  }
+}
+
+class _IntroCard extends StatelessWidget {
+  const _IntroCard({required this.statusText});
+
+  final String statusText;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppStandardCard(
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(AppDimens.dp12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFFF2F8FF), Color(0xFFFAFCFF)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          borderRadius: BorderRadius.circular(AppDimens.dp10),
+          border: Border.all(color: const Color(0xFFD8E6FF)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: AppDimens.dp30,
+                  height: AppDimens.dp30,
+                  decoration: BoxDecoration(color: const Color(0xFFE8F1FF), borderRadius: BorderRadius.circular(AppDimens.dp9)),
+                  child: const Icon(Icons.assignment_outlined, size: 18, color: Color(0xFF3A78F2)),
+                ),
+                SizedBox(width: AppDimens.dp10),
+                Expanded(
+                  child: Text(
+                    '隐患详情说明',
+                    style: TextStyle(color: const Color(0xFF243447), fontSize: AppDimens.sp13, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: AppDimens.dp8),
+            Text(
+              '此页面展示隐患上报详情与整改时间线，当前状态为$statusText，可用于完整查看处理过程。',
+              style: TextStyle(color: const Color(0xFF6C7A8C), fontSize: AppDimens.sp12, height: 1.6),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -47,89 +104,104 @@ class _DetailOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(AppDimens.dp16, AppDimens.dp16, AppDimens.dp16, AppDimens.dp14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFFFFFFF), Color(0xFFF2F7FF)]),
-        borderRadius: BorderRadius.circular(AppDimens.dp18),
-        border: Border.all(color: const Color(0xFFD9E6FB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      controller.pointText,
-                      style: TextStyle(color: const Color(0xFF223146), fontSize: AppDimens.sp18, fontWeight: FontWeight.w700),
-                    ),
-                    SizedBox(height: AppDimens.dp6),
-                    Text(
-                      controller.ruleText,
-                      style: TextStyle(color: const Color(0xFF6B7A90), fontSize: AppDimens.sp12),
-                    ),
-                  ],
+    return AppStandardCard(
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.fromLTRB(AppDimens.dp14, AppDimens.dp14, AppDimens.dp14, AppDimens.dp14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFF2F8FF), Color(0xFFFAFCFF)]),
+          borderRadius: BorderRadius.circular(AppDimens.dp12),
+          border: Border.all(color: const Color(0xFFD8E6FF)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        controller.pointText,
+                        style: TextStyle(color: const Color(0xFF223146), fontSize: AppDimens.sp18, fontWeight: FontWeight.w700),
+                      ),
+                      SizedBox(height: AppDimens.dp6),
+                      Text(
+                        controller.ruleText,
+                        style: TextStyle(color: const Color(0xFF6B7A90), fontSize: AppDimens.sp12),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              _StatusBadge(text: controller.statusText),
-            ],
-          ),
-          SizedBox(height: AppDimens.dp14),
-          Container(height: 1, color: const Color(0xFFDCE6F5)),
-          SizedBox(height: AppDimens.dp14),
-          Row(
-            children: [
-              Expanded(
-                child: _OverviewMetric(label: '上报人', value: controller.reporterText),
-              ),
-              SizedBox(width: AppDimens.dp10),
-              Expanded(
-                child: _OverviewMetric(label: '上报时间', value: controller.reportTimeText),
-              ),
-            ],
-          ),
-          SizedBox(height: AppDimens.dp10),
-          Row(
-            children: [
-              Expanded(
-                child: _OverviewMetric(label: '是否紧急', value: controller.urgentText, highlight: controller.urgentText == '是'),
-              ),
-              SizedBox(width: AppDimens.dp10),
-              Expanded(
-                child: _OverviewMetric(label: '责任对象', value: controller.responsibleNameText),
-              ),
-            ],
-          ),
-        ],
+                _StatusBadge(text: controller.statusText),
+              ],
+            ),
+            SizedBox(height: AppDimens.dp14),
+            Container(height: 1, color: const Color(0xFFDCE6F5)),
+            SizedBox(height: AppDimens.dp14),
+            Row(
+              children: [
+                Expanded(
+                  child: _OverviewMetric(label: '上报人', value: controller.reporterText, icon: Icons.person_outline_rounded),
+                ),
+                SizedBox(width: AppDimens.dp10),
+                Expanded(
+                  child: _OverviewMetric(label: '上报时间', value: controller.reportTimeText, icon: Icons.schedule_rounded),
+                ),
+              ],
+            ),
+            SizedBox(height: AppDimens.dp10),
+            Row(
+              children: [
+                Expanded(
+                  child: _OverviewMetric(label: '是否紧急', value: controller.urgentText, icon: Icons.priority_high_rounded, highlight: controller.urgentText == '是'),
+                ),
+                SizedBox(width: AppDimens.dp10),
+                Expanded(
+                  child: _OverviewMetric(label: '责任对象', value: controller.responsibleNameText, icon: Icons.badge_outlined),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _OverviewMetric extends StatelessWidget {
-  const _OverviewMetric({required this.label, required this.value, this.highlight = false});
+  const _OverviewMetric({required this.label, required this.value, required this.icon, this.highlight = false});
 
   final String label;
   final String value;
+  final IconData icon;
   final bool highlight;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: AppDimens.dp12, vertical: AppDimens.dp10),
-      decoration: BoxDecoration(color: const Color(0xFFF7FAFF), borderRadius: BorderRadius.circular(AppDimens.dp12)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimens.dp12),
+        border: Border.all(color: const Color(0xFFDCE6F5)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(color: const Color(0xFF8090A6), fontSize: AppDimens.sp11),
+          Row(
+            children: [
+              Icon(icon, size: 14, color: const Color(0xFF8090A6)),
+              SizedBox(width: AppDimens.dp6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(color: const Color(0xFF8090A6), fontSize: AppDimens.sp11),
+                ),
+              ),
+            ],
           ),
           SizedBox(height: AppDimens.dp6),
           Text(
@@ -317,14 +389,12 @@ class _TimelineSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (nodes.isEmpty) {
-      return AppStandardCard(
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: AppDimens.dp8),
-            child: Text(
-              '暂无整改记录',
-              style: TextStyle(color: const Color(0xFF7B8798), fontSize: AppDimens.sp12),
-            ),
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: AppDimens.dp8),
+          child: Text(
+            '暂无整改记录',
+            style: TextStyle(color: const Color(0xFF7B8798), fontSize: AppDimens.sp12),
           ),
         ),
       );
@@ -603,19 +673,20 @@ class _ThumbList extends StatelessWidget {
         final imageUrl = FileService.getFaceUrl(url);
         return InkWell(
           onTap: imageUrl == null ? null : () => FileService.openFile(imageUrl, title: title),
-          borderRadius: BorderRadius.circular(AppDimens.dp8),
+          borderRadius: BorderRadius.circular(AppDimens.dp10),
           child: Container(
-            width: AppDimens.dp80,
-            height: AppDimens.dp50,
+            width: AppDimens.dp84,
+            height: AppDimens.dp56,
             decoration: BoxDecoration(
               color: const Color(0xFFEEF3F8),
-              borderRadius: BorderRadius.circular(AppDimens.dp8),
+              borderRadius: BorderRadius.circular(AppDimens.dp10),
               border: Border.all(color: const Color(0xFFD6DFEC)),
+              boxShadow: const [BoxShadow(color: Color(0x080F172A), blurRadius: 8, offset: Offset(0, 3))],
             ),
             child: imageUrl == null
                 ? Icon(Icons.image_outlined, size: 18, color: const Color(0xFF8A9AB1))
                 : ClipRRect(
-                    borderRadius: BorderRadius.circular(AppDimens.dp8 - 1),
+                    borderRadius: BorderRadius.circular(AppDimens.dp9),
                     child: Image.network(
                       imageUrl,
                       headers: FileService.imageHeaders(),

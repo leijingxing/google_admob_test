@@ -847,7 +847,7 @@ class WorkbenchRepository {
   }) {
     final payload = <String, dynamic>{
       ...buildPagePayload(pageIndex: current, pageSize: size),
-      'keywords': keywords,
+      'userName': keywords,
       'departmentId': departmentId,
       'postId': postId,
     };

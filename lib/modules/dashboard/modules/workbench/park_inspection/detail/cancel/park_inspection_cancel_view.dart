@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../../../../core/components/app_form_styles.dart';
 import '../../../../../../../core/components/app_standard_card.dart';
 import '../../../../../../../core/constants/dimens.dart';
 import 'park_inspection_cancel_controller.dart';
@@ -20,9 +21,62 @@ class ParkInspectionCancelView extends GetView<ParkInspectionCancelController> {
             child: Column(
               children: [
                 AppStandardCard(
-                  child: _SummaryLine(
-                    label: '操作提示',
-                    value: '取消后任务将不可继续执行，请填写明确的取消原因',
+                  child: Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(AppDimens.dp12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFFF4F1), Color(0xFFFFFBFA)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(AppDimens.dp10),
+                      border: Border.all(color: const Color(0xFFFFD9CF)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: AppDimens.dp30,
+                              height: AppDimens.dp30,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFE9E2),
+                                borderRadius: BorderRadius.circular(
+                                  AppDimens.dp9,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.block_outlined,
+                                size: 18,
+                                color: Color(0xFFE06A4B),
+                              ),
+                            ),
+                            SizedBox(width: AppDimens.dp10),
+                            Expanded(
+                              child: Text(
+                                '取消操作提示',
+                                style: TextStyle(
+                                  color: const Color(0xFF243447),
+                                  fontSize: AppDimens.sp13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: AppDimens.dp8),
+                        Text(
+                          '取消后任务将不可继续执行，请填写明确的取消原因，便于后续追溯和沟通。',
+                          style: TextStyle(
+                            color: const Color(0xFF6C7A8C),
+                            fontSize: AppDimens.sp12,
+                            height: 1.6,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 SizedBox(height: AppDimens.dp12),
@@ -30,6 +84,8 @@ class ParkInspectionCancelView extends GetView<ParkInspectionCancelController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _sectionTitle('取消信息'),
+                      SizedBox(height: AppDimens.dp10),
                       _fieldLabel('取消原因', required: true),
                       SizedBox(height: AppDimens.dp8),
                       TextField(
@@ -37,7 +93,20 @@ class ParkInspectionCancelView extends GetView<ParkInspectionCancelController> {
                         minLines: 4,
                         maxLines: 6,
                         maxLength: 200,
-                        decoration: _inputDecoration(hintText: '请输入取消原因'),
+                        decoration: AppFormStyles.inputDecoration(
+                          hintText: '请输入取消原因',
+                        ),
+                      ),
+                      SizedBox(height: AppDimens.dp6),
+                      Padding(
+                        padding: EdgeInsets.only(left: AppDimens.dp2),
+                        child: Text(
+                          '建议说明取消背景、当前处理情况或后续安排，避免任务状态不清。',
+                          style: TextStyle(
+                            color: const Color(0xFF8A97A8),
+                            fontSize: AppDimens.sp11,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -47,28 +116,52 @@ class ParkInspectionCancelView extends GetView<ParkInspectionCancelController> {
           ),
           bottomNavigationBar: SafeArea(
             top: false,
-            child: Padding(
+            child: Container(
               padding: EdgeInsets.fromLTRB(
                 AppDimens.dp12,
-                AppDimens.dp8,
+                AppDimens.dp10,
                 AppDimens.dp12,
-                AppDimens.dp8,
+                AppDimens.dp10,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Color(0xFFE7EDF5))),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0x0A0F172A),
+                    blurRadius: 14,
+                    offset: Offset(0, -2),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: Size.fromHeight(AppDimens.dp44),
+                        side: const BorderSide(color: Color(0xFFD7DFEB)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppDimens.dp10),
+                        ),
+                        foregroundColor: const Color(0xFF5C6B7D),
+                      ),
                       onPressed: logic.submitting ? null : Get.back,
                       child: const Text('返回'),
                     ),
                   ),
-                  SizedBox(width: AppDimens.dp8),
+                  SizedBox(width: AppDimens.dp10),
                   Expanded(
                     child: FilledButton(
-                      onPressed: logic.submitting ? null : logic.submit,
                       style: FilledButton.styleFrom(
+                        minimumSize: Size.fromHeight(AppDimens.dp44),
                         backgroundColor: const Color(0xFFE06A4B),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppDimens.dp10),
+                        ),
+                        elevation: 0,
                       ),
+                      onPressed: logic.submitting ? null : logic.submit,
                       child: logic.submitting
                           ? const SizedBox(
                               width: 14,
@@ -113,56 +206,24 @@ class ParkInspectionCancelView extends GetView<ParkInspectionCancelController> {
     );
   }
 
-  InputDecoration _inputDecoration({required String hintText}) {
-    return InputDecoration(
-      hintText: hintText,
-      filled: true,
-      fillColor: const Color(0xFFF8FAFD),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimens.dp10),
-        borderSide: const BorderSide(color: Color(0xFFD7DFEB)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimens.dp10),
-        borderSide: const BorderSide(color: Color(0xFFD7DFEB)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimens.dp10),
-        borderSide: const BorderSide(color: Color(0xFF1F7BFF)),
-      ),
-    );
-  }
-}
-
-class _SummaryLine extends StatelessWidget {
-  const _SummaryLine({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _sectionTitle(String text) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: AppDimens.dp80,
-          child: Text(
-            '$label：',
-            style: TextStyle(
-              color: const Color(0xFF7B8798),
-              fontSize: AppDimens.sp12,
-            ),
+        Container(
+          width: AppDimens.dp4,
+          height: AppDimens.dp14,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE06A4B),
+            borderRadius: BorderRadius.circular(999),
           ),
         ),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
-              color: const Color(0xFF263547),
-              fontSize: AppDimens.sp12,
-              fontWeight: FontWeight.w600,
-            ),
+        SizedBox(width: AppDimens.dp8),
+        Text(
+          text,
+          style: TextStyle(
+            color: const Color(0xFF223146),
+            fontSize: AppDimens.sp13,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ],
