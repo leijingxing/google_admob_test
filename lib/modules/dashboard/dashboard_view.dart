@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/dimens.dart';
+import '../../router/module_routes/dashboard_routes.dart';
 import 'dashboard_controller.dart';
 
 /// 首页 Tab 页面：5 个业务模块入口。
@@ -37,21 +39,71 @@ class DashboardView extends GetView<DashboardController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '业务模块',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: AppDimens.sp16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      SizedBox(height: AppDimens.dp4),
-                      Text(
-                        '请选择需要进入的业务场景',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: AppDimens.sp12,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '业务模块',
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: AppDimens.sp16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                SizedBox(height: AppDimens.dp4),
+                                Text(
+                                  '请选择需要进入的业务场景',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: AppDimens.sp12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (kDebugMode) ...[
+                            SizedBox(width: AppDimens.dp12),
+                            InkWell(
+                              onTap: DashboardRoutes.toShell,
+                              borderRadius: BorderRadius.circular(999),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: AppDimens.dp12,
+                                  vertical: AppDimens.dp8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEDF4FF),
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(
+                                    color: const Color(0xFFD6E6FF),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.developer_mode_rounded,
+                                      size: AppDimens.sp14,
+                                      color: const Color(0xFF2F6FD6),
+                                    ),
+                                    SizedBox(width: AppDimens.dp4),
+                                    Text(
+                                      '封闭页',
+                                      style: TextStyle(
+                                        color: const Color(0xFF2F6FD6),
+                                        fontSize: AppDimens.sp11,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),

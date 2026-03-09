@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 
+import '../../modules/dashboard/shell/dashboard_shell_binding.dart';
+import '../../modules/dashboard/shell/dashboard_shell_view.dart';
 import '../../modules/dashboard/modules/logistics_query/logistics_query_binding.dart';
 import '../../modules/dashboard/modules/logistics_query/logistics_query_view.dart';
 import '../../modules/dashboard/modules/overview/overview_binding.dart';
@@ -14,6 +16,15 @@ import '../../modules/dashboard/modules/workbench/workbench_view.dart';
 /// Dashboard 模块子页面跳转封装（非命名路由）。
 abstract class DashboardRoutes {
   DashboardRoutes._();
+
+  /// Dashboard 封闭化聚合页。
+  static Future<T?>? toShell<T>({int initialIndex = 0}) {
+    return Get.to<T>(
+      () => const DashboardShellView(),
+      binding: DashboardShellBinding(),
+      arguments: initialIndex,
+    );
+  }
 
   /// 工作台。
   static Future<T?>? toWorkbench<T>() {
