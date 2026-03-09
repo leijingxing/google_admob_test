@@ -21,6 +21,13 @@ class ParkInspectionCheckInView
             child: Column(
               children: [
                 AppStandardCard(
+                  child: _SummaryLine(
+                    label: '打卡说明',
+                    value: '请选择巡检点位，并填写或获取当前经纬度后提交',
+                  ),
+                ),
+                SizedBox(height: AppDimens.dp12),
+                AppStandardCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -30,10 +37,7 @@ class ParkInspectionCheckInView
                         initialValue: logic.selectedPointId,
                         items: logic.pointItems,
                         onChanged: logic.onPointChanged,
-                        decoration: const InputDecoration(
-                          hintText: '请选择巡检点位',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: _inputDecoration(hintText: '请选择巡检点位'),
                       ),
                       SizedBox(height: AppDimens.dp12),
                       _fieldLabel('打卡位置', required: true),
@@ -43,9 +47,8 @@ class ParkInspectionCheckInView
                           Expanded(
                             child: TextField(
                               controller: logic.positionController,
-                              decoration: const InputDecoration(
+                              decoration: _inputDecoration(
                                 hintText: '请输入经度,纬度',
-                                border: OutlineInputBorder(),
                               ),
                             ),
                           ),
@@ -75,10 +78,7 @@ class ParkInspectionCheckInView
                         minLines: 4,
                         maxLines: 6,
                         maxLength: 200,
-                        decoration: const InputDecoration(
-                          hintText: '请输入打卡备注',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: _inputDecoration(hintText: '请输入打卡备注'),
                       ),
                     ],
                   ),
@@ -145,6 +145,62 @@ class ParkInspectionCheckInView
             color: const Color(0xFF2E3B4D),
             fontSize: AppDimens.sp12,
             fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _inputDecoration({required String hintText}) {
+    return InputDecoration(
+      hintText: hintText,
+      filled: true,
+      fillColor: const Color(0xFFF8FAFD),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimens.dp10),
+        borderSide: const BorderSide(color: Color(0xFFD7DFEB)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimens.dp10),
+        borderSide: const BorderSide(color: Color(0xFFD7DFEB)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimens.dp10),
+        borderSide: const BorderSide(color: Color(0xFF1F7BFF)),
+      ),
+    );
+  }
+}
+
+class _SummaryLine extends StatelessWidget {
+  const _SummaryLine({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: AppDimens.dp80,
+          child: Text(
+            '$label：',
+            style: TextStyle(
+              color: const Color(0xFF7B8798),
+              fontSize: AppDimens.sp12,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: const Color(0xFF263547),
+              fontSize: AppDimens.sp12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],

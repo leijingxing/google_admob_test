@@ -488,7 +488,10 @@ class _RecordCard extends StatelessWidget {
                     separatorBuilder: (context, index) =>
                         SizedBox(height: AppDimens.dp8),
                     itemBuilder: (context, index) {
-                      return _AbnormalTile(item: abnormals[index]);
+                      return _AbnormalTile(
+                        item: abnormals[index],
+                        controller: controller,
+                      );
                     },
                   ),
                 ),
@@ -502,9 +505,10 @@ class _RecordCard extends StatelessWidget {
 }
 
 class _AbnormalTile extends StatelessWidget {
-  const _AbnormalTile({required this.item});
+  const _AbnormalTile({required this.item, required this.controller});
 
   final InspectionAbnormalItemModel item;
+  final ParkInspectionDetailController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -513,7 +517,7 @@ class _AbnormalTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            item.ruleName ?? item.ruleId ?? '--',
+            controller.ruleNameById(item.ruleId),
             style: TextStyle(
               color: const Color(0xFF223146),
               fontSize: AppDimens.sp14,

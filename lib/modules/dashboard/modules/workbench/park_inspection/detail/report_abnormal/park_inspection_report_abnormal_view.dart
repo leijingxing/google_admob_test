@@ -29,29 +29,28 @@ class ParkInspectionReportAbnormalView
                   ),
                   DropdownButtonFormField<String>(
                     initialValue: logic.selectedRuleId,
+                    isExpanded: true,
                     items: logic.detailController.planRules
                         .map(
                           (item) => DropdownMenuItem<String>(
                             value: item.ruleId ?? item.id,
-                            child: Text(item.ruleName ?? '--'),
+                            child: Text(
+                              item.ruleName ?? '--',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         )
                         .toList(),
                     onChanged: logic.onRuleChanged,
-                    decoration: const InputDecoration(
-                      labelText: '巡检细则',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: _inputDecoration(hintText: '请选择巡检细则'),
                   ),
                   SizedBox(height: AppDimens.dp10),
                   TextField(
                     controller: logic.descController,
                     minLines: 3,
                     maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: '异常描述',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: _inputDecoration(hintText: '请输入异常描述'),
                   ),
                   SizedBox(height: AppDimens.dp10),
                   Row(
@@ -165,4 +164,24 @@ class _InfoLine extends StatelessWidget {
       ),
     );
   }
+}
+
+InputDecoration _inputDecoration({String? hintText}) {
+  return InputDecoration(
+    hintText: hintText,
+    filled: true,
+    fillColor: const Color(0xFFF8FAFD),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppDimens.dp10),
+      borderSide: const BorderSide(color: Color(0xFFD7DFEB)),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppDimens.dp10),
+      borderSide: const BorderSide(color: Color(0xFFD7DFEB)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppDimens.dp10),
+      borderSide: const BorderSide(color: Color(0xFF1F7BFF)),
+    ),
+  );
 }

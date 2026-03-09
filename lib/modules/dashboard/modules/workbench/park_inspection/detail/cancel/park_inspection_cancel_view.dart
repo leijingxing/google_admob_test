@@ -20,6 +20,13 @@ class ParkInspectionCancelView extends GetView<ParkInspectionCancelController> {
             child: Column(
               children: [
                 AppStandardCard(
+                  child: _SummaryLine(
+                    label: '操作提示',
+                    value: '取消后任务将不可继续执行，请填写明确的取消原因',
+                  ),
+                ),
+                SizedBox(height: AppDimens.dp12),
+                AppStandardCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -30,10 +37,7 @@ class ParkInspectionCancelView extends GetView<ParkInspectionCancelController> {
                         minLines: 4,
                         maxLines: 6,
                         maxLength: 200,
-                        decoration: const InputDecoration(
-                          hintText: '请输入取消原因',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: _inputDecoration(hintText: '请输入取消原因'),
                       ),
                     ],
                   ),
@@ -103,6 +107,62 @@ class ParkInspectionCancelView extends GetView<ParkInspectionCancelController> {
             color: const Color(0xFF2E3B4D),
             fontSize: AppDimens.sp12,
             fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _inputDecoration({required String hintText}) {
+    return InputDecoration(
+      hintText: hintText,
+      filled: true,
+      fillColor: const Color(0xFFF8FAFD),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimens.dp10),
+        borderSide: const BorderSide(color: Color(0xFFD7DFEB)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimens.dp10),
+        borderSide: const BorderSide(color: Color(0xFFD7DFEB)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimens.dp10),
+        borderSide: const BorderSide(color: Color(0xFF1F7BFF)),
+      ),
+    );
+  }
+}
+
+class _SummaryLine extends StatelessWidget {
+  const _SummaryLine({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: AppDimens.dp80,
+          child: Text(
+            '$label：',
+            style: TextStyle(
+              color: const Color(0xFF7B8798),
+              fontSize: AppDimens.sp12,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: const Color(0xFF263547),
+              fontSize: AppDimens.sp12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],

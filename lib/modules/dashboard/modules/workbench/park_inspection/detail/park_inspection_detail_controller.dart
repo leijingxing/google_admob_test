@@ -68,6 +68,7 @@ class ParkInspectionDetailController extends GetxController {
       const <ParkInspectionPointItemModel>[];
   List<ParkInspectionRuleItemModel> planRules =
       const <ParkInspectionRuleItemModel>[];
+  Map<String, String> inspectionRuleNameMap = <String, String>{};
 
   @override
   void onInit() {
@@ -112,6 +113,7 @@ class ParkInspectionDetailController extends GetxController {
       _repository.getParkInspectionPlanRules(planId: planId),
       _repository.getParkInspectionPoints(),
       _repository.getParkInspectionRules(),
+      _repository.getInspectionRuleNameMap(),
     ]);
 
     final planPointResult =
@@ -122,6 +124,8 @@ class ParkInspectionDetailController extends GetxController {
         results[2] as Result<List<ParkInspectionPointItemModel>>;
     final allRuleResult =
         results[3] as Result<List<ParkInspectionRuleItemModel>>;
+    final inspectionRuleNameMapResult =
+        results[4] as Result<Map<String, String>>;
 
     final pointMap = <String, ParkInspectionPointItemModel>{};
     final ruleMap = <String, ParkInspectionRuleItemModel>{};
@@ -142,6 +146,10 @@ class ParkInspectionDetailController extends GetxController {
           if (key.isNotEmpty) ruleMap[key] = item;
         }
       },
+      failure: (_) {},
+    );
+    inspectionRuleNameMapResult.when(
+      success: (data) => inspectionRuleNameMap = data,
       failure: (_) {},
     );
 
@@ -367,7 +375,9 @@ class ParkInspectionDetailController extends GetxController {
             'ruleId': rule.ruleId,
             'resultStatus': rule.resultStatus,
             'remark': rule.remark,
-            'attachments': rule.attachments,
+            'attachments': rule.attachments
+                .where((item) => item.trim().isNotEmpty)
+                .join(','),
           },
         )
         .toList();
@@ -525,6 +535,9 @@ class ParkInspectionDetailController extends GetxController {
   String ruleNameById(String? ruleId) {
     final key = (ruleId ?? '').trim();
     if (key.isEmpty) return '--';
+    if (inspectionRuleNameMap.containsKey(key)) {
+      return inspectionRuleNameMap[key] ?? key;
+    }
     for (final rule in planRules) {
       final ruleKey = (rule.ruleId ?? rule.id ?? '').trim();
       if (ruleKey == key) return rule.ruleName ?? key;

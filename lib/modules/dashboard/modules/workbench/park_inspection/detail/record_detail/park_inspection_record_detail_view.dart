@@ -19,6 +19,18 @@ class ParkInspectionRecordDetailView
           backgroundColor: const Color(0xFFF4F7FB),
           body: logic.loading
               ? const Center(child: CircularProgressIndicator())
+              : logic.details.isEmpty
+              ? Center(
+                  child: AppStandardCard(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppDimens.dp32,
+                        vertical: AppDimens.dp24,
+                      ),
+                      child: const Text('暂无数据'),
+                    ),
+                  ),
+                )
               : ListView.separated(
                   padding: EdgeInsets.all(AppDimens.dp12),
                   itemCount: logic.details.length,
