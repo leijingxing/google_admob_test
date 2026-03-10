@@ -9,7 +9,7 @@ import '../../../../../../data/repository/workbench_repository.dart';
 class AppointmentApprovalDetailController extends GetxController {
   final WorkbenchRepository _repository = WorkbenchRepository();
 
-  late final AppointmentApprovalItemModel item;
+  late final String reservationId;
 
   int currentSection = 0;
   bool basicLoading = false;
@@ -29,9 +29,11 @@ class AppointmentApprovalDetailController extends GetxController {
     super.onInit();
     final args = Get.arguments;
     if (args is AppointmentApprovalItemModel) {
-      item = args;
+      reservationId = args.id ?? '';
+    } else if (args is String) {
+      reservationId = args.trim();
     } else {
-      item = const AppointmentApprovalItemModel();
+      reservationId = '';
     }
     _loadBasic();
   }
@@ -48,12 +50,13 @@ class AppointmentApprovalDetailController extends GetxController {
   }
 
   Future<void> _loadBasic() async {
-    final id = item.id ?? '';
-    if (id.isEmpty || _basicLoaded) return;
+    if (reservationId.isEmpty || _basicLoaded) return;
 
     basicLoading = true;
     update();
-    final result = await _repository.getReservationProgressTimeline(id: id);
+    final result = await _repository.getReservationProgressTimeline(
+      id: reservationId,
+    );
     result.when(
       success: (data) {
         progressTimeline = data;
@@ -66,12 +69,14 @@ class AppointmentApprovalDetailController extends GetxController {
   }
 
   Future<void> _loadRecords() async {
-    final id = item.id ?? '';
-    if (id.isEmpty || _recordLoaded) return;
+    if (reservationId.isEmpty || _recordLoaded) return;
 
     recordLoading = true;
     update();
-    final result = await _repository.getGateRecords(id: id, idType: 1);
+    final result = await _repository.getGateRecords(
+      id: reservationId,
+      idType: 1,
+    );
     result.when(
       success: (data) {
         gateRecords = data;
@@ -87,14 +92,13 @@ class AppointmentApprovalDetailController extends GetxController {
     int pageIndex,
     int pageSize,
   ) async {
-    final id = item.id ?? '';
-    if (id.isEmpty) return const <RiskWarningRecordItemModel>[];
+    if (reservationId.isEmpty) return const <RiskWarningRecordItemModel>[];
 
     final result = await _repository.getRiskWarningPage(
       pageIndex: pageIndex,
       pageSize: pageSize,
-      relationId: id,
-      carNum: item.carNumb,
+      relationId: reservationId,
+      carNum: reservationCarNumb,
     );
 
     return result.when(
@@ -166,6 +170,43 @@ class AppointmentApprovalDetailController extends GetxController {
         : const <String, dynamic>{};
   }
 
+  Map<String, dynamic> timelineSpecificDataByType(int typeCode) {
+    for (final node in progressTimeline) {
+      if (_toInt(node['typeCode']) != typeCode) continue;
+      return timelineSpecificData(node);
+    }
+    return const <String, dynamic>{};
+  }
+
+  Map<String, dynamic> get initiateSpecificData =>
+      timelineSpecificDataByType(0);
+
+  bool get isPersonReservation {
+    final specific = initiateSpecificData;
+    final reservationType = _toInt(
+      specific['reservationType'] ??
+          specific['appointmentType'] ??
+          specific['type'],
+    );
+    if (reservationType > 0) {
+      return reservationType == 1;
+    }
+
+    final reservationCategoryName = displayText(
+      specific['reservationCategoryName'],
+    );
+    if (reservationCategoryName != '--') {
+      return reservationCategoryName.contains('人员');
+    }
+
+    return displayText(specific['carNumb']) == '--';
+  }
+
+  String? get reservationCarNumb {
+    final text = displayText(initiateSpecificData['carNumb']);
+    return text == '--' ? null : text;
+  }
+
   List<DetailLine> _commonDetailLines(Map<String, dynamic> specific) {
     final lines = <DetailLine>[];
     void addLine(String label, Object? value) {
@@ -185,7 +226,7 @@ class AppointmentApprovalDetailController extends GetxController {
 
   List<DetailGroup> _buildInitiateGroups(Map<String, dynamic> specific) {
     // 发起预约节点字段最多，前端按“发起/车辆/挂车/人员/载货/预约信息”拆组展示。
-    final isPersonReservation = item.reservationType == 1;
+    final isPersonReservation = this.isPersonReservation;
     final headerLines = <DetailLine>[];
     void addHeader(String label, Object? value) {
       final text = displayText(value);

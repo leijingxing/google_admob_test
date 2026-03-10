@@ -29,9 +29,11 @@ class BasicInfoDetailSection extends StatelessWidget {
       itemCount: controller.progressTimeline.length,
       itemBuilder: (context, index) {
         final node = controller.progressTimeline[index];
+        final typeCode = node['typeCode'] as int?;
         final groups = controller.timelineDisplayGroups(node);
-        final title = controller.timelineTypeText(node['typeCode'] as int?);
+        final title = controller.timelineTypeText(typeCode);
         final timeText = (node['time'] ?? '--').toString();
+        final hideGroupTitle = typeCode == 1 || typeCode == 2;
         return Padding(
           padding: EdgeInsets.only(bottom: AppDimens.dp10),
           child: AppStandardCard(
@@ -83,15 +85,17 @@ class BasicInfoDetailSection extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            group.title,
-                            style: TextStyle(
-                              color: const Color(0xFF245FD0),
-                              fontSize: AppDimens.sp12,
-                              fontWeight: FontWeight.w700,
+                          if (!hideGroupTitle) ...[
+                            Text(
+                              group.title,
+                              style: TextStyle(
+                                color: const Color(0xFF245FD0),
+                                fontSize: AppDimens.sp12,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: AppDimens.dp8),
+                            SizedBox(height: AppDimens.dp8),
+                          ],
                           ...group.lines.map((line) {
                             // 控制器会插入空行作为组内分隔标记，这里渲染成细分割线。
                             if (line.label.isEmpty && line.value.isEmpty) {

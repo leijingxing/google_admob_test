@@ -13,7 +13,7 @@ class RecordDetailSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPersonReservation = controller.item.reservationType == 1;
+    final isPersonReservation = controller.isPersonReservation;
     if (controller.recordLoading) {
       return const Center(child: CircularProgressIndicator());
     }

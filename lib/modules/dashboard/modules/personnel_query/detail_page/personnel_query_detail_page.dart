@@ -7,6 +7,7 @@ import 'package:closed_off_app/core/utils/file_service.dart';
 import 'package:closed_off_app/data/models/personnel_query/personnel_query_models.dart';
 import 'package:closed_off_app/data/models/vehicle_query/vehicle_query_models.dart';
 import 'package:closed_off_app/data/models/workbench/appointment_approval_item_model.dart';
+import 'package:closed_off_app/data/models/workbench/whitelist_approval_item_model.dart';
 import 'package:closed_off_app/modules/dashboard/modules/personnel_query/detail_page/personnel_query_detail_controller.dart';
 import 'package:closed_off_app/modules/dashboard/modules/personnel_query/personnel_query_statistics_controller.dart';
 import 'package:closed_off_app/router/module_routes/workbench_routes.dart';
@@ -502,8 +503,10 @@ class _AuthorizationRecordTabState extends State<_AuthorizationRecordTab> {
                   ],
                   actions: [
                     TextButton(
-                      onPressed: () =>
-                          _openAppointmentApprovalDetail(id: item.id),
+                      onPressed: () => _openAuthorizationRecordDetail(
+                        id: item.id,
+                        recordType: item.recordType,
+                      ),
                       child: const Text('详情'),
                     ),
                   ],
@@ -1248,6 +1251,25 @@ void _openAppointmentApprovalDetail({String? id, String? carNumb}) {
   }
   WorkbenchRoutes.toAppointmentApprovalDetail(
     item: AppointmentApprovalItemModel(id: detailId, carNumb: carNumb),
+  );
+}
+
+void _openAuthorizationRecordDetail({String? id, int? recordType}) {
+  final detailId = (id ?? '').trim();
+  if (detailId.isEmpty) {
+    AppToast.showWarning('当前记录缺少详情ID');
+    return;
+  }
+
+  if (recordType == 0) {
+    WorkbenchRoutes.toWhitelistApprovalDetail(
+      item: WhitelistApprovalItemModel(id: detailId, type: 1),
+    );
+    return;
+  }
+
+  WorkbenchRoutes.toAppointmentApprovalDetail(
+    item: AppointmentApprovalItemModel(id: detailId),
   );
 }
 

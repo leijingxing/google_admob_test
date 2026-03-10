@@ -16,7 +16,7 @@ class ViolationDetailSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomEasyRefreshList<RiskWarningRecordItemModel>(
-      key: ValueKey('violation-${controller.item.id ?? ''}'),
+      key: ValueKey('violation-${controller.reservationId}'),
       pageSize: 20,
       dataLoader: controller.loadViolationPage,
       padding: EdgeInsets.fromLTRB(

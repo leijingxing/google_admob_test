@@ -256,18 +256,6 @@ class _VehicleCountCardList extends StatelessWidget {
               )
               .toList(),
         ),
-        Positioned(
-          top: 0,
-          right: 0,
-          child: IconButton(visualDensity: VisualDensity.compact, onPressed: loading ? null : onRefresh, icon: const Icon(Icons.refresh_rounded, size: 18)),
-        ),
-        if (loading)
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 0,
-            child: ClipRRect(borderRadius: BorderRadius.circular(AppDimens.dp2), child: const LinearProgressIndicator(minHeight: 1.5)),
-          ),
       ],
     );
   }
