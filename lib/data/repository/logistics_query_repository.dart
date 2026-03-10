@@ -15,14 +15,14 @@ class LogisticsQueryRepository {
     String? keyWords,
     String? strDate,
     String? endDate,
-    int? hazardousType,
+    int? goodsType,
   }) {
     final payload = buildPagePayload(pageIndex: pageIndex, pageSize: pageSize)
       ..addAll({
         'keyWords': keyWords,
         'strDate': strDate,
         'endDate': endDate,
-        'hazardousType': hazardousType,
+        'goodsType': goodsType,
       })
       ..removeWhere((key, value) => value == null || value == '');
 

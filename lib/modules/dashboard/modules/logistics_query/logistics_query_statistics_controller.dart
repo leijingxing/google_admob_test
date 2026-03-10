@@ -13,11 +13,16 @@ import '../../../../data/repository/logistics_query_repository.dart';
 class LogisticsQueryStatisticsController extends GetxController {
   final LogisticsQueryRepository _repository = LogisticsQueryRepository();
 
-  static const Map<int, String> _goodsTypeTextMap = <int, String>{0: '危化品', 1: '危废品', 2: '普通货物'};
+  static const Map<int, String> _goodsTypeTextMap = <int, String>{
+    0: '危化品',
+    1: '危废品',
+    2: '普通货物',
+  };
 
-  static const Map<int, String> _hazardousTypeTextMap = <int, String>{0: '爆炸品', 1: '压缩气体和液化气体', 2: '易燃液体', 3: '易燃固体，自燃物品和遇湿易燃物', 4: '氧化剂和有机氧化物', 5: '有毒品', 6: '放射性物品', 7: '腐蚀品'};
-
-  static const List<String> _pageDictTypes = <String>[DictFieldQueryTool.hazardousType, DictFieldQueryTool.loadType];
+  static const List<String> _pageDictTypes = <String>[
+    DictFieldQueryTool.hazardousType,
+    DictFieldQueryTool.loadType,
+  ];
 
   /// 主列表关键字。
   final TextEditingController mainKeywordController = TextEditingController();
@@ -25,8 +30,8 @@ class LogisticsQueryStatisticsController extends GetxController {
   /// 主列表开始/结束时间。
   DateTimeRange? mainDateRange;
 
-  /// 主列表物资类别筛选。
-  int? mainHazardousType;
+  /// 主列表物资类型筛选。
+  int? mainGoodsType;
 
   /// 主列表刷新触发器。
   final ValueNotifier<int> mainRefreshTrigger = ValueNotifier<int>(0);
@@ -41,12 +46,6 @@ class LogisticsQueryStatisticsController extends GetxController {
   static String? goodsTypeText(int? goodsType, {bool fallbackRaw = false}) {
     if (goodsType == null) return null;
     return _goodsTypeTextMap[goodsType] ?? (fallbackRaw ? '$goodsType' : null);
-  }
-
-  /// 危险品类别文案。
-  static String? hazardousTypeText(int? hazardousType, {bool fallbackRaw = false}) {
-    if (hazardousType == null) return null;
-    return _hazardousTypeTextMap[hazardousType] ?? (fallbackRaw ? '$hazardousType' : null);
   }
 
   /// 装载类型文案。
@@ -88,7 +87,7 @@ class LogisticsQueryStatisticsController extends GetxController {
   void onResetMainList() {
     mainKeywordController.clear();
     mainDateRange = null;
-    mainHazardousType = null;
+    mainGoodsType = null;
     mainRefreshTrigger.value++;
     update();
   }
@@ -99,21 +98,24 @@ class LogisticsQueryStatisticsController extends GetxController {
     update();
   }
 
-  /// 修改主列表物资类别。
-  void onMainHazardousTypeChanged(int? value) {
-    mainHazardousType = value;
+  /// 修改主列表物资类型。
+  void onMainGoodsTypeChanged(int? value) {
+    mainGoodsType = value;
     update();
   }
 
   /// 主列表分页加载。
-  Future<List<LogisticsComprehensiveItemModel>> loadMainList(int pageIndex, int pageSize) async {
+  Future<List<LogisticsComprehensiveItemModel>> loadMainList(
+    int pageIndex,
+    int pageSize,
+  ) async {
     final result = await _repository.getLogisticsPage(
       pageIndex: pageIndex,
       pageSize: pageSize,
       keyWords: mainKeywordController.text.trim(),
       strDate: rangeStartTime(mainDateRange),
       endDate: rangeEndTime(mainDateRange),
-      hazardousType: mainHazardousType,
+      goodsType: mainGoodsType,
     );
 
     return result.when(
@@ -153,21 +155,36 @@ class LogisticsQueryStatisticsController extends GetxController {
     countCards = _defaultCountCards().asMap().entries.map((entry) {
       final index = entry.key;
       final card = entry.value;
-      final source = byType[card.type] ?? (index < sourceData.length ? sourceData[index] : null);
+      final source =
+          byType[card.type] ??
+          (index < sourceData.length ? sourceData[index] : null);
       if (source == null) return card;
 
       return card.copyWith(
         metrics: [
-          LogisticsCountMetricData(label: source.topOneName.trim().isEmpty ? '-' : source.topOneName, value: source.topOneAmount),
-          LogisticsCountMetricData(label: source.topTwoName.trim().isEmpty ? '-' : source.topTwoName, value: source.topTwoAmount),
-          LogisticsCountMetricData(label: source.topThreeName.trim().isEmpty ? '-' : source.topThreeName, value: source.topThreeAmount),
+          LogisticsCountMetricData(
+            label: source.topOneName.trim().isEmpty ? '-' : source.topOneName,
+            value: source.topOneAmount,
+          ),
+          LogisticsCountMetricData(
+            label: source.topTwoName.trim().isEmpty ? '-' : source.topTwoName,
+            value: source.topTwoAmount,
+          ),
+          LogisticsCountMetricData(
+            label: source.topThreeName.trim().isEmpty
+                ? '-'
+                : source.topThreeName,
+            value: source.topThreeAmount,
+          ),
         ],
       );
     }).toList();
   }
 
   /// 详情抽屉统计。
-  Future<LogisticsDetailCountModel> loadDetailCount({required String cas}) async {
+  Future<LogisticsDetailCountModel> loadDetailCount({
+    required String cas,
+  }) async {
     final result = await _repository.getLogisticsDetailCount(cas: cas);
     return result.when(
       success: (data) => data,
@@ -208,7 +225,14 @@ class LogisticsQueryStatisticsController extends GetxController {
   }
 
   /// 详情-出入记录分页。
-  Future<List<LogisticsAccessRecordModel>> loadAccessRecords(int pageIndex, int pageSize, {required String cas, String? keyWords, DateTimeRange? inDate, DateTimeRange? outDate}) async {
+  Future<List<LogisticsAccessRecordModel>> loadAccessRecords(
+    int pageIndex,
+    int pageSize, {
+    required String cas,
+    String? keyWords,
+    DateTimeRange? inDate,
+    DateTimeRange? outDate,
+  }) async {
     final result = await _repository.getAccessRecordPage(
       pageIndex: pageIndex,
       pageSize: pageSize,
@@ -232,13 +256,17 @@ class LogisticsQueryStatisticsController extends GetxController {
   /// 格式化日期范围开始时间。
   String? rangeStartTime(DateTimeRange? range) {
     if (range == null) return null;
-    return formatDateTime(DateTime(range.start.year, range.start.month, range.start.day, 0, 0, 0));
+    return formatDateTime(
+      DateTime(range.start.year, range.start.month, range.start.day, 0, 0, 0),
+    );
   }
 
   /// 格式化日期范围结束时间。
   String? rangeEndTime(DateTimeRange? range) {
     if (range == null) return null;
-    return formatDateTime(DateTime(range.end.year, range.end.month, range.end.day, 23, 59, 59));
+    return formatDateTime(
+      DateTime(range.end.year, range.end.month, range.end.day, 23, 59, 59),
+    );
   }
 
   /// 格式化时间。
@@ -254,9 +282,21 @@ class LogisticsQueryStatisticsController extends GetxController {
 
   static List<LogisticsCountCardData> _defaultCountCards() {
     return const [
-      LogisticsCountCardData(name: '危化', type: 1, accentColor: Color(0xFFEC5858)),
-      LogisticsCountCardData(name: '危废', type: 2, accentColor: Color(0xFFFFA126)),
-      LogisticsCountCardData(name: '普货', type: 4, accentColor: Color(0xFF37B6FF)),
+      LogisticsCountCardData(
+        name: '危化',
+        type: 1,
+        accentColor: Color(0xFFEC5858),
+      ),
+      LogisticsCountCardData(
+        name: '危废',
+        type: 2,
+        accentColor: Color(0xFFFFA126),
+      ),
+      LogisticsCountCardData(
+        name: '普货',
+        type: 4,
+        accentColor: Color(0xFF37B6FF),
+      ),
     ];
   }
 }
@@ -272,11 +312,25 @@ class LogisticsCountCardData {
     required this.name,
     required this.type,
     required this.accentColor,
-    this.metrics = const [LogisticsCountMetricData(label: '-', value: '0'), LogisticsCountMetricData(label: '-', value: '0'), LogisticsCountMetricData(label: '-', value: '0')],
+    this.metrics = const [
+      LogisticsCountMetricData(label: '-', value: '0'),
+      LogisticsCountMetricData(label: '-', value: '0'),
+      LogisticsCountMetricData(label: '-', value: '0'),
+    ],
   });
 
-  LogisticsCountCardData copyWith({String? name, int? type, Color? accentColor, List<LogisticsCountMetricData>? metrics}) {
-    return LogisticsCountCardData(name: name ?? this.name, type: type ?? this.type, accentColor: accentColor ?? this.accentColor, metrics: metrics ?? this.metrics);
+  LogisticsCountCardData copyWith({
+    String? name,
+    int? type,
+    Color? accentColor,
+    List<LogisticsCountMetricData>? metrics,
+  }) {
+    return LogisticsCountCardData(
+      name: name ?? this.name,
+      type: type ?? this.type,
+      accentColor: accentColor ?? this.accentColor,
+      metrics: metrics ?? this.metrics,
+    );
   }
 }
 

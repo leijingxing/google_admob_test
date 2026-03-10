@@ -60,7 +60,7 @@ class LogisticsComprehensiveItemModel {
   final int goodsType;
 
   @IntSafeConverter()
-  final int? hazardousType;
+  final String? hazardousType;
 
   @IntSafeConverter()
   final int inCount;

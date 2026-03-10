@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/components/app_form_styles.dart';
 import '../../../../core/components/custom_refresh.dart';
 import '../../../../core/components/date_picker/custom_date_range_picker.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -58,7 +59,7 @@ class _MainSearchPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasFilter = controller.mainDateRange != null || controller.mainHazardousType != null;
+    final hasFilter = controller.mainDateRange != null || controller.mainGoodsType != null;
 
     return Container(
       width: double.infinity,
@@ -89,12 +90,12 @@ class _MainSearchPanel extends StatelessWidget {
                         controller: controller.mainKeywordController,
                         textInputAction: TextInputAction.search,
                         textAlignVertical: TextAlignVertical.center,
+                        style: AppFormStyles.inputTextStyle(),
                         onSubmitted: (_) => controller.onSearchMainList(),
-                        decoration: InputDecoration(
-                          hintText: '请输入物资名称/类型关键词',
+                        decoration: AppFormStyles.inputDecoration(
+                          hintText: '请输入搜索关键词',
                           isCollapsed: true,
-                          border: const OutlineInputBorder(borderSide: BorderSide.none),
-                          hintStyle: TextStyle(color: const Color(0xFF8A98AF), fontSize: AppDimens.sp12),
+                          filled: false,
                           contentPadding: EdgeInsets.symmetric(horizontal: AppDimens.dp2),
                           prefixIcon: Icon(Icons.search_rounded, color: const Color(0xFF4D8DFF), size: AppDimens.dp20),
                           suffixIcon: hasText
@@ -153,10 +154,10 @@ class _MainSearchPanel extends StatelessWidget {
                   Expanded(
                     child: _FilterTag(label: '开始时间', value: _formatDateRange(controller.mainDateRange!)),
                   ),
-                if (controller.mainDateRange != null && controller.mainHazardousType != null) SizedBox(width: AppDimens.dp6),
-                if (controller.mainHazardousType != null)
+                if (controller.mainDateRange != null && controller.mainGoodsType != null) SizedBox(width: AppDimens.dp6),
+                if (controller.mainGoodsType != null)
                   Expanded(
-                    child: _FilterTag(label: '物资类型', value: LogisticsQueryStatisticsController.hazardousTypeText(controller.mainHazardousType, fallbackRaw: true) ?? '--'),
+                    child: _FilterTag(label: '物资类型', value: LogisticsQueryStatisticsController.goodsTypeText(controller.mainGoodsType, fallbackRaw: true) ?? '--'),
                   ),
               ],
             ),
@@ -168,7 +169,7 @@ class _MainSearchPanel extends StatelessWidget {
 
   Future<void> _showFilterBottomSheet(BuildContext context) async {
     DateTimeRange? tempDateRange = controller.mainDateRange;
-    int? tempHazardousType = controller.mainHazardousType;
+    int? tempGoodsType = controller.mainGoodsType;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -216,10 +217,10 @@ class _MainSearchPanel extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: AppDimens.dp10),
-                    _HazardousTypeField(
-                      value: tempHazardousType,
+                    _GoodsTypeField(
+                      value: tempGoodsType,
                       onChanged: (value) {
-                        setModalState(() => tempHazardousType = value);
+                        setModalState(() => tempGoodsType = value);
                       },
                     ),
                     SizedBox(height: AppDimens.dp14),
@@ -229,7 +230,7 @@ class _MainSearchPanel extends StatelessWidget {
                           child: OutlinedButton(
                             onPressed: () {
                               controller.onMainDateRangeChanged(null);
-                              controller.onMainHazardousTypeChanged(null);
+                              controller.onMainGoodsTypeChanged(null);
                               controller.onSearchMainList();
                               Navigator.of(bottomSheetContext).pop();
                             },
@@ -241,7 +242,7 @@ class _MainSearchPanel extends StatelessWidget {
                           child: FilledButton(
                             onPressed: () {
                               controller.onMainDateRangeChanged(tempDateRange);
-                              controller.onMainHazardousTypeChanged(tempHazardousType);
+                              controller.onMainGoodsTypeChanged(tempGoodsType);
                               controller.onSearchMainList();
                               Navigator.of(bottomSheetContext).pop();
                             },
@@ -272,8 +273,8 @@ class _MainSearchPanel extends StatelessWidget {
   }
 }
 
-class _HazardousTypeField extends StatelessWidget {
-  const _HazardousTypeField({required this.value, required this.onChanged});
+class _GoodsTypeField extends StatelessWidget {
+  const _GoodsTypeField({required this.value, required this.onChanged});
 
   final int? value;
   final ValueChanged<int?> onChanged;
@@ -300,13 +301,13 @@ class _HazardousTypeField extends StatelessWidget {
           DropdownButtonFormField<int?>(
             initialValue: value,
             isDense: true,
-            decoration: InputDecoration(
+            style: AppFormStyles.inputTextStyle(),
+            borderRadius: AppFormStyles.dropdownBorderRadius,
+            dropdownColor: AppFormStyles.dropdownBackgroundColor,
+            menuMaxHeight: AppFormStyles.dropdownMenuMaxHeight,
+            decoration: AppFormStyles.inputDecoration(
+              hintText: '请选择物资类型',
               contentPadding: EdgeInsets.symmetric(horizontal: AppDimens.dp10, vertical: AppDimens.dp8),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDimens.dp8)),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimens.dp8),
-                borderSide: const BorderSide(color: Color(0xFFD5DDEA)),
-              ),
             ),
             items: options.map((item) => DropdownMenuItem<int?>(value: item.value, child: Text(item.label))).toList(),
             onChanged: onChanged,
@@ -317,14 +318,12 @@ class _HazardousTypeField extends StatelessWidget {
   }
 
   List<_DropdownOption> _buildOptions() {
-    final options = <_DropdownOption>[const _DropdownOption(label: '全部', value: null)];
-    final dictItems = DictFieldQueryTool.items(DictFieldQueryTool.hazardousType);
-    for (final item in dictItems) {
-      final value = int.tryParse(item.itemValue);
-      if (value == null) continue;
-      options.add(_DropdownOption(label: item.label, value: value));
-    }
-    return options;
+    return const <_DropdownOption>[
+      _DropdownOption(label: '全部', value: null),
+      _DropdownOption(label: '危化品', value: 0),
+      _DropdownOption(label: '危废品', value: 1),
+      _DropdownOption(label: '普通货物', value: 2),
+    ];
   }
 }
 
@@ -521,8 +520,7 @@ class _MainLogisticsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hazardousTypeText = LogisticsQueryStatisticsController.hazardousTypeText(item.hazardousType);
-
+    final hazardousTypeText = _hazardousTypeText(item.hazardousType);
     return Container(
       margin: EdgeInsets.only(bottom: AppDimens.dp8),
       decoration: BoxDecoration(
@@ -552,24 +550,14 @@ class _MainLogisticsCard extends StatelessWidget {
                     SizedBox(width: AppDimens.dp6),
                     Expanded(
                       child: Text(
-                        '物资：${_goodsNameType(item)}',
+                        '物资名称/类型：${_goodsNameType(item)}',
                         style: TextStyle(color: const Color(0xFF202020), fontSize: AppDimens.sp16, fontWeight: FontWeight.w700),
                       ),
                     ),
-                    if (hazardousTypeText != null && hazardousTypeText.isNotEmpty)
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: AppDimens.dp8, vertical: AppDimens.dp4),
-                        decoration: BoxDecoration(color: _hazardousTypeColor(item.hazardousType).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppDimens.dp12)),
-                        child: Text(
-                          hazardousTypeText,
-                          style: TextStyle(color: _hazardousTypeColor(item.hazardousType), fontSize: AppDimens.sp12, fontWeight: FontWeight.w700),
-                        ),
-                      ),
                   ],
                 ),
                 SizedBox(height: AppDimens.dp8),
-                _MainCardInfo(label: 'CAS', value: _emptyDash(item.cas)),
-                SizedBox(height: AppDimens.dp8),
+                if (hazardousTypeText != null) ...[_MainCardInfo(label: '物资类别', value: hazardousTypeText), SizedBox(height: AppDimens.dp8)],
                 Row(
                   children: [
                     Expanded(
@@ -577,7 +565,7 @@ class _MainLogisticsCard extends StatelessWidget {
                     ),
                     SizedBox(width: AppDimens.dp6),
                     Expanded(
-                      child: _MainCardMetric(label: '运输数量(m³/T)', value: '${item.outGoodsAmount} / ${item.inGoodsAmount}', color: const Color(0xFF2CA7A0)),
+                      child: _MainCardMetric(label: '出入运输数量(m³/T)', value: '${item.outGoodsAmount} / ${item.inGoodsAmount}', color: const Color(0xFF2CA7A0)),
                     ),
                   ],
                 ),
@@ -596,10 +584,16 @@ class _MainLogisticsCard extends StatelessWidget {
     return sections.join(' / ');
   }
 
-  Color _hazardousTypeColor(int? hazardousType) {
-    if (hazardousType == 1) return const Color(0xFFE85D5D);
-    if (hazardousType == 2) return const Color(0xFFFF9D2E);
-    return const Color(0xFF2C9BFF);
+  String? _hazardousTypeText(Object? hazardousType) {
+    if (hazardousType == null) return null;
+    final rawValue = hazardousType.toString().trim();
+    if (rawValue.isEmpty) return null;
+
+    final numericValue = int.tryParse(rawValue);
+    if (numericValue != null) {
+      return DictFieldQueryTool.hazardousTypeLabel(numericValue, fallback: rawValue);
+    }
+    return rawValue;
   }
 }
 
@@ -672,11 +666,4 @@ DateTimeRange? _buildDateRange(DateTime? start, DateTime? end) {
   }
   final singleDay = start ?? end!;
   return DateTimeRange(start: singleDay, end: singleDay);
-}
-
-String _emptyDash(String? text) {
-  if (text == null || text.trim().isEmpty) {
-    return '--';
-  }
-  return text;
 }
