@@ -127,6 +127,11 @@ class WorkbenchController extends GetxController {
     WorkbenchRoutes.toAppointmentApproval();
   }
 
+  /// 进入任务详情页。
+  void openTaskProgressDetail() {
+    WorkbenchRoutes.toTaskProgressDetail();
+  }
+
   /// 进入工作台入口。
   void openEntry(WorkbenchEntry entry) {
     entry.onTap();

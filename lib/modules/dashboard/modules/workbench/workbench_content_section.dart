@@ -27,7 +27,10 @@ class WorkbenchContentSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _TaskProgressCard(progressPercent: controller.taskProgressPercent),
+            _TaskProgressCard(
+              progressPercent: controller.taskProgressPercent,
+              onDetailTap: controller.openTaskProgressDetail,
+            ),
             SizedBox(height: AppDimens.dp16),
             _PrimaryApprovalCard(
               title: '预约审批',
@@ -102,10 +105,14 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _TaskProgressCard extends StatelessWidget {
-  const _TaskProgressCard({required this.progressPercent});
+  const _TaskProgressCard({
+    required this.progressPercent,
+    required this.onDetailTap,
+  });
 
   /// 接口返回百分比值（0~100）。
   final double progressPercent;
+  final VoidCallback onDetailTap;
 
   @override
   Widget build(BuildContext context) {
@@ -160,21 +167,25 @@ class _TaskProgressCard extends StatelessWidget {
                 ),
                 SizedBox(height: AppDimens.dp8),
                 SizedBox(height: AppDimens.dp12),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppDimens.dp12,
-                    vertical: AppDimens.dp4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3B84F6).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppDimens.dp20),
-                  ),
-                  child: Text(
-                    '查看详情 >',
-                    style: TextStyle(
-                      color: const Color(0xFF3B84F6),
-                      fontSize: AppDimens.sp10,
-                      fontWeight: FontWeight.w600,
+                InkWell(
+                  borderRadius: BorderRadius.circular(AppDimens.dp20),
+                  onTap: onDetailTap,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppDimens.dp12,
+                      vertical: AppDimens.dp4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3B84F6).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppDimens.dp20),
+                    ),
+                    child: Text(
+                      '查看详情 >',
+                      style: TextStyle(
+                        color: const Color(0xFF3B84F6),
+                        fontSize: AppDimens.sp10,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
