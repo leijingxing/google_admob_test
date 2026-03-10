@@ -4,7 +4,7 @@ description: "flutter基础框架项目"
 publish_to: 'none'
 
 
-version: 1.0.4+5
+version: 1.0.5+6
 environment:
   sdk: ^3.10.0
 
