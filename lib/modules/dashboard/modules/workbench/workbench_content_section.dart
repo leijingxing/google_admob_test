@@ -276,18 +276,7 @@ class _PrimaryApprovalCard extends StatelessWidget {
               ),
             ],
           ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -10,
-                top: -10,
-                child: Icon(
-                  Icons.assignment_turned_in_rounded,
-                  size: 80,
-                  color: Colors.white.withValues(alpha: 0.1),
-                ),
-              ),
-              Padding(
+          child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppDimens.dp20),
                 child: Row(
                   children: [
@@ -340,8 +329,6 @@ class _PrimaryApprovalCard extends StatelessWidget {
                   ],
                 ),
               ),
-            ],
-          ),
         ),
       ),
     );

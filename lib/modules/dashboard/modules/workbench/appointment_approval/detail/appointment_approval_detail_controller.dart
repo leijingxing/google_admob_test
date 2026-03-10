@@ -125,11 +125,13 @@ class AppointmentApprovalDetailController extends GetxController {
   String recordTypeText(int? type) {
     switch (type ?? -1) {
       case 1:
-        return '入园';
-      case 2:
         return '出园';
+      case 2:
+        return '入园';
       case 3:
         return '园内抓拍';
+      case 4:
+        return '违规抓拍';
       default:
         return '记录';
     }
@@ -182,6 +184,7 @@ class AppointmentApprovalDetailController extends GetxController {
 
   List<DetailGroup> _buildInitiateGroups(Map<String, dynamic> specific) {
     // 发起预约节点字段最多，前端按“发起/车辆/挂车/人员/载货/预约信息”拆组展示。
+    final isPersonReservation = item.reservationType == 1;
     final headerLines = <DetailLine>[];
     void addHeader(String label, Object? value) {
       final text = displayText(value);
@@ -216,10 +219,12 @@ class AppointmentApprovalDetailController extends GetxController {
       trailerLines.add(DetailLine(label: label, value: text));
     }
 
-    addTrailer('是否挂车', boolText(specific['trailer']));
-    addTrailer('挂车车牌号', specific['trailerLicensePlate']);
-    addTrailer('挂车道路运输证号', specific['trailerRoadTransportPermitNumber']);
-    addTrailer('挂车行驶证', specific['trailerTrailerDrivingLicense']);
+    if (!isPersonReservation) {
+      addTrailer('是否挂车', boolText(specific['trailer']));
+      addTrailer('挂车车牌号', specific['trailerLicensePlate']);
+      addTrailer('挂车道路运输证号', specific['trailerRoadTransportPermitNumber']);
+      addTrailer('挂车行驶证', specific['trailerTrailerDrivingLicense']);
+    }
 
     final peopleLines = <DetailLine>[];
     void addPeople(
@@ -240,7 +245,9 @@ class AppointmentApprovalDetailController extends GetxController {
     addPeople('联系电话', specific['userPhone']);
     addPeople('证件号码', specific['idCard']);
     addPeople('正脸照片', specific['faceUrl']);
-    addPeople('随车人数', specific['applianceCrewAmount']);
+    if (!isPersonReservation) {
+      addPeople('随车人数', specific['applianceCrewAmount']);
+    }
     addPeople('是否驾驶员', boolText(specific['driver']));
     addPeople('是否危货驾驶员', boolText(specific['dangerousGoodsDriver']));
     addPeople('驾驶证', specific['driverCardPic'], showWhenEmpty: true);
@@ -268,22 +275,24 @@ class AppointmentApprovalDetailController extends GetxController {
       cargoLines.add(DetailLine(label: label, value: text));
     }
 
-    addCargo('装载类型', _loadTypeText(specific));
-    final goodsListRaw = specific['reservationGoodsVOList'];
-    if (goodsListRaw is List) {
-      for (var i = 0; i < goodsListRaw.length; i++) {
-        final goods = goodsListRaw[i];
-        if (goods is! Map) continue;
-        final g = Map<String, dynamic>.from(goods);
-        final inOut = _toInt(g['inOut']) == 1 ? '入园' : '出园';
-        addCargo('$inOut 危化品类型', g['goodsTypeName'] ?? g['goodsType']);
-        addCargo('$inOut 危化品名称', g['goodsName']);
-        addCargo('$inOut 危化品数量', g['goodsAmount']);
-        addCargo('$inOut 电子运单', g['electronicWaybill']);
+    if (!isPersonReservation) {
+      addCargo('装载类型', _loadTypeText(specific));
+      final goodsListRaw = specific['reservationGoodsVOList'];
+      if (goodsListRaw is List) {
+        for (var i = 0; i < goodsListRaw.length; i++) {
+          final goods = goodsListRaw[i];
+          if (goods is! Map) continue;
+          final g = Map<String, dynamic>.from(goods);
+          final inOut = _toInt(g['inOut']) == 1 ? '入园' : '出园';
+          addCargo('$inOut 危化品类型', g['goodsTypeName'] ?? g['goodsType']);
+          addCargo('$inOut 危化品名称', g['goodsName']);
+          addCargo('$inOut 危化品数量', g['goodsAmount']);
+          addCargo('$inOut 电子运单', g['electronicWaybill']);
 
-        // 组内插入空行标记，交给 View 渲染成一条分隔线。
-        if (i != goodsListRaw.length - 1) {
-          cargoLines.add(const DetailLine(label: '', value: ''));
+          // 组内插入空行标记，交给 View 渲染成一条分隔线。
+          if (i != goodsListRaw.length - 1) {
+            cargoLines.add(const DetailLine(label: '', value: ''));
+          }
         }
       }
     }

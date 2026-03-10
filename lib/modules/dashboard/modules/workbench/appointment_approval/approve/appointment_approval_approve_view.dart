@@ -100,14 +100,17 @@ class AppointmentApprovalApproveView
                           isIn: false,
                         ),
                       ),
-                      SizedBox(height: AppDimens.dp12),
-                      _fieldLabel('是否抽检', required: true),
-                      SizedBox(height: AppDimens.dp4),
-                      Switch(
-                        value: logic.sampleCheck,
-                        onChanged: logic.onSampleCheckChanged,
-                      ),
-                      SizedBox(height: AppDimens.dp8),
+                      if (logic.shouldShowSampleCheck) ...[
+                        SizedBox(height: AppDimens.dp12),
+                        _fieldLabel('是否抽检', required: true),
+                        SizedBox(height: AppDimens.dp4),
+                        Switch(
+                          value: logic.sampleCheck,
+                          onChanged: logic.onSampleCheckChanged,
+                        ),
+                        SizedBox(height: AppDimens.dp8),
+                      ] else
+                        SizedBox(height: AppDimens.dp12),
                       _fieldLabel('审批意见'),
                       SizedBox(height: AppDimens.dp8),
                       TextField(

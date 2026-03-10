@@ -9,29 +9,36 @@ import '../../../../../../data/repository/workbench_repository.dart';
 import '../../../../../../global.dart';
 
 /// 预约审批页控制器。
+///
+/// 负责详情加载、授权闸机选择以及审批提交。
 class AppointmentApprovalApproveController extends GetxController {
   final WorkbenchRepository _repository = WorkbenchRepository();
 
   late final AppointmentApprovalItemModel item;
   final TextEditingController parkCheckDescController = TextEditingController();
 
+  /// 页面主状态。
   bool loading = false;
   bool gateLoading = false;
   bool submitting = false;
   Map<String, dynamic> detail = const <String, dynamic>{};
 
+  /// 审批表单字段。
   DateTime? validityStart;
   DateTime? validityEnd;
   bool sampleCheck = false;
 
+  /// 入口/出口闸机可选项。
   List<CheckpointAreaOption> inGateOptions = const <CheckpointAreaOption>[];
   List<CheckpointAreaOption> outGateOptions = const <CheckpointAreaOption>[];
 
+  /// 当前选中的区域和设备。
   Set<String> inSelectedAreaIds = <String>{};
   Set<String> outSelectedAreaIds = <String>{};
   Set<String> inSelectedDeviceCodes = <String>{};
   Set<String> outSelectedDeviceCodes = <String>{};
 
+  /// 详情接口返回的默认值，用于首次回填。
   List<String> _inDefaultAreaIds = const <String>[];
   List<String> _outDefaultAreaIds = const <String>[];
   List<String> _inDefaultDeviceCodes = const <String>[];
@@ -86,7 +93,7 @@ class AppointmentApprovalApproveController extends GetxController {
     final data = _detailData();
     validityStart = _parseDateTime(data['validityBeginTime']);
     validityEnd = _parseDateTime(data['validityEndTime']);
-    sampleCheck = _toInt(data['sampleCheck']) == 1;
+    sampleCheck = shouldShowSampleCheck && _toInt(data['sampleCheck']) == 1;
 
     final desc = (data['parkCheckDesc'] ?? '').toString().trim();
     if (desc.isNotEmpty && parkCheckDescController.text.trim().isEmpty) {
@@ -119,6 +126,10 @@ class AppointmentApprovalApproveController extends GetxController {
     sampleCheck = value;
     update();
   }
+
+  /// 仅危化车、危废车需要展示并提交抽检字段。
+  bool get shouldShowSampleCheck =>
+      item.reservationType == 3 || item.reservationType == 4;
 
   Future<void> _reloadGateOptions() async {
     gateLoading = true;
@@ -340,7 +351,7 @@ class AppointmentApprovalApproveController extends GetxController {
       outDistrictIds: outSelectedAreaIds.toList(),
       inDeviceCodes: inSelectedDeviceCodes.toList(),
       outDeviceCodes: outSelectedDeviceCodes.toList(),
-      sampleCheck: sampleCheck ? 1 : 0,
+      sampleCheck: shouldShowSampleCheck && sampleCheck ? 1 : 0,
     );
 
     submitting = false;
