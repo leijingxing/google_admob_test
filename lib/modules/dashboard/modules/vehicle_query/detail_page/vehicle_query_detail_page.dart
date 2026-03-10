@@ -335,10 +335,7 @@ class _AuthorizationRecordTabState extends State<_AuthorizationRecordTab> {
                   ],
                   actions: [
                     TextButton(
-                      onPressed: () => _openAppointmentApprovalDetail(
-                        id: item.id,
-                        carNumb: widget.row.carNumb,
-                      ),
+                      onPressed: () => _openAppointmentApprovalDetail(id: item.id, carNumb: widget.row.carNumb),
                       child: const Text('详情'),
                     ),
                   ],
@@ -442,10 +439,7 @@ class _AccessRecordTabState extends State<_AccessRecordTab> {
                   ],
                   actions: [
                     TextButton(
-                      onPressed: () => _openAppointmentApprovalDetail(
-                        id: item.reservationOrWhileId,
-                        carNumb: widget.row.carNumb,
-                      ),
+                      onPressed: () => _openAppointmentApprovalDetail(id: item.reservationOrWhileId, carNumb: widget.row.carNumb),
                       child: const Text('详情'),
                     ),
                   ],
@@ -715,6 +709,10 @@ class _SubSearchBar extends StatelessWidget {
   final VoidCallback onSearch;
   final VoidCallback onReset;
 
+  bool get _hasExtraFilters {
+    return (primaryRangeTitle != null && onPrimaryRangeSelected != null) || (secondaryRangeTitle != null && onSecondaryRangeSelected != null);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -749,21 +747,23 @@ class _SubSearchBar extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: AppDimens.dp8),
-          SizedBox(
-            width: AppDimens.dp34,
-            height: AppDimens.dp34,
-            child: FilledButton(
-              onPressed: () => _showFilterBottomSheet(context),
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF1F7BFF),
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.dp10)),
+          if (_hasExtraFilters) ...[
+            SizedBox(width: AppDimens.dp8),
+            SizedBox(
+              width: AppDimens.dp34,
+              height: AppDimens.dp34,
+              child: FilledButton(
+                onPressed: () => _showFilterBottomSheet(context),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF1F7BFF),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.dp10)),
+                ),
+                child: const Icon(Icons.tune, size: 16),
               ),
-              child: const Icon(Icons.tune, size: 16),
             ),
-          ),
+          ],
         ],
       ),
     );
