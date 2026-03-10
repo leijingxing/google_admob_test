@@ -544,18 +544,19 @@ class WorkbenchRepository {
 
   /// 提交报警/预警处置。
   Future<Result<void>> disposeRiskWarning({
-    required RiskWarningDisposalItemModel item,
+    required Map<String, dynamic> payload,
     required String disposalResult,
     required List<String> disposalFiles,
   }) async {
-    final payload = <String, dynamic>{
-      ...item.toJson(),
-      'id': item.id,
-      'warningType': item.warningType,
+    final requestData = <String, dynamic>{
+      ...payload,
       'disposalResult': disposalResult,
-      'disposalFiles': disposalFiles,
+      'disposalFiles': disposalFiles.join(','),
     };
-    payload.removeWhere((_, value) {
+    _normalizeAttachmentField(requestData, 'disposalFiles');
+    _normalizeAttachmentField(requestData, 'cancelWarningFiles');
+    _normalizeAttachmentField(requestData, 'giveWarningFiles');
+    requestData.removeWhere((_, value) {
       if (value == null) return true;
       if (value is String && value.trim().isEmpty) return true;
       return false;
@@ -563,7 +564,7 @@ class WorkbenchRepository {
 
     final result = await _httpService.post<dynamic>(
       '/api/risk-warning/riskWarning/disposal',
-      data: payload,
+      data: requestData,
     );
     return result.when(
       success: (_) => const Success<void>(null),
@@ -1618,5 +1619,18 @@ class WorkbenchRepository {
         'values': <String>[begin, end],
       },
     ];
+  }
+
+  void _normalizeAttachmentField(
+    Map<String, dynamic> payload,
+    String fieldName,
+  ) {
+    final value = payload[fieldName];
+    if (value is List) {
+      payload[fieldName] = value
+          .map((item) => item?.toString().trim() ?? '')
+          .where((item) => item.isNotEmpty)
+          .join(',');
+    }
   }
 }

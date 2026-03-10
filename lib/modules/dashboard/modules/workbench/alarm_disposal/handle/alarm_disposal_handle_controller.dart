@@ -56,20 +56,7 @@ class AlarmDisposalHandleController extends GetxController {
     update();
 
     final result = await _repository.disposeRiskWarning(
-      item: RiskWarningDisposalItemModel(
-        id: item.id,
-        warningType: 2,
-        title: item.title,
-        description: item.description,
-        warningLevel: item.warningLevel,
-        warningStatus: item.warningStatus,
-        warningSource: item.warningSource,
-        warningStartTime: item.warningStartTime,
-        warningEndTime: item.warningEndTime,
-        deviceName: item.deviceName,
-        position: item.position,
-        disposalCategory: item.disposalCategory,
-      ),
+      payload: item.toJson(),
       disposalResult: resultText,
       disposalFiles: List<String>.from(disposalFiles),
     );
