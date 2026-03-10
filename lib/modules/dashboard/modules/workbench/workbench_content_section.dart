@@ -347,7 +347,7 @@ class _GridActionCard extends StatelessWidget {
   });
 
   final String title;
-  final int count;
+  final int? count;
   final Color color;
   final IconData icon;
   final VoidCallback onTap;
@@ -396,7 +396,7 @@ class _GridActionCard extends StatelessWidget {
               ),
               SizedBox(height: AppDimens.dp2),
               Text(
-                '$count',
+                count == null ? '--' : '$count',
                 style: TextStyle(
                   color: color,
                   fontSize: AppDimens.sp14,

@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../dashboard/dashboard_view.dart';
+import '../message/message_view.dart';
 import '../profile/profile_view.dart';
-import '../refresh_test/refresh_test_view.dart';
 import 'home_controller.dart';
 
 /// 首页：底部 Tab（主页 / 消息 / 个人）。

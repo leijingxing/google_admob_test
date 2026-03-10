@@ -21,6 +21,7 @@ import '../models/workbench/system_department_tree_model.dart';
 import '../models/workbench/system_post_item_model.dart';
 import '../models/workbench/system_user_item_model.dart';
 import '../models/workbench/whitelist_approval_item_model.dart';
+import '../models/workbench/workbench_pending_task_count_model.dart';
 
 /// 工作台模块数据仓库：统一处理工作台相关接口。
 class WorkbenchRepository {
@@ -98,6 +99,17 @@ class WorkbenchRepository {
         }
         return 0;
       },
+    );
+  }
+
+  /// 获取工作台待处理数量统计。
+  Future<Result<WorkbenchPendingTaskCountModel>> getPendingTaskCount() {
+    return _httpService.post<WorkbenchPendingTaskCountModel>(
+      '/api/closed-off/workbenchStatistics/pendingTaskCount',
+      data: const {},
+      parser: (json) => WorkbenchPendingTaskCountModel.fromJson(
+        Map<String, dynamic>.from(json as Map),
+      ),
     );
   }
 

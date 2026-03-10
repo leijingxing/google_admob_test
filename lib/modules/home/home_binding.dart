@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../dashboard/dashboard_controller.dart';
+import '../message/message_binding.dart';
 import '../profile/profile_controller.dart';
 import 'home_controller.dart';
 
@@ -10,6 +11,7 @@ class HomeBinding extends Bindings {
   void dependencies() {
     Get.lazyPut<HomeController>(HomeController.new);
     Get.lazyPut<DashboardController>(DashboardController.new);
+    MessageBinding().dependencies();
     Get.lazyPut<ProfileController>(ProfileController.new);
   }
 }
