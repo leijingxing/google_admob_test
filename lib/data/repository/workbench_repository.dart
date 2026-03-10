@@ -688,14 +688,16 @@ class WorkbenchRepository {
     final payload = <String, dynamic>{
       ...buildPagePayload(pageIndex: current, pageSize: size),
       'confirmStatus': confirmStatus,
-      'keyword': keyword,
       'customParams': <Map<String, dynamic>>[
-        if (reportTimeBegin != null && reportTimeEnd != null)
-          <String, dynamic>{
-            'name': 'reportTime',
-            'operator': 'BETWEEN',
-            'values': <String>[reportTimeBegin, reportTimeEnd],
-          },
+        ..._buildLikeSearchCustomParams(
+          keyword: keyword,
+          fields: const ['reportUserName', 'remark', 'exceptionDesc'],
+        ),
+        ..._buildBetweenCustomParams(
+          fieldName: 'reportTime',
+          begin: reportTimeBegin,
+          end: reportTimeEnd,
+        ),
       ],
     };
     payload.removeWhere((_, value) {
@@ -1569,5 +1571,52 @@ class WorkbenchRepository {
       success: (_) => const Success<void>(null),
       failure: (error) => Failure<void>(error),
     );
+  }
+
+  List<Map<String, dynamic>> _buildLikeSearchCustomParams({
+    required String? keyword,
+    required List<String> fields,
+  }) {
+    final normalizedKeyword = keyword?.trim() ?? '';
+    if (normalizedKeyword.isEmpty || fields.isEmpty) {
+      return const <Map<String, dynamic>>[];
+    }
+
+    return <Map<String, dynamic>>[
+      <String, dynamic>{
+        'virtual': true,
+        'operator': 'LIKE',
+        'connector': 'AND',
+        'childrenConnector': 'AND',
+        'children': fields
+            .map(
+              (field) => <String, dynamic>{
+                'name': field,
+                'operator': 'LIKE',
+                'values': <String>[normalizedKeyword],
+                'connector': 'OR',
+              },
+            )
+            .toList(),
+      },
+    ];
+  }
+
+  List<Map<String, dynamic>> _buildBetweenCustomParams({
+    required String fieldName,
+    required String? begin,
+    required String? end,
+  }) {
+    if (begin == null || end == null) {
+      return const <Map<String, dynamic>>[];
+    }
+
+    return <Map<String, dynamic>>[
+      <String, dynamic>{
+        'name': fieldName,
+        'operator': 'BETWEEN',
+        'values': <String>[begin, end],
+      },
+    ];
   }
 }
