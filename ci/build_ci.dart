@@ -38,7 +38,10 @@ late final Stream<String> _broadcastStdin;
 /// 主入口函数
 void main(List<String> args) async {
   // 初始化标准输入流
-  _broadcastStdin = stdin.transform(utf8.decoder).transform(const LineSplitter()).asBroadcastStream();
+  _broadcastStdin = stdin
+      .transform(utf8.decoder)
+      .transform(const LineSplitter())
+      .asBroadcastStream();
 
   try {
     // 1. 解析参数并创建构建配置
@@ -62,14 +65,19 @@ void main(List<String> args) async {
 class BuildConfig {
   /// Flavor 名称 (例如: dev, prod)
   final String? flavor;
+
   /// 构建渠道标识（用于日志与上传），不一定等于 Gradle flavor
   final String channel;
+
   /// Dart 入口文件路径 (例如: lib/main_dev.dart)
   final String entryPoint;
+
   /// 应用显示名称 (从 resValue 中获取)
   final String appName;
+
   /// 最终的包名 (例如: com.hyzh.industrial_alarm.dev)
   final String finalPackageId;
+
   /// 构建产物APK的路径
   final String finalApkPath;
 
@@ -86,16 +94,21 @@ class BuildConfig {
   static Future<BuildConfig> fromArgs(List<String> args) async {
     // 1. 从 .run/*.xml 文件中选择一个运行配置
     final runConfig = await RunConfig.selectFromLocal();
-    Logger.success('已选择构建配置: ${runConfig.name} (Flavor: ${runConfig.flavor ?? 'default'})');
+    Logger.success(
+      '已选择构建配置: ${runConfig.name} (Flavor: ${runConfig.flavor ?? 'default'})',
+    );
 
     final hasValidFlavor = await GradleParser.supportsFlavor(runConfig.flavor);
     final effectiveFlavor = hasValidFlavor ? runConfig.flavor : null;
     if (runConfig.flavor != null && !hasValidFlavor) {
-      Logger.warn('Gradle 中未定义 flavor "${runConfig.flavor}"，将自动以无 flavor 模式构建。');
+      Logger.warn(
+        'Gradle 中未定义 flavor "${runConfig.flavor}"，将自动以无 flavor 模式构建。',
+      );
     }
 
     // 2. 基于选择的 flavor，从 build.gradle.kts 解析详细信息
-    final appName = await GradleParser.getAppName(effectiveFlavor) ?? runConfig.name;
+    final appName =
+        await GradleParser.getAppName(effectiveFlavor) ?? runConfig.name;
     final packageId = await GradleParser.getFinalPackageId(effectiveFlavor);
 
     // 3. 确定最终构建产物的路径
@@ -126,6 +139,7 @@ class BuildRunner {
     await _checkPrerequisites();
     await _buildApk();
     await _processAndUploadApk();
+    await _pushCurrentBranchIfNeeded();
   }
 
   /// 检查脚本运行环境
@@ -172,16 +186,29 @@ class BuildRunner {
 
     Logger.info('执行命令: $flutterBin ${buildArgs.join(' ')}');
 
-    final process = await Process.start(flutterBin, buildArgs, runInShell: true);
-    final stdoutSubscription = process.stdout.transform(utf8.decoder).listen(Logger.info);
-    final stderrSubscription = process.stderr.transform(utf8.decoder).listen(Logger.error);
+    final process = await Process.start(
+      flutterBin,
+      buildArgs,
+      runInShell: true,
+    );
+    final stdoutSubscription = process.stdout
+        .transform(utf8.decoder)
+        .listen(Logger.info);
+    final stderrSubscription = process.stderr
+        .transform(utf8.decoder)
+        .listen(Logger.error);
 
     final exitCode = await process.exitCode;
     await stdoutSubscription.cancel();
     await stderrSubscription.cancel();
 
     if (exitCode != 0) {
-      throw ProcessException(flutterBin, buildArgs, 'Flutter构建失败，退出码: $exitCode', exitCode);
+      throw ProcessException(
+        flutterBin,
+        buildArgs,
+        'Flutter构建失败，退出码: $exitCode',
+        exitCode,
+      );
     }
     final duration = DateTime.now().difference(startTime);
     Logger.success('APK构建成功！耗时: ${duration.inSeconds}秒');
@@ -209,7 +236,12 @@ class BuildRunner {
     String suggestedLog = '常规优化及Bug修复';
     Logger.info('正在获取最新的 Git 提交日志...');
     try {
-      final result = await Process.run('git', ['log', '-1', '--pretty=%B'], stdoutEncoding: utf8, stderrEncoding: utf8);
+      final result = await Process.run(
+        'git',
+        ['log', '-1', '--pretty=%B'],
+        stdoutEncoding: utf8,
+        stderrEncoding: utf8,
+      );
       if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
         suggestedLog = result.stdout.toString().trim();
         Logger.success('成功获取到 Git 日志。');
@@ -247,7 +279,10 @@ class BuildRunner {
   Future<bool> _promptForUploadTarget() async {
     const prompt = '是否上传到蒲公英 (y/n, 默认 y, 上传到私有服务器)';
     const timeout = Duration(seconds: 30);
-    final input = (await _ioPromptWithTimeout(prompt, timeout)).toLowerCase().trim();
+    final input = (await _ioPromptWithTimeout(
+      prompt,
+      timeout,
+    )).toLowerCase().trim();
 
     if (input == _TIMED_OUT) {
       Logger.info('输入超时，将自动选择 "y"（上传到蒲公英）。');
@@ -304,7 +339,10 @@ class BuildRunner {
   Future<void> _sendWeChatNotification(Map<String, dynamic> data) async {
     const prompt = '是否发送企业微信消息 (y/n, 默认 y)';
     const timeout = Duration(seconds: 30);
-    final input = (await _ioPromptWithTimeout(prompt, timeout)).toLowerCase().trim();
+    final input = (await _ioPromptWithTimeout(
+      prompt,
+      timeout,
+    )).toLowerCase().trim();
 
     if (input == 'n') {
       Logger.info('用户取消发送企业微信消息。');
@@ -321,6 +359,89 @@ class BuildRunner {
       data: data,
       atMobiles: atMobiles,
     );
+  }
+
+  /// 如有未推送提交，则自动 push 当前分支
+  Future<void> _pushCurrentBranchIfNeeded() async {
+    Logger.info('检查当前分支是否需要自动 push...');
+
+    final branchResult = await Process.run(
+      'git',
+      ['rev-parse', '--abbrev-ref', 'HEAD'],
+      stdoutEncoding: utf8,
+      stderrEncoding: utf8,
+    );
+    if (branchResult.exitCode != 0) {
+      Logger.warn('获取当前分支失败，跳过自动 push。');
+      return;
+    }
+
+    final branch = branchResult.stdout.toString().trim();
+    if (branch.isEmpty || branch == 'HEAD') {
+      Logger.warn('当前处于 detached HEAD，跳过自动 push。');
+      return;
+    }
+
+    final dirtyResult = await Process.run(
+      'git',
+      ['status', '--short'],
+      stdoutEncoding: utf8,
+      stderrEncoding: utf8,
+    );
+    if (dirtyResult.exitCode == 0 &&
+        dirtyResult.stdout.toString().trim().isNotEmpty) {
+      Logger.warn('检测到未提交改动，自动 push 只会推送已提交内容，不会自动 commit。');
+    }
+
+    final aheadResult = await Process.run(
+      'git',
+      ['rev-list', '--count', '@{u}..HEAD'],
+      stdoutEncoding: utf8,
+      stderrEncoding: utf8,
+    );
+    if (aheadResult.exitCode != 0) {
+      Logger.warn('当前分支可能尚未设置 upstream，尝试直接推送到 origin/$branch ...');
+      await _pushBranch(branch);
+      return;
+    }
+
+    final aheadCount = int.tryParse(aheadResult.stdout.toString().trim()) ?? 0;
+    if (aheadCount <= 0) {
+      Logger.success('当前分支没有未推送提交，无需 push。');
+      return;
+    }
+
+    Logger.info('检测到当前分支有 $aheadCount 个未推送提交，开始自动 push...');
+    await _pushBranch(branch);
+  }
+
+  Future<void> _pushBranch(String branch) async {
+    final pushResult = await Process.start('git', [
+      'push',
+      'origin',
+      branch,
+    ], runInShell: true);
+    final stdoutSubscription = pushResult.stdout
+        .transform(utf8.decoder)
+        .listen(Logger.info);
+    final stderrSubscription = pushResult.stderr
+        .transform(utf8.decoder)
+        .listen(Logger.error);
+
+    final exitCode = await pushResult.exitCode;
+    await stdoutSubscription.cancel();
+    await stderrSubscription.cancel();
+
+    if (exitCode != 0) {
+      throw ProcessException(
+        'git',
+        ['push', 'origin', branch],
+        '自动 push 失败，退出码: $exitCode',
+        exitCode,
+      );
+    }
+
+    Logger.success('自动 push 完成：origin/$branch');
   }
 }
 
@@ -353,15 +474,20 @@ abstract final class GradleParser {
     final content = await _getGradleContent();
 
     // 1. 获取默认包名
-    final baseIdMatch = RegExp(r'applicationId\s*=\s*"([^"]+)"').firstMatch(content);
+    final baseIdMatch = RegExp(
+      r'applicationId\s*=\s*"([^"]+)"',
+    ).firstMatch(content);
     final baseId = baseIdMatch?.group(1);
-    if (baseId == null) throw Exception('在 build.gradle.kts 中找不到默认的 applicationId');
+    if (baseId == null)
+      throw Exception('在 build.gradle.kts 中找不到默认的 applicationId');
 
     // 2. 查找指定 flavor 的配置块
     if (flavor == null || flavor.isEmpty) {
       return baseId;
     }
-    final flavorBlockMatch = RegExp('create\\("$flavor"\\)\\s*\\{([\\s\\S]*?)\\}').firstMatch(content);
+    final flavorBlockMatch = RegExp(
+      'create\\("$flavor"\\)\\s*\\{([\\s\\S]*?)\\}',
+    ).firstMatch(content);
     if (flavorBlockMatch == null) {
       // 如果没有找到独立的 flavor 块 (例如 prod flavor 可能直接使用默认值)，则返回基础ID
       return baseId;
@@ -370,13 +496,17 @@ abstract final class GradleParser {
     final flavorBlock = flavorBlockMatch.group(1)!;
 
     // 3. 查找 applicationIdSuffix
-    final suffixMatch = RegExp(r'applicationIdSuffix\s*=\s*"([^"]+)"').firstMatch(flavorBlock);
+    final suffixMatch = RegExp(
+      r'applicationIdSuffix\s*=\s*"([^"]+)"',
+    ).firstMatch(flavorBlock);
     if (suffixMatch != null) {
       return '$baseId${suffixMatch.group(1)}';
     }
 
     // 4. 查找完整的 applicationId 覆盖
-    final overrideMatch = RegExp(r'applicationId\s*=\s*"([^"]+)"').firstMatch(flavorBlock);
+    final overrideMatch = RegExp(
+      r'applicationId\s*=\s*"([^"]+)"',
+    ).firstMatch(flavorBlock);
     if (overrideMatch != null) {
       return overrideMatch.group(1)!;
     }
@@ -389,11 +519,15 @@ abstract final class GradleParser {
   static Future<String?> getAppName(String? flavor) async {
     if (flavor == null || flavor.isEmpty) return null;
     final content = await _getGradleContent();
-    final flavorBlockMatch = RegExp('create\\("$flavor"\\)\\s*\\{([\\s\\S]*?)\\}').firstMatch(content);
+    final flavorBlockMatch = RegExp(
+      'create\\("$flavor"\\)\\s*\\{([\\s\\S]*?)\\}',
+    ).firstMatch(content);
     if (flavorBlockMatch == null) return null;
 
     final flavorBlock = flavorBlockMatch.group(1)!;
-    final appNameMatch = RegExp(r'resValue\("string",\s*"app_name",\s*"([^"]+)"\)').firstMatch(flavorBlock);
+    final appNameMatch = RegExp(
+      r'resValue\("string",\s*"app_name",\s*"([^"]+)"\)',
+    ).firstMatch(flavorBlock);
 
     return appNameMatch?.group(1);
   }
@@ -405,23 +539,39 @@ class RunConfig {
   final String? flavor;
   final String entryPoint;
 
-  const RunConfig({required this.name, required this.flavor, required this.entryPoint});
+  const RunConfig({
+    required this.name,
+    required this.flavor,
+    required this.entryPoint,
+  });
 
   static final _nameReg = RegExp(r'<configuration .*name="([^"]+)"');
-  static final _flavorReg = RegExp(r'<option name="buildFlavor" value="([^"]+)" />');
-  static final _additionalArgsReg = RegExp(r'<option name="additionalArgs" value="([^"]+)" />');
-  static final _entryPointReg = RegExp(r'<option name="filePath" value="\$PROJECT_DIR\$([^"]+)" />');
+  static final _flavorReg = RegExp(
+    r'<option name="buildFlavor" value="([^"]+)" />',
+  );
+  static final _additionalArgsReg = RegExp(
+    r'<option name="additionalArgs" value="([^"]+)" />',
+  );
+  static final _entryPointReg = RegExp(
+    r'<option name="filePath" value="\$PROJECT_DIR\$([^"]+)" />',
+  );
 
   /// 从文件中解析配置
   static RunConfig? fromFile(File file) {
     final content = file.readAsStringSync();
     final name = _nameReg.firstMatch(content)?.group(1);
     var flavor = _flavorReg.firstMatch(content)?.group(1);
-    final additionalArgs = _additionalArgsReg.firstMatch(content)?.group(1) ?? '';
-    final entryPoint = _entryPointReg.firstMatch(content)?.group(1)?.substring(1); // 移除开头的 '/'
+    final additionalArgs =
+        _additionalArgsReg.firstMatch(content)?.group(1) ?? '';
+    final entryPoint = _entryPointReg
+        .firstMatch(content)
+        ?.group(1)
+        ?.substring(1); // 移除开头的 '/'
 
     if (flavor == null || flavor.isEmpty) {
-      flavor = RegExp(r'--flavor\s+([A-Za-z0-9_-]+)').firstMatch(additionalArgs)?.group(1);
+      flavor = RegExp(
+        r'--flavor\s+([A-Za-z0-9_-]+)',
+      ).firstMatch(additionalArgs)?.group(1);
     }
     if ((flavor == null || flavor.isEmpty) && entryPoint != null) {
       flavor = _inferFlavorFromEntryPoint(entryPoint);
@@ -444,16 +594,25 @@ class RunConfig {
     final dir = Directory('.run');
     if (!await dir.exists()) throw const FileSystemException('找不到 .run 目录');
 
-    final files = await dir.list().where((f) => f.path.endsWith('.run.xml')).toList();
-    if (files.isEmpty) throw const FileSystemException('在 .run/ 目录中未找到任何 *.run.xml 配置文件');
+    final files = await dir
+        .list()
+        .where((f) => f.path.endsWith('.run.xml'))
+        .toList();
+    if (files.isEmpty)
+      throw const FileSystemException('在 .run/ 目录中未找到任何 *.run.xml 配置文件');
 
-    final configs = files.map((f) => fromFile(File(f.path))).whereType<RunConfig>().toList();
+    final configs = files
+        .map((f) => fromFile(File(f.path)))
+        .whereType<RunConfig>()
+        .toList();
     if (configs.isEmpty) throw Exception('在 .run/ 目录中未找到有效的 Flutter 运行配置');
     if (configs.length == 1) return configs.first;
 
     Logger.prompt('检测到多个运行配置，请选择一个:');
     for (var i = 0; i < configs.length; i++) {
-      Logger.info('$i: ${configs[i].name} (Flavor: ${configs[i].flavor ?? 'default'})');
+      Logger.info(
+        '$i: ${configs[i].name} (Flavor: ${configs[i].flavor ?? 'default'})',
+      );
     }
 
     const prompt = '请输入序号 (默认 0)';
@@ -524,10 +683,12 @@ String _fmtTime(DateTime time) {
 
 /// 企业微信通知模块
 abstract final class WeChat {
-  static final _dio = Dio(BaseOptions(
-    headers: {'Content-Type': 'application/json'},
-    validateStatus: (status) => status != null && status < 500,
-  ));
+  static final _dio = Dio(
+    BaseOptions(
+      headers: {'Content-Type': 'application/json'},
+      validateStatus: (status) => status != null && status < 500,
+    ),
+  );
 
   static Future<void> send({
     required String title,
@@ -573,13 +734,16 @@ abstract final class WeChat {
 
 /// 蒲公英上传模块
 class AppUploader {
-  static const String _pgyerApiKey = '51703a1d7b85abc64a6727ab4a9d7812'; // TODO: 替换为你的蒲公英 API Key
+  static const String _pgyerApiKey =
+      '51703a1d7b85abc64a6727ab4a9d7812'; // TODO: 替换为你的蒲公英 API Key
   // ... (此类与你之前的脚本完全相同，这里省略了具体实现以保持简洁，你可以直接复制过来)
   // ... (请确保将 _getCOSToken, _uploadFile, _pollBuildInfo 等方法完整复制)
-  static final _dio = Dio(BaseOptions(
-    baseUrl: 'https://www.pgyer.com/apiv2/',
-    headers: {'Content-Type': 'multipart/form-data'},
-  ));
+  static final _dio = Dio(
+    BaseOptions(
+      baseUrl: 'https://www.pgyer.com/apiv2/',
+      headers: {'Content-Type': 'multipart/form-data'},
+    ),
+  );
 
   static Future<bool> uploadToPgyer({
     required String path,
@@ -602,20 +766,29 @@ class AppUploader {
     }
   }
 
-  static Future<Map<String, dynamic>> _getCOSToken(String? updateDescription) async {
-    final response = await _dio.post('app/getCOSToken', data: FormData.fromMap({
-      '_api_key': _pgyerApiKey,
-      'buildType': 'android',
-      'buildInstallType': 1,
-      'buildUpdateDescription': ?updateDescription,
-    }));
+  static Future<Map<String, dynamic>> _getCOSToken(
+    String? updateDescription,
+  ) async {
+    final response = await _dio.post(
+      'app/getCOSToken',
+      data: FormData.fromMap({
+        '_api_key': _pgyerApiKey,
+        'buildType': 'android',
+        'buildInstallType': 1,
+        'buildUpdateDescription': ?updateDescription,
+      }),
+    );
     if (response.statusCode == 200 && response.data['code'] == 0) {
       return response.data['data'] as Map<String, dynamic>;
     }
     throw Exception('获取蒲公英COSToken失败: ${response.data}');
   }
 
-  static Future<void> _uploadFile(String url, String path, Map<String, dynamic> params) async {
+  static Future<void> _uploadFile(
+    String url,
+    String path,
+    Map<String, dynamic> params,
+  ) async {
     final file = File(path);
     final formData = FormData.fromMap({
       ...params,
@@ -625,36 +798,50 @@ class AppUploader {
       ),
     });
 
-    final response = await Dio().post(url, data: formData, onSendProgress: (sent, total) {
-      final percentage = (sent / total * 100).toStringAsFixed(1);
-      stdout.write('\r上传进度: $percentage%');
-    });
+    final response = await Dio().post(
+      url,
+      data: formData,
+      onSendProgress: (sent, total) {
+        final percentage = (sent / total * 100).toStringAsFixed(1);
+        stdout.write('\r上传进度: $percentage%');
+      },
+    );
     stdout.writeln();
     if (response.statusCode != 204) {
       throw Exception('上传文件到蒲公英COS失败, HTTP status: ${response.statusCode}');
     }
   }
 
-  static Future<void> _pollBuildInfo(String buildKey, {int maxRetries = 10, int currentRetry = 0}) async {
+  static Future<void> _pollBuildInfo(
+    String buildKey, {
+    int maxRetries = 10,
+    int currentRetry = 0,
+  }) async {
     if (currentRetry >= maxRetries) {
       throw Exception('获取构建信息超时，请稍后前往蒲公英网站查看。');
     }
     await Future.delayed(const Duration(seconds: 3));
     Logger.info('正在查询构建状态 (第 ${currentRetry + 1} 次)...');
 
-    final response = await _dio.post('app/buildInfo', data: FormData.fromMap({
-      '_api_key': _pgyerApiKey,
-      'buildKey': buildKey,
-    }));
+    final response = await _dio.post(
+      'app/buildInfo',
+      data: FormData.fromMap({'_api_key': _pgyerApiKey, 'buildKey': buildKey}),
+    );
 
     if (response.statusCode == 200 && response.data['code'] == 0) {
       final buildData = response.data['data'];
       Logger.success('蒲公英处理完成！');
       Logger.info('应用信息:');
       Logger.info(ENCODER.convert(buildData));
-      Logger.info('下载短链接: https://www.pgyer.com/${buildData['buildShortcutUrl']}');
+      Logger.info(
+        '下载短链接: https://www.pgyer.com/${buildData['buildShortcutUrl']}',
+      );
     } else if (response.data['code'] == 1247 || response.data['code'] == 1246) {
-      await _pollBuildInfo(buildKey, maxRetries: maxRetries, currentRetry: currentRetry + 1);
+      await _pollBuildInfo(
+        buildKey,
+        maxRetries: maxRetries,
+        currentRetry: currentRetry + 1,
+      );
     } else {
       throw Exception('获取构建信息失败: ${response.data}');
     }
@@ -668,12 +855,16 @@ abstract final class S3Uploader {
     required String packageId,
     required String channel,
   }) async {
-    final endpoint = (Platform.environment['S3_ENDPOINT'] ?? DEFAULT_S3_ENDPOINT).trim();
+    final endpoint =
+        (Platform.environment['S3_ENDPOINT'] ?? DEFAULT_S3_ENDPOINT).trim();
     var accessKey = (Platform.environment['S3_ACCESS_KEY'] ?? '').trim();
     var secretKey = (Platform.environment['S3_SECRET_KEY'] ?? '').trim();
-    final bucket = (Platform.environment['S3_BUCKET'] ?? DEFAULT_S3_BUCKET).trim();
-    final region = (Platform.environment['S3_REGION'] ?? DEFAULT_S3_REGION).trim();
-    final publicBaseUrl = (Platform.environment['S3_PUBLIC_BASE_URL'] ?? endpoint).trim();
+    final bucket = (Platform.environment['S3_BUCKET'] ?? DEFAULT_S3_BUCKET)
+        .trim();
+    final region = (Platform.environment['S3_REGION'] ?? DEFAULT_S3_REGION)
+        .trim();
+    final publicBaseUrl =
+        (Platform.environment['S3_PUBLIC_BASE_URL'] ?? endpoint).trim();
     final includeBucketInPublicUrl = _parseBoolEnv(
       Platform.environment['S3_PUBLIC_INCLUDE_BUCKET'],
       fallback: DEFAULT_S3_PUBLIC_INCLUDE_BUCKET,
@@ -710,8 +901,11 @@ abstract final class S3Uploader {
 
     final payloadHash = sha256.convert(bytes).toString();
     final canonicalUri = '/$bucket/$encodedKey';
-    final host = endpointUri.hasPort ? '${endpointUri.host}:${endpointUri.port}' : endpointUri.host;
-    final canonicalHeaders = 'host:$host\nx-amz-content-sha256:$payloadHash\nx-amz-date:$amzDate\n';
+    final host = endpointUri.hasPort
+        ? '${endpointUri.host}:${endpointUri.port}'
+        : endpointUri.host;
+    final canonicalHeaders =
+        'host:$host\nx-amz-content-sha256:$payloadHash\nx-amz-date:$amzDate\n';
     final signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
     final canonicalRequest = [
       'PUT',
@@ -732,7 +926,8 @@ abstract final class S3Uploader {
 
     final signingKey = _getSigningKey(secretKey, dateStamp, region, 's3');
     final signature = _hmacHex(signingKey, stringToSign);
-    final authorization = 'AWS4-HMAC-SHA256 Credential=$accessKey/$credentialScope, SignedHeaders=$signedHeaders, Signature=$signature';
+    final authorization =
+        'AWS4-HMAC-SHA256 Credential=$accessKey/$credentialScope, SignedHeaders=$signedHeaders, Signature=$signature';
 
     final httpClient = HttpClient();
     try {
@@ -742,7 +937,10 @@ abstract final class S3Uploader {
       request.headers.set('x-amz-content-sha256', payloadHash);
       request.headers.set('x-amz-date', amzDate);
       request.headers.set(HttpHeaders.authorizationHeader, authorization);
-      request.headers.set(HttpHeaders.contentTypeHeader, 'application/vnd.android.package-archive');
+      request.headers.set(
+        HttpHeaders.contentTypeHeader,
+        'application/vnd.android.package-archive',
+      );
       request.contentLength = bytes.length;
       request.add(bytes);
 
@@ -764,7 +962,12 @@ abstract final class S3Uploader {
     return publicUri.toString();
   }
 
-  static List<int> _getSigningKey(String secretKey, String dateStamp, String region, String service) {
+  static List<int> _getSigningKey(
+    String secretKey,
+    String dateStamp,
+    String region,
+    String service,
+  ) {
     final kDate = _hmacBytes(utf8.encode('AWS4$secretKey'), dateStamp);
     final kRegion = _hmacBytes(kDate, region);
     final kService = _hmacBytes(kRegion, service);
@@ -799,8 +1002,10 @@ abstract final class S3Uploader {
   static bool _parseBoolEnv(String? raw, {required bool fallback}) {
     if (raw == null) return fallback;
     final value = raw.trim().toLowerCase();
-    if (value == '1' || value == 'true' || value == 'yes' || value == 'y') return true;
-    if (value == '0' || value == 'false' || value == 'no' || value == 'n') return false;
+    if (value == '1' || value == 'true' || value == 'yes' || value == 'y')
+      return true;
+    if (value == '0' || value == 'false' || value == 'no' || value == 'n')
+      return false;
     return fallback;
   }
 
@@ -811,7 +1016,9 @@ abstract final class S3Uploader {
     required bool includeBucket,
   }) {
     final base = Uri.parse(publicBaseUrl);
-    final basePath = base.path.endsWith('/') ? base.path.substring(0, base.path.length - 1) : base.path;
+    final basePath = base.path.endsWith('/')
+        ? base.path.substring(0, base.path.length - 1)
+        : base.path;
     final suffix = includeBucket ? '/$bucket/$encodedKey' : '/$encodedKey';
     return base.replace(path: '$basePath$suffix');
   }
