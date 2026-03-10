@@ -37,6 +37,8 @@ import '../../modules/dashboard/modules/workbench/spot_inspection/fill/spot_insp
 import '../../modules/dashboard/modules/workbench/spot_inspection/fill/spot_inspection_fill_view.dart';
 import '../../modules/dashboard/modules/workbench/spot_inspection/spot_inspection_binding.dart';
 import '../../modules/dashboard/modules/workbench/spot_inspection/spot_inspection_view.dart';
+import '../../modules/dashboard/modules/workbench/task_progress_detail/task_progress_detail_binding.dart';
+import '../../modules/dashboard/modules/workbench/task_progress_detail/task_progress_detail_view.dart';
 import '../../modules/dashboard/modules/workbench/hidden_danger_governance/hidden_danger_governance_binding.dart';
 import '../../modules/dashboard/modules/workbench/hidden_danger_governance/hidden_danger_governance_view.dart';
 import '../../modules/dashboard/modules/workbench/alarm_disposal/alarm_disposal_binding.dart';
@@ -72,6 +74,14 @@ abstract class WorkbenchRoutes {
     return Get.to<T>(
       () => const AppointmentApprovalView(),
       binding: AppointmentApprovalBinding(),
+    );
+  }
+
+  /// 任务详情页。
+  static Future<T?>? toTaskProgressDetail<T>() {
+    return Get.to<T>(
+      () => const TaskProgressDetailView(),
+      binding: TaskProgressDetailBinding(),
     );
   }
 

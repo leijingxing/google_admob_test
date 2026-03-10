@@ -115,6 +115,18 @@ class FileService {
     }
   }
 
+  /// 按文件后缀判断是否为图片。
+  static bool isImageFile(String? path) {
+    final ext = _getFileExtension((path ?? '').trim());
+    return ext != null && _imageExtensions.contains(ext);
+  }
+
+  /// 按文件后缀判断是否为视频。
+  static bool isVideoFile(String? path) {
+    final ext = _getFileExtension((path ?? '').trim());
+    return ext != null && _videoExtensions.contains(ext);
+  }
+
   static String _buildCacheFileName(String url) {
     final hash = md5.convert(utf8.encode(url)).toString();
     final ext = _getFileExtension(url);

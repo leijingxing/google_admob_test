@@ -27,7 +27,10 @@ class WorkbenchContentSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _TaskProgressCard(progressPercent: controller.taskProgressPercent),
+            _TaskProgressCard(
+              progressPercent: controller.taskProgressPercent,
+              onDetailTap: controller.openTaskProgressDetail,
+            ),
             SizedBox(height: AppDimens.dp16),
             _PrimaryApprovalCard(
               title: '预约审批',
@@ -102,10 +105,14 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _TaskProgressCard extends StatelessWidget {
-  const _TaskProgressCard({required this.progressPercent});
+  const _TaskProgressCard({
+    required this.progressPercent,
+    required this.onDetailTap,
+  });
 
   /// 接口返回百分比值（0~100）。
   final double progressPercent;
+  final VoidCallback onDetailTap;
 
   @override
   Widget build(BuildContext context) {
@@ -160,21 +167,25 @@ class _TaskProgressCard extends StatelessWidget {
                 ),
                 SizedBox(height: AppDimens.dp8),
                 SizedBox(height: AppDimens.dp12),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppDimens.dp12,
-                    vertical: AppDimens.dp4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3B84F6).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppDimens.dp20),
-                  ),
-                  child: Text(
-                    '查看详情 >',
-                    style: TextStyle(
-                      color: const Color(0xFF3B84F6),
-                      fontSize: AppDimens.sp10,
-                      fontWeight: FontWeight.w600,
+                InkWell(
+                  borderRadius: BorderRadius.circular(AppDimens.dp20),
+                  onTap: onDetailTap,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppDimens.dp12,
+                      vertical: AppDimens.dp4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3B84F6).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppDimens.dp20),
+                    ),
+                    child: Text(
+                      '查看详情 >',
+                      style: TextStyle(
+                        color: const Color(0xFF3B84F6),
+                        fontSize: AppDimens.sp10,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -265,18 +276,7 @@ class _PrimaryApprovalCard extends StatelessWidget {
               ),
             ],
           ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -10,
-                top: -10,
-                child: Icon(
-                  Icons.assignment_turned_in_rounded,
-                  size: 80,
-                  color: Colors.white.withValues(alpha: 0.1),
-                ),
-              ),
-              Padding(
+          child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppDimens.dp20),
                 child: Row(
                   children: [
@@ -329,8 +329,6 @@ class _PrimaryApprovalCard extends StatelessWidget {
                   ],
                 ),
               ),
-            ],
-          ),
         ),
       ),
     );
@@ -347,7 +345,7 @@ class _GridActionCard extends StatelessWidget {
   });
 
   final String title;
-  final int count;
+  final int? count;
   final Color color;
   final IconData icon;
   final VoidCallback onTap;
@@ -396,7 +394,7 @@ class _GridActionCard extends StatelessWidget {
               ),
               SizedBox(height: AppDimens.dp2),
               Text(
-                '$count',
+                count == null ? '--' : '$count',
                 style: TextStyle(
                   color: color,
                   fontSize: AppDimens.sp14,

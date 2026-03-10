@@ -8,6 +8,7 @@ import '../models/workbench/checkpoint_area_option_model.dart';
 import '../models/workbench/exception_confirmation_item_model.dart';
 import '../models/workbench/inspection_abnormal_item_model.dart';
 import '../models/workbench/inspection_rectification_item_model.dart';
+import '../models/workbench/risk_warning_record_item_model.dart';
 import '../models/workbench/risk_warning_disposal_item_model.dart';
 import '../models/workbench/park_inspection_plan_item_model.dart';
 import '../models/workbench/park_inspection_point_item_model.dart';
@@ -21,6 +22,7 @@ import '../models/workbench/system_department_tree_model.dart';
 import '../models/workbench/system_post_item_model.dart';
 import '../models/workbench/system_user_item_model.dart';
 import '../models/workbench/whitelist_approval_item_model.dart';
+import '../models/workbench/workbench_pending_task_count_model.dart';
 
 /// 工作台模块数据仓库：统一处理工作台相关接口。
 class WorkbenchRepository {
@@ -98,6 +100,17 @@ class WorkbenchRepository {
         }
         return 0;
       },
+    );
+  }
+
+  /// 获取工作台待处理数量统计。
+  Future<Result<WorkbenchPendingTaskCountModel>> getPendingTaskCount() {
+    return _httpService.post<WorkbenchPendingTaskCountModel>(
+      '/api/closed-off/workbenchStatistics/pendingTaskCount',
+      data: const {},
+      parser: (json) => WorkbenchPendingTaskCountModel.fromJson(
+        Map<String, dynamic>.from(json as Map),
+      ),
     );
   }
 
@@ -435,14 +448,8 @@ class WorkbenchRepository {
   }
 
   /// 获取违规记录分页（违规记录模块）。
-  ///
-  /// 该接口为标准分页结构，列表项当前主要使用：
-  /// - `subModuleTypeName`：违规类型
-  /// - `position`：违规地点
-  /// - `createDate`：违规时间
-  /// - `description`：违规内容
-  /// - `fileUrl`：违规影像
-  Future<Result<PaginatedResult<Map<String, dynamic>>>> getRiskWarningPage({
+  Future<Result<PaginatedResult<RiskWarningRecordItemModel>>>
+  getRiskWarningPage({
     required int pageIndex,
     required int pageSize,
     required String relationId,
@@ -452,14 +459,16 @@ class WorkbenchRepository {
       ..addAll({'relationId': relationId, 'carNum': carNum})
       ..removeWhere((key, value) => value == null || value == '');
 
-    return _httpService.post<PaginatedResult<Map<String, dynamic>>>(
+    return _httpService.post<PaginatedResult<RiskWarningRecordItemModel>>(
       '/api/risk-warning/riskWarning/page',
       data: payload,
-      parser: (json) => parsePaginatedResult<Map<String, dynamic>>(
+      parser: (json) => parsePaginatedResult<RiskWarningRecordItemModel>(
         json: json,
         requestPageIndex: pageIndex,
         requestPageSize: pageSize,
-        itemParser: (item) => Map<String, dynamic>.from(item),
+        itemParser: (item) => RiskWarningRecordItemModel.fromJson(
+          Map<String, dynamic>.from(item as Map),
+        ),
       ),
     );
   }
@@ -677,10 +686,7 @@ class WorkbenchRepository {
     String? reportTimeEnd,
   }) {
     final payload = <String, dynamic>{
-      ...buildPagePayload(
-        pageIndex: current,
-        pageSize: size,
-      ),
+      ...buildPagePayload(pageIndex: current, pageSize: size),
       'confirmStatus': confirmStatus,
       'keyword': keyword,
       'customParams': <Map<String, dynamic>>[

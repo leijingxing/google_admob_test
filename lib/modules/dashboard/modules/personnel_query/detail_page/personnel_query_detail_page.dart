@@ -7,6 +7,7 @@ import 'package:closed_off_app/core/utils/file_service.dart';
 import 'package:closed_off_app/data/models/personnel_query/personnel_query_models.dart';
 import 'package:closed_off_app/data/models/vehicle_query/vehicle_query_models.dart';
 import 'package:closed_off_app/data/models/workbench/appointment_approval_item_model.dart';
+import 'package:closed_off_app/data/models/workbench/whitelist_approval_item_model.dart';
 import 'package:closed_off_app/modules/dashboard/modules/personnel_query/detail_page/personnel_query_detail_controller.dart';
 import 'package:closed_off_app/modules/dashboard/modules/personnel_query/personnel_query_statistics_controller.dart';
 import 'package:closed_off_app/router/module_routes/workbench_routes.dart';
@@ -502,8 +503,10 @@ class _AuthorizationRecordTabState extends State<_AuthorizationRecordTab> {
                   ],
                   actions: [
                     TextButton(
-                      onPressed: () =>
-                          _openAppointmentApprovalDetail(id: item.id),
+                      onPressed: () => _openAuthorizationRecordDetail(
+                        id: item.id,
+                        recordType: item.recordType,
+                      ),
                       child: const Text('详情'),
                     ),
                   ],
@@ -953,6 +956,11 @@ class _SubSearchBar extends StatelessWidget {
   final VoidCallback onSearch;
   final VoidCallback onReset;
 
+  bool get _hasExtraFilters {
+    return (primaryRangeTitle != null && onPrimaryRangeSelected != null) ||
+        (secondaryRangeTitle != null && onSecondaryRangeSelected != null);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1006,23 +1014,25 @@ class _SubSearchBar extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: AppDimens.dp8),
-          SizedBox(
-            width: AppDimens.dp34,
-            height: AppDimens.dp34,
-            child: FilledButton(
-              onPressed: () => _showFilterBottomSheet(context),
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF1F7BFF),
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimens.dp10),
+          if (_hasExtraFilters) ...[
+            SizedBox(width: AppDimens.dp8),
+            SizedBox(
+              width: AppDimens.dp34,
+              height: AppDimens.dp34,
+              child: FilledButton(
+                onPressed: () => _showFilterBottomSheet(context),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF1F7BFF),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimens.dp10),
+                  ),
                 ),
+                child: const Icon(Icons.tune, size: 16),
               ),
-              child: const Icon(Icons.tune, size: 16),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -1241,6 +1251,25 @@ void _openAppointmentApprovalDetail({String? id, String? carNumb}) {
   }
   WorkbenchRoutes.toAppointmentApprovalDetail(
     item: AppointmentApprovalItemModel(id: detailId, carNumb: carNumb),
+  );
+}
+
+void _openAuthorizationRecordDetail({String? id, int? recordType}) {
+  final detailId = (id ?? '').trim();
+  if (detailId.isEmpty) {
+    AppToast.showWarning('当前记录缺少详情ID');
+    return;
+  }
+
+  if (recordType == 0) {
+    WorkbenchRoutes.toWhitelistApprovalDetail(
+      item: WhitelistApprovalItemModel(id: detailId, type: 1),
+    );
+    return;
+  }
+
+  WorkbenchRoutes.toAppointmentApprovalDetail(
+    item: AppointmentApprovalItemModel(id: detailId),
   );
 }
 

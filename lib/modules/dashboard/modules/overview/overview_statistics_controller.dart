@@ -6,6 +6,9 @@ class OverviewStatisticsController extends GetxController {
   /// 园区下拉选项。
   final List<String> parkOptions = const ['全部园区', '一园区', '二园区', '三园区'];
 
+  /// 今日预约情况：单位选项。
+  final List<String> reservationUnitOptions = const ['全部单位', '一园区', '二园区', '三园区'];
+
   /// 危化品入园统计筛选：园区。
   String hazardousInPark = '全部园区';
 
@@ -17,6 +20,9 @@ class OverviewStatisticsController extends GetxController {
 
   /// 危化品出园统计筛选：日期范围。
   DateTimeRange? hazardousOutRange;
+
+  /// 今日预约情况：选中单位。
+  String selectedReservationUnit = '全部单位';
 
   /// 审批统计假数据。
   final List<ApprovalStatRow> approvalRows = const [
@@ -52,8 +58,8 @@ class OverviewStatisticsController extends GetxController {
       title: '危化车辆统计',
       metrics: [
         YardMetric(value: '67', label: '当前在园'),
-        YardMetric(value: '207/423', label: '入园/出园车辆'),
-        YardMetric(value: '140/327', label: '入园/出园次数'),
+        YardMetric(value: '207/423', label: '入/出园车辆'),
+        YardMetric(value: '140/327', label: '入/出园次数'),
       ],
     ),
     YardStatCardData(
@@ -70,8 +76,8 @@ class OverviewStatisticsController extends GetxController {
       title: '危废车辆统计',
       metrics: [
         YardMetric(value: '67', label: '当前在园'),
-        YardMetric(value: '207/423', label: '入园/出园车辆'),
-        YardMetric(value: '140/327', label: '入园/出园次数'),
+        YardMetric(value: '207/423', label: '入/出园车辆'),
+        YardMetric(value: '140/327', label: '入/出园次数'),
       ],
     ),
     YardStatCardData(
@@ -88,8 +94,8 @@ class OverviewStatisticsController extends GetxController {
       title: '货车统计',
       metrics: [
         YardMetric(value: '67', label: '当前在园'),
-        YardMetric(value: '207/423', label: '入园/出园车辆'),
-        YardMetric(value: '140/327', label: '入园/出园次数'),
+        YardMetric(value: '207/423', label: '入/出园车辆'),
+        YardMetric(value: '140/327', label: '入/出园次数'),
       ],
     ),
     YardStatCardData(
@@ -131,6 +137,86 @@ class OverviewStatisticsController extends GetxController {
     PiePoint(name: '其他', value: 18),
   ];
 
+  /// 今日预约概览指标。
+  List<ReservationSummaryMetric> get reservationSummaryMetrics => const [
+    ReservationSummaryMetric(value: '0', label: '人员'),
+    ReservationSummaryMetric(value: '245', label: '普通车辆'),
+    ReservationSummaryMetric(value: '121', label: '危化车辆'),
+    ReservationSummaryMetric(value: '0', label: '危废车辆'),
+    ReservationSummaryMetric(value: '8/366', label: '待审批/已提交'),
+  ];
+
+  /// 今日预约折线数据。
+  List<ReservationTrendSeries> get reservationTrendSeries => const [
+    ReservationTrendSeries(
+      label: '人员',
+      color: Color(0xFF4C7DFF),
+      points: [
+        ReservationTrendPoint(time: '00:00', value: 0),
+        ReservationTrendPoint(time: '02:00', value: 0),
+        ReservationTrendPoint(time: '04:00', value: 0),
+        ReservationTrendPoint(time: '06:00', value: 0),
+        ReservationTrendPoint(time: '08:00', value: 0),
+        ReservationTrendPoint(time: '10:00', value: 0),
+        ReservationTrendPoint(time: '12:00', value: 0),
+        ReservationTrendPoint(time: '14:00', value: 0),
+        ReservationTrendPoint(time: '16:00', value: 0),
+        ReservationTrendPoint(time: '18:00', value: 0),
+        ReservationTrendPoint(time: '20:00', value: 0),
+        ReservationTrendPoint(time: '22:00', value: 0),
+      ],
+    ),
+    ReservationTrendSeries(
+      label: '普通车辆',
+      color: Color(0xFF59D3B4),
+      points: [
+        ReservationTrendPoint(time: '00:00', value: 6),
+        ReservationTrendPoint(time: '02:00', value: 2),
+        ReservationTrendPoint(time: '04:00', value: 0),
+        ReservationTrendPoint(time: '06:00', value: 0),
+        ReservationTrendPoint(time: '08:00', value: 24),
+        ReservationTrendPoint(time: '10:00', value: 29),
+        ReservationTrendPoint(time: '12:00', value: 16),
+        ReservationTrendPoint(time: '13:00', value: 41),
+        ReservationTrendPoint(time: '14:00', value: 31),
+        ReservationTrendPoint(time: '15:00', value: 3),
+        ReservationTrendPoint(time: '16:00', value: 0),
+        ReservationTrendPoint(time: '22:00', value: 0),
+      ],
+    ),
+    ReservationTrendSeries(
+      label: '危化车辆',
+      color: Color(0xFFE4A32A),
+      points: [
+        ReservationTrendPoint(time: '00:00', value: 0),
+        ReservationTrendPoint(time: '02:00', value: 0),
+        ReservationTrendPoint(time: '04:00', value: 0),
+        ReservationTrendPoint(time: '06:00', value: 0),
+        ReservationTrendPoint(time: '07:00', value: 8),
+        ReservationTrendPoint(time: '08:00', value: 20),
+        ReservationTrendPoint(time: '09:00', value: 15),
+        ReservationTrendPoint(time: '10:00', value: 16),
+        ReservationTrendPoint(time: '11:00', value: 14),
+        ReservationTrendPoint(time: '12:00', value: 12),
+        ReservationTrendPoint(time: '13:00', value: 6),
+        ReservationTrendPoint(time: '14:00', value: 9),
+        ReservationTrendPoint(time: '15:00', value: 0),
+        ReservationTrendPoint(time: '22:00', value: 0),
+      ],
+    ),
+    ReservationTrendSeries(
+      label: '危废车辆',
+      color: Color(0xFFFF7B2F),
+      points: [
+        ReservationTrendPoint(time: '00:00', value: 0),
+        ReservationTrendPoint(time: '06:00', value: 0),
+        ReservationTrendPoint(time: '12:00', value: 0),
+        ReservationTrendPoint(time: '18:00', value: 0),
+        ReservationTrendPoint(time: '22:00', value: 0),
+      ],
+    ),
+  ];
+
   /// 更新入园统计园区筛选。
   void onHazardousInParkChanged(String? value) {
     if (value == null) return;
@@ -142,6 +228,18 @@ class OverviewStatisticsController extends GetxController {
   void onHazardousOutParkChanged(String? value) {
     if (value == null) return;
     hazardousOutPark = value;
+    update();
+  }
+
+  /// 更新今日预约情况单位筛选。
+  void onReservationUnitChanged(String? value) {
+    if (value == null) return;
+    selectedReservationUnit = value;
+    update();
+  }
+
+  /// 刷新今日预约情况。
+  void refreshReservationTrend() {
     update();
   }
 
@@ -230,4 +328,33 @@ class YardMetric {
   final String label;
 
   const YardMetric({required this.value, required this.label});
+}
+
+/// 今日预约概览指标。
+class ReservationSummaryMetric {
+  final String value;
+  final String label;
+
+  const ReservationSummaryMetric({required this.value, required this.label});
+}
+
+/// 今日预约趋势图系列。
+class ReservationTrendSeries {
+  final String label;
+  final Color color;
+  final List<ReservationTrendPoint> points;
+
+  const ReservationTrendSeries({
+    required this.label,
+    required this.color,
+    required this.points,
+  });
+}
+
+/// 今日预约趋势图点位。
+class ReservationTrendPoint {
+  final String time;
+  final double value;
+
+  const ReservationTrendPoint({required this.time, required this.value});
 }

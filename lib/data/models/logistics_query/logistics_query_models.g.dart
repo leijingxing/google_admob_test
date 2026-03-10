@@ -55,7 +55,7 @@ LogisticsComprehensiveItemModel _$LogisticsComprehensiveItemModelFromJson(
       ? ''
       : const StringSafeConverter().fromJson(json['goodsName']),
   goodsType: (json['goodsType'] as num?)?.toInt() ?? 0,
-  hazardousType: const IntSafeConverter().fromJson(json['hazardousType']),
+  hazardousType: json['hazardousType'] as String?,
   inCount: json['inCount'] == null
       ? 0
       : const IntSafeConverter().fromJson(json['inCount']),
@@ -77,20 +77,12 @@ Map<String, dynamic> _$LogisticsComprehensiveItemModelToJson(
   'cas': const StringSafeConverter().toJson(instance.cas),
   'goodsName': const StringSafeConverter().toJson(instance.goodsName),
   'goodsType': instance.goodsType,
-  'hazardousType': _$JsonConverterToJson<Object?, int>(
-    instance.hazardousType,
-    const IntSafeConverter().toJson,
-  ),
+  'hazardousType': instance.hazardousType,
   'inCount': const IntSafeConverter().toJson(instance.inCount),
   'outCount': const IntSafeConverter().toJson(instance.outCount),
   'inGoodsAmount': const StringSafeConverter().toJson(instance.inGoodsAmount),
   'outGoodsAmount': const StringSafeConverter().toJson(instance.outGoodsAmount),
 };
-
-Json? _$JsonConverterToJson<Json, Value>(
-  Value? value,
-  Json? Function(Value value) toJson,
-) => value == null ? null : toJson(value);
 
 LogisticsDetailCountModel _$LogisticsDetailCountModelFromJson(
   Map<String, dynamic> json,
