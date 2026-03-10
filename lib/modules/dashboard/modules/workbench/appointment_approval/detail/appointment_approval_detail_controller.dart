@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../../../../../core/components/toast/toast_widget.dart';
 import '../../../../../../data/models/workbench/appointment_approval_item_model.dart';
+import '../../../../../../data/models/workbench/risk_warning_record_item_model.dart';
 import '../../../../../../data/repository/workbench_repository.dart';
 
 /// 预约审批详情页控制器（基本信息 / 出入记录 / 违规记录）。
@@ -82,12 +83,12 @@ class AppointmentApprovalDetailController extends GetxController {
     update();
   }
 
-  Future<List<Map<String, dynamic>>> loadViolationPage(
+  Future<List<RiskWarningRecordItemModel>> loadViolationPage(
     int pageIndex,
     int pageSize,
   ) async {
     final id = item.id ?? '';
-    if (id.isEmpty) return const <Map<String, dynamic>>[];
+    if (id.isEmpty) return const <RiskWarningRecordItemModel>[];
 
     final result = await _repository.getRiskWarningPage(
       pageIndex: pageIndex,
