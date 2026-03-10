@@ -90,12 +90,12 @@ class _MainSearchPanel extends StatelessWidget {
                         controller: controller.mainKeywordController,
                         textInputAction: TextInputAction.search,
                         textAlignVertical: TextAlignVertical.center,
-                        style: AppFormStyles.inputTextStyle(),
                         onSubmitted: (_) => controller.onSearchMainList(),
-                        decoration: AppFormStyles.inputDecoration(
+                        decoration: InputDecoration(
                           hintText: '请输入搜索关键词',
                           isCollapsed: true,
-                          filled: false,
+                          border: const OutlineInputBorder(borderSide: BorderSide.none),
+                          hintStyle: TextStyle(color: const Color(0xFF8A98AF), fontSize: AppDimens.sp12),
                           contentPadding: EdgeInsets.symmetric(horizontal: AppDimens.dp2),
                           prefixIcon: Icon(Icons.search_rounded, color: const Color(0xFF4D8DFF), size: AppDimens.dp20),
                           suffixIcon: hasText
@@ -126,7 +126,7 @@ class _MainSearchPanel extends StatelessWidget {
                     padding: EdgeInsets.zero,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.dp8)),
                   ),
-                  child: const Icon(Icons.tune, size: 16),
+                  child: const Icon(Icons.tune_rounded, size: 18),
                 ),
               ),
               SizedBox(width: AppDimens.dp8),
