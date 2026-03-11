@@ -6,15 +6,12 @@ Map<String, dynamic> buildPagePayload({
   required int pageIndex,
   required int pageSize,
 }) {
-  return <String, dynamic>{
-    'pageIndex': pageIndex,
-    'pageSize': pageSize,
-  };
+  return <String, dynamic>{'pageIndex': pageIndex, 'pageSize': pageSize};
 }
 
 /// 通用分页解析器：
-/// - 兼容 HttpService unwrap 后仅返回 data(List) 的场景
-/// - 兼容直接返回分页 Map 的场景
+/// - 优先解析项目统一分页协议：data/totalCount/pageIndex/pageSize/totalPages
+/// - 兼容异常降级场景：HttpService 只返回 data(List)
 PaginatedResult<T> parsePaginatedResult<T>({
   required dynamic json,
   required int requestPageIndex,
@@ -34,23 +31,14 @@ PaginatedResult<T> parsePaginatedResult<T>({
   }
 
   final map = _toMap(json);
-  final records = _normalizeRecords(
-    map['records'] ??
-        map['list'] ??
-        map['rows'] ??
-        map['data'] ??
-        const <dynamic>[],
-  );
+  final records = _normalizeRecords(map['data'] ?? const <dynamic>[]);
   final items = records.map((item) => itemParser(_toMap(item))).toList();
 
-  final current = _toInt(
-    map['current'] ?? map['pageIndex'] ?? map['pageNum'] ?? map['pageNo'],
-    requestPageIndex,
-  );
-  final size = _toInt(map['size'] ?? map['pageSize'], requestPageSize);
-  final total = _toInt(map['total'] ?? map['totalCount'], items.length);
+  final current = _toInt(map['pageIndex'], requestPageIndex);
+  final size = _toInt(map['pageSize'], requestPageSize);
+  final total = _toInt(map['totalCount'], items.length);
   final pages = _toInt(
-    map['pages'] ?? map['totalPages'] ?? map['pageCount'],
+    map['totalPages'],
     current + (items.length < size ? 0 : 1),
   );
 

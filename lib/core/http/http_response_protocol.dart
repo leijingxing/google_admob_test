@@ -43,20 +43,15 @@ class HttpResponseProtocol {
   dynamic unwrap(dynamic responseBody) {
     if (responseBody is Map && responseBody.containsKey('data')) {
       final data = responseBody['data'];
-      final hasPaginationMeta =
-          responseBody.containsKey('totalCount') ||
-          responseBody.containsKey('totalPages') ||
-          responseBody.containsKey('pageIndex') ||
-          responseBody.containsKey('pageSize') ||
-          responseBody.containsKey('total') ||
-          responseBody.containsKey('pages') ||
-          responseBody.containsKey('current') ||
-          responseBody.containsKey('pageNum') ||
-          responseBody.containsKey('pageNo') ||
-          responseBody.containsKey('size');
+      final isPaginatedResponse =
+          data is List &&
+          responseBody.containsKey('totalCount') &&
+          responseBody.containsKey('totalPages') &&
+          responseBody.containsKey('pageIndex') &&
+          responseBody.containsKey('pageSize');
 
-      // 分页响应保留外层，避免丢失 total/page 信息。
-      if (hasPaginationMeta && data is List) {
+      // 分页接口必须保留外层协议，否则 total/page 等元信息会丢失。
+      if (isPaginatedResponse) {
         return responseBody;
       }
       return data;

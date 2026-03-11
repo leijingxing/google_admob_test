@@ -26,22 +26,22 @@ class PaginatedResult<T> {
   bool get hasMore => currentPage < pageCount;
 
   /// 从 JSON 和一个列表解析器函数创建实例
-  /// [json] 是包含分页信息的 Map，例如：`{"records": [...], "total": 100, "current": 1, "size": 10, "pages": 10}`
+  /// [json] 是包含分页信息的 Map，例如：
+  /// `{"data": [...], "totalCount": 100, "pageIndex": 1, "pageSize": 10, "totalPages": 10}`
   /// [itemParser] 是一个函数，用于将列表中的单个 item (Map) 转换为模型对象 `T`
   factory PaginatedResult.fromJson(
     Map<String, dynamic> json,
     T Function(dynamic itemJson) itemParser,
   ) {
-    final itemsList = json['records'] as List? ?? [];
+    final itemsList = json['data'] as List? ?? [];
     final parsedItems = itemsList.map((item) => itemParser(item)).toList();
 
     return PaginatedResult<T>(
       items: parsedItems,
-      total: json['totalPages'] as int? ?? 0,
+      total: json['totalCount'] as int? ?? parsedItems.length,
       currentPage: json['pageIndex'] as int? ?? 1,
       pageSize: json['pageSize'] as int? ?? 10,
-      pageCount: json['totalCount'] as int? ?? 0,
+      pageCount: json['totalPages'] as int? ?? 0,
     );
   }
-
 }
