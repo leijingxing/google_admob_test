@@ -478,8 +478,9 @@ abstract final class GradleParser {
       r'applicationId\s*=\s*"([^"]+)"',
     ).firstMatch(content);
     final baseId = baseIdMatch?.group(1);
-    if (baseId == null)
+    if (baseId == null) {
       throw Exception('在 build.gradle.kts 中找不到默认的 applicationId');
+    }
 
     // 2. 查找指定 flavor 的配置块
     if (flavor == null || flavor.isEmpty) {
@@ -598,8 +599,9 @@ class RunConfig {
         .list()
         .where((f) => f.path.endsWith('.run.xml'))
         .toList();
-    if (files.isEmpty)
+    if (files.isEmpty) {
       throw const FileSystemException('在 .run/ 目录中未找到任何 *.run.xml 配置文件');
+    }
 
     final configs = files
         .map((f) => fromFile(File(f.path)))
@@ -1002,10 +1004,12 @@ abstract final class S3Uploader {
   static bool _parseBoolEnv(String? raw, {required bool fallback}) {
     if (raw == null) return fallback;
     final value = raw.trim().toLowerCase();
-    if (value == '1' || value == 'true' || value == 'yes' || value == 'y')
+    if (value == '1' || value == 'true' || value == 'yes' || value == 'y') {
       return true;
-    if (value == '0' || value == 'false' || value == 'no' || value == 'n')
+    }
+    if (value == '0' || value == 'false' || value == 'no' || value == 'n') {
       return false;
+    }
     return fallback;
   }
 
