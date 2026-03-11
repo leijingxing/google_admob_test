@@ -691,6 +691,8 @@ class _ViolationRecordTabState extends State<_ViolationRecordTab> {
             child: CustomEasyRefreshList<VehicleViolationRecordModel>(
               refreshTrigger: _refreshTrigger,
               dataLoader: (pageIndex, pageSize) {
+                // todo 违规记录接口暂未接入，当前固定返回空列表。
+                return Future.value(const <VehicleViolationRecordModel>[]);
                 return widget.controller.loadViolationRecords(
                   pageIndex,
                   pageSize,
