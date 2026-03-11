@@ -99,12 +99,6 @@ class ProfileView extends GetView<ProfileController> {
             label: '部门',
             value: _v(profile?.departmentName),
           ),
-          _InfoTile(
-            icon: Icons.verified_user_outlined,
-            label: '用户角色',
-            value: profile?.isAdmin == '1' ? '系统管理员' : '普通用户',
-            showDivider: false,
-          ),
         ],
       ),
     );

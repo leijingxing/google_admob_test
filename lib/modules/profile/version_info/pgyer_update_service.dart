@@ -192,8 +192,34 @@ class PgyerUpdateService {
     final requested = await Permission.requestInstallPackages.request();
     if (requested.isGranted) return true;
 
-    AppToast.showWarning('缺少安装权限，请允许当前应用安装未知来源应用后重试');
+    final shouldOpenSettings = await _showInstallPermissionDialog();
+    if (shouldOpenSettings == true) {
+      final opened = await openAppSettings();
+      if (!opened) {
+        AppToast.showWarning('无法打开设置页，请手动前往系统设置开启安装权限');
+      }
+    }
     return false;
+  }
+
+  Future<bool?> _showInstallPermissionDialog() {
+    return Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('开启安装权限'),
+        content: const Text('检测到当前未开启安装未知应用权限，请前往设置中允许本应用安装更新包后再重试。'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Get.back(result: true),
+            child: const Text('去开启'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
   }
 
   bool _isSameVersion(PgyerAppInfo info) {
