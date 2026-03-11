@@ -328,139 +328,9 @@ class _ModuleGrid extends StatelessWidget {
                   isFeatured ? AppDimens.dp18 : AppDimens.dp16,
                 ),
                 onTap: () => onTap(index),
-                child: Container(
-                  padding: EdgeInsets.all(
-                    isFeatured ? AppDimens.dp14 : AppDimens.dp12,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: isFeatured
-                        ? const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFF1E5EB8), Color(0xFF3F84DB)],
-                          )
-                        : null,
-                    color: isFeatured ? null : Colors.white,
-                    borderRadius: BorderRadius.circular(
-                      isFeatured ? AppDimens.dp18 : AppDimens.dp16,
-                    ),
-                    border: Border.all(
-                      color: isFeatured
-                          ? const Color(0xFF2B6DC8)
-                          : const Color(0xFFE2EAF6),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            (isFeatured
-                                    ? const Color(0xFF1E5EB8)
-                                    : const Color(0xFF0E2A49))
-                                .withValues(alpha: isFeatured ? 0.18 : 0.06),
-                        blurRadius: isFeatured ? 16 : 10,
-                        offset: Offset(0, isFeatured ? 8 : 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: isFeatured ? AppDimens.dp44 : AppDimens.dp36,
-                            height: isFeatured
-                                ? AppDimens.dp44
-                                : AppDimens.dp36,
-                            decoration: BoxDecoration(
-                              color: isFeatured
-                                  ? Colors.white.withValues(alpha: 0.18)
-                                  : item.color.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(
-                                isFeatured ? AppDimens.dp12 : AppDimens.dp10,
-                              ),
-                            ),
-                            child: Icon(
-                              item.icon,
-                              color: isFeatured ? Colors.white : item.color,
-                              size: isFeatured ? AppDimens.sp24 : null,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (isFeatured)
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: AppDimens.dp10,
-                                vertical: AppDimens.dp4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.16),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                '高频入口',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: AppDimens.sp10,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: isFeatured ? AppDimens.dp14 : AppDimens.dp10,
-                      ),
-                      Text(
-                        item.title,
-                        style: TextStyle(
-                          color: isFeatured
-                              ? Colors.white
-                              : AppColors.textPrimary,
-                          fontSize: isFeatured
-                              ? AppDimens.sp18
-                              : AppDimens.sp14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      SizedBox(height: AppDimens.dp4),
-                      Text(
-                        item.subtitle,
-                        maxLines: isFeatured ? 1 : 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: isFeatured
-                              ? const Color(0xFFE2EEFF)
-                              : AppColors.textSecondary,
-                          fontSize: isFeatured
-                              ? AppDimens.sp12
-                              : AppDimens.sp11,
-                          height: 1.35,
-                        ),
-                      ),
-                      if (isFeatured) ...[
-                        SizedBox(height: AppDimens.dp12),
-                        Row(
-                          children: [
-                            Text(
-                              '进入工作台',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.95),
-                                fontSize: AppDimens.sp11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            SizedBox(width: AppDimens.dp4),
-                            Icon(
-                              Icons.arrow_forward_rounded,
-                              color: Colors.white.withValues(alpha: 0.95),
-                              size: AppDimens.sp16,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+                child: isFeatured
+                    ? _FeaturedModuleCard(item: item)
+                    : _NormalModuleCard(item: item),
               ),
             );
           }),
@@ -469,3 +339,161 @@ class _ModuleGrid extends StatelessWidget {
     );
   }
 }
+
+class _FeaturedModuleCard extends StatelessWidget {
+  const _FeaturedModuleCard({required this.item});
+
+  final DashboardModuleItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(AppDimens.dp14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1E5EB8), Color(0xFF3F84DB)],
+        ),
+        borderRadius: BorderRadius.circular(AppDimens.dp18),
+        border: Border.all(color: const Color(0xFF2B6DC8)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1E5EB8).withValues(alpha: 0.14),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  item.title,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: AppDimens.sp18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(height: AppDimens.dp4),
+                Text(
+                  item.subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: const Color(0xFFE2EEFF),
+                    fontSize: AppDimens.sp11,
+                    height: 1.3,
+                  ),
+                ),
+                SizedBox(height: AppDimens.dp12),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '进入工作台',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: AppDimens.sp11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(width: AppDimens.dp2),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: AppDimens.sp14,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: AppDimens.dp12),
+          Container(
+            width: AppDimens.dp50,
+            height: AppDimens.dp50,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppDimens.dp16),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.10),
+              ),
+            ),
+            child: Icon(
+              item.icon,
+              color: Colors.white,
+              size: AppDimens.sp26,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NormalModuleCard extends StatelessWidget {
+  const _NormalModuleCard({required this.item});
+
+  final DashboardModuleItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(AppDimens.dp12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimens.dp16),
+        border: Border.all(color: const Color(0xFFE2EAF6)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0E2A49).withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: AppDimens.dp36,
+            height: AppDimens.dp36,
+            decoration: BoxDecoration(
+              color: item.color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppDimens.dp10),
+            ),
+            child: Icon(item.icon, color: item.color),
+          ),
+          SizedBox(height: AppDimens.dp10),
+          Text(
+            item.title,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: AppDimens.sp14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: AppDimens.dp4),
+          Text(
+            item.subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: AppDimens.sp11,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
