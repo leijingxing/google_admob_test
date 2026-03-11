@@ -13,12 +13,22 @@ class UserManager {
 
   static final Rxn<LoginEntity> _userProfile = Rxn<LoginEntity>();
   static String? _token;
+  static String? _identityType;
 
   /// 当前 token。
   static String? get token => _token;
 
   /// 当前用户信息。
   static LoginEntity? get user => _userProfile.value;
+
+  /// 当前登录人身份类型。
+  static String? get identityType => _identityType;
+
+  /// 是否园区用户。
+  static bool get isParkUser => (_identityType ?? '').trim() == 'park';
+
+  /// 是否企业用户。
+  static bool get isCompanyUser => (_identityType ?? '').trim() == 'company';
 
   /// 用户信息响应式流。
   static Rxn<LoginEntity> get userProfileStream => _userProfile;
@@ -33,6 +43,7 @@ class UserManager {
   /// 启动时恢复本地登录态。
   static Future<void> init() async {
     _token = StorageUtil.getString(StorageConstants.token);
+    _identityType = StorageUtil.getString(StorageConstants.identityType);
     final profileJson = StorageUtil.getString(StorageConstants.userProfile);
     if (profileJson == null || profileJson.isEmpty) return;
     try {
@@ -56,6 +67,20 @@ class UserManager {
     await StorageUtil.setString(StorageConstants.token, value);
   }
 
+  /// 保存用户身份类型到内存与本地存储。
+  static Future<void> saveIdentityType(
+    String? value, {
+    bool isSave = true,
+  }) async {
+    _identityType = value?.trim();
+    if (!isSave) return;
+    if ((_identityType ?? '').isEmpty) {
+      await StorageUtil.remove(StorageConstants.identityType);
+      return;
+    }
+    await StorageUtil.setString(StorageConstants.identityType, _identityType!);
+  }
+
   /// 保存用户信息到内存与本地存储。
   static Future<void> saveUser(LoginEntity value, {bool isSave = true}) async {
     _userProfile.value = value;
@@ -75,9 +100,11 @@ class UserManager {
   /// 清除所有用户态数据。
   static Future<void> clearAll() async {
     _token = null;
+    _identityType = null;
     _userProfile.value = null;
     await StorageUtil.remove(StorageConstants.token);
     await StorageUtil.remove(StorageConstants.userProfile);
+    await StorageUtil.remove(StorageConstants.identityType);
   }
 
   /// 清理登录态并回到登录页。

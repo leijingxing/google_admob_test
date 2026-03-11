@@ -11,7 +11,10 @@ class AuthRepository {
   Future<Result<Map<String, dynamic>>> getVerifyCode() {
     return _httpService.get<Map<String, dynamic>>(
       '/api/oauth2/proxy/captcha',
-      queryParameters: {'appCode': Environment.currentEnv.appCode, 'debug': true},
+      queryParameters: {
+        'appCode': Environment.currentEnv.appCode,
+        'debug': true,
+      },
       parser: (json) => Map<String, dynamic>.from(json as Map),
     );
   }
@@ -20,9 +23,15 @@ class AuthRepository {
   Future<String> getAuthorizationUrl() async {
     final result = await _httpService.get<dynamic>(
       '/api/oauth2/getAuthorizationUrl',
-      queryParameters: {'appCode': Environment.currentEnv.appCode, 'web_redirect_uri': ''},
+      queryParameters: {
+        'appCode': Environment.currentEnv.appCode,
+        'web_redirect_uri': '',
+      },
     );
-    return result.when(success: (data) => data.toString(), failure: (error) => throw Exception(error.message));
+    return result.when(
+      success: (data) => data.toString(),
+      failure: (error) => throw Exception(error.message),
+    );
   }
 
   /// 代理登录获取授权码。
@@ -51,7 +60,10 @@ class AuthRepository {
         'password': password,
       },
     );
-    return result.when(success: (data) => data.toString(), failure: (error) => throw Exception(error.message));
+    return result.when(
+      success: (data) => data.toString(),
+      failure: (error) => throw Exception(error.message),
+    );
   }
 
   /// 通过授权码换取 token。
@@ -62,7 +74,10 @@ class AuthRepository {
 
     final result = await _httpService.get<Map<String, dynamic>>(
       '/api/oauth2/getAccessToken',
-      queryParameters: {'appCode': Environment.currentEnv.appCode, 'code': code},
+      queryParameters: {
+        'appCode': Environment.currentEnv.appCode,
+        'code': code,
+      },
       parser: (json) => Map<String, dynamic>.from(json as Map),
     );
 
@@ -78,9 +93,21 @@ class AuthRepository {
     );
   }
 
+  /// 获取当前登录人身份类型。
+  Future<Result<String>> getIdentityType() {
+    return _httpService.get<String>(
+      '/api/closed-off/userInfo/getIdentityType',
+      parser: (json) => json?.toString() ?? '',
+    );
+  }
+
   /// 获取当前登录用户信息。
   Future<Result<LoginEntity>> getUserProfile() {
-    return _httpService.get<LoginEntity>('/api/system/user/getUserInfo', parser: (json) => LoginEntity.fromJson(Map<String, dynamic>.from(json as Map)));
+    return _httpService.get<LoginEntity>(
+      '/api/system/user/getUserInfo',
+      parser: (json) =>
+          LoginEntity.fromJson(Map<String, dynamic>.from(json as Map)),
+    );
   }
 
   /// 退出登录，预留服务端登出扩展点。
