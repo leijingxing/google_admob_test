@@ -705,7 +705,12 @@ class WorkbenchRepository {
       'customParams': <Map<String, dynamic>>[
         ..._buildLikeSearchCustomParams(
           keyword: keyword,
-          fields: const ['reportUserName', 'remark', 'exceptionDesc'],
+          fields: const [
+            'reportUserName',
+            'remark',
+            'exceptionDesc',
+            'exceptionLocation',
+          ],
         ),
         ..._buildBetweenCustomParams(
           fieldName: 'reportTime',
