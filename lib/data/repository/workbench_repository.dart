@@ -42,14 +42,27 @@ class WorkbenchRepository {
       ...buildPagePayload(pageIndex: current, pageSize: size),
       'status': status,
       'appealType': appealType,
-      'keywords': keywords,
-      'keyWords': keywords,
-      'appealTimeBegin': appealTimeBegin,
-      'appealTimeEnd': appealTimeEnd,
+      'customParams': <Map<String, dynamic>>[
+        ..._buildLikeSearchCustomParams(
+          keyword: keywords,
+          fields: const [
+            'targetValue',
+            'applicant',
+            'abnormalDesc',
+            'appealDesc',
+          ],
+        ),
+        ..._buildBetweenCustomParams(
+          fieldName: 'appealTime',
+          begin: appealTimeBegin,
+          end: appealTimeEnd,
+        ),
+      ],
     };
     payload.removeWhere((_, value) {
       if (value == null) return true;
       if (value is String && value.trim().isEmpty) return true;
+      if (value is List && value.isEmpty) return true;
       return false;
     });
 
