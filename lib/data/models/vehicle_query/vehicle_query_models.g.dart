@@ -178,9 +178,10 @@ VehicleAccessRecordModel _$VehicleAccessRecordModelFromJson(
   userPhone: json['userPhone'] == null
       ? ''
       : const StringSafeConverter().fromJson(json['userPhone']),
-  destination: json['destination'] == null
+  destination: const StringSafeConverter().fromJson(json['destination']),
+  companyName: json['companyName'] == null
       ? ''
-      : const StringSafeConverter().fromJson(json['destination']),
+      : const StringSafeConverter().fromJson(json['companyName']),
   inDate: json['inDate'] == null
       ? ''
       : const StringSafeConverter().fromJson(json['inDate']),
@@ -206,13 +207,22 @@ Map<String, dynamic> _$VehicleAccessRecordModelToJson(
   ),
   'recordType': const IntSafeConverter().toJson(instance.recordType),
   'userPhone': const StringSafeConverter().toJson(instance.userPhone),
-  'destination': const StringSafeConverter().toJson(instance.destination),
+  'destination': _$JsonConverterToJson<Object?, String>(
+    instance.destination,
+    const StringSafeConverter().toJson,
+  ),
+  'companyName': const StringSafeConverter().toJson(instance.companyName),
   'inDate': const StringSafeConverter().toJson(instance.inDate),
   'inDeviceName': const StringSafeConverter().toJson(instance.inDeviceName),
   'outDate': const StringSafeConverter().toJson(instance.outDate),
   'outDeviceName': const StringSafeConverter().toJson(instance.outDeviceName),
   'violationCount': const IntSafeConverter().toJson(instance.violationCount),
 };
+
+Json? _$JsonConverterToJson<Json, Value>(
+  Value? value,
+  Json? Function(Value value) toJson,
+) => value == null ? null : toJson(value);
 
 VehicleViolationRecordModel _$VehicleViolationRecordModelFromJson(
   Map<String, dynamic> json,

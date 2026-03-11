@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 
 import '../../../../../../core/components/toast/toast_widget.dart';
+import '../../../../../../core/utils/dict_field_query_tool.dart';
 import '../../../../../../data/models/workbench/appointment_approval_item_model.dart';
 import '../../../../../../data/models/workbench/risk_warning_record_item_model.dart';
 import '../../../../../../data/repository/workbench_repository.dart';
@@ -8,6 +11,10 @@ import '../../../../../../data/repository/workbench_repository.dart';
 /// 预约审批详情页控制器（基本信息 / 出入记录 / 违规记录）。
 class AppointmentApprovalDetailController extends GetxController {
   final WorkbenchRepository _repository = WorkbenchRepository();
+  static const List<String> _pageDictTypes = <String>[
+    DictFieldQueryTool.loadType,
+    DictFieldQueryTool.goodsType,
+  ];
 
   late final String reservationId;
 
@@ -35,7 +42,17 @@ class AppointmentApprovalDetailController extends GetxController {
     } else {
       reservationId = '';
     }
+    _preloadDictItems();
     _loadBasic();
+  }
+
+  void _preloadDictItems() {
+    unawaited(
+      DictFieldQueryTool.ensureLoaded(dictTypes: _pageDictTypes).then((loaded) {
+        if (!loaded) return;
+        update();
+      }),
+    );
   }
 
   Future<void> onSectionChanged(int index) async {
@@ -326,7 +343,7 @@ class AppointmentApprovalDetailController extends GetxController {
           if (goods is! Map) continue;
           final g = Map<String, dynamic>.from(goods);
           final inOut = _toInt(g['inOut']) == 1 ? '入园' : '出园';
-          addCargo('$inOut 危化品类型', g['goodsTypeName'] ?? g['goodsType']);
+          addCargo('$inOut 危化品类型', _goodsTypeText(g));
           addCargo('$inOut 危化品名称', g['goodsName']);
           addCargo('$inOut 危化品数量', g['goodsAmount']);
           addCargo('$inOut 电子运单', g['electronicWaybill']);
@@ -517,6 +534,19 @@ class AppointmentApprovalDetailController extends GetxController {
       3: '重载入园，重载出园',
     };
     return map[code] ?? displayText(specific['loadType']);
+  }
+
+  String _goodsTypeText(Map<String, dynamic> goods) {
+    final label = DictFieldQueryTool.goodsTypeLabel(
+      goods['goodsType'],
+      fallback: '--',
+    );
+    if (label != '--') return label;
+
+    final name = displayText(goods['goodsTypeName']);
+    if (name != '--') return name;
+
+    return displayText(goods['goodsType']);
   }
 
   String _rangeText(Object? begin, Object? end) {

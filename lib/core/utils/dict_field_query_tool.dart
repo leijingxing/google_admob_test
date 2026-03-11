@@ -45,6 +45,9 @@ class DictFieldQueryTool {
   /// 危险品类型字典。
   static const String hazardousType = 'closed-off-mgt_hazardous_type';
 
+  /// 物资类型字典。
+  static const String goodsType = 'closed_off_mgt_goods_type';
+
   static final Map<String, List<DictFieldItem>> _dictItemsByType = <String, List<DictFieldItem>>{};
 
   /// 获取指定字典类型下的全部项。
@@ -104,6 +107,11 @@ class DictFieldQueryTool {
   /// 查询危化品类型文案。
   static String hazardousTypeLabel(Object? itemValue, {String fallback = '--'}) {
     return labelOf(hazardousType, itemValue, fallback: fallback);
+  }
+
+  /// 查询物资类型文案。
+  static String goodsTypeLabel(Object? itemValue, {String fallback = '--'}) {
+    return labelOf(goodsType, itemValue, fallback: fallback);
   }
 
   /// 根据字典类型与文案查询字段值，查询不到返回 null。

@@ -243,6 +243,7 @@ class PersonnelQueryStatisticsController extends GetxController {
     int pageSize, {
     String? keyword,
     String? realName,
+    String? idCard,
     Object? type = 1,
   }) async {
     final result = await _detailRepository.getBlackRecordPage(
@@ -251,6 +252,7 @@ class PersonnelQueryStatisticsController extends GetxController {
       keyword: keyword,
       carNumb: '',
       realName: realName,
+      idCard: idCard,
       type: type,
     );
 

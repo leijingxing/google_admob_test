@@ -182,7 +182,10 @@ class VehicleAccessRecordModel {
   final String userPhone;
 
   @StringSafeConverter()
-  final String destination;
+  final String? destination;
+
+  @StringSafeConverter()
+  final String companyName;
 
   @StringSafeConverter()
   final String inDate;
@@ -203,7 +206,8 @@ class VehicleAccessRecordModel {
     this.reservationOrWhileId,
     this.recordType = 0,
     this.userPhone = '',
-    this.destination = '',
+    this.destination,
+    this.companyName = '',
     this.inDate = '',
     this.inDeviceName = '',
     this.outDate = '',
