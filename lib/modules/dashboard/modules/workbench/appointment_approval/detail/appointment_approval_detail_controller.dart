@@ -11,10 +11,7 @@ import '../../../../../../data/repository/workbench_repository.dart';
 /// 预约审批详情页控制器（基本信息 / 出入记录 / 违规记录）。
 class AppointmentApprovalDetailController extends GetxController {
   final WorkbenchRepository _repository = WorkbenchRepository();
-  static const List<String> _pageDictTypes = <String>[
-    DictFieldQueryTool.loadType,
-    DictFieldQueryTool.goodsType,
-  ];
+  static const List<String> _pageDictTypes = <String>[DictFieldQueryTool.loadType, DictFieldQueryTool.goodsType, DictFieldQueryTool.carNumbColour];
 
   late final String reservationId;
 
@@ -71,9 +68,7 @@ class AppointmentApprovalDetailController extends GetxController {
 
     basicLoading = true;
     update();
-    final result = await _repository.getReservationProgressTimeline(
-      id: reservationId,
-    );
+    final result = await _repository.getReservationProgressTimeline(id: reservationId);
     result.when(
       success: (data) {
         progressTimeline = data;
@@ -90,10 +85,7 @@ class AppointmentApprovalDetailController extends GetxController {
 
     recordLoading = true;
     update();
-    final result = await _repository.getGateRecords(
-      id: reservationId,
-      idType: 1,
-    );
+    final result = await _repository.getGateRecords(id: reservationId, idType: 1);
     result.when(
       success: (data) {
         gateRecords = data;
@@ -105,18 +97,10 @@ class AppointmentApprovalDetailController extends GetxController {
     update();
   }
 
-  Future<List<RiskWarningRecordItemModel>> loadViolationPage(
-    int pageIndex,
-    int pageSize,
-  ) async {
+  Future<List<RiskWarningRecordItemModel>> loadViolationPage(int pageIndex, int pageSize) async {
     if (reservationId.isEmpty) return const <RiskWarningRecordItemModel>[];
 
-    final result = await _repository.getRiskWarningPage(
-      pageIndex: pageIndex,
-      pageSize: pageSize,
-      relationId: reservationId,
-      carNum: reservationCarNumb,
-    );
+    final result = await _repository.getRiskWarningPage(pageIndex: pageIndex, pageSize: pageSize, relationId: reservationId, carNum: reservationCarNumb);
 
     return result.when(
       success: (pageData) => pageData.items,
@@ -174,17 +158,13 @@ class AppointmentApprovalDetailController extends GetxController {
         return _buildParkApproveGroups(specific);
       default:
         final lines = _commonDetailLines(specific);
-        return lines.isEmpty
-            ? const <DetailGroup>[]
-            : <DetailGroup>[DetailGroup(title: '流程信息', lines: lines)];
+        return lines.isEmpty ? const <DetailGroup>[] : <DetailGroup>[DetailGroup(title: '流程信息', lines: lines)];
     }
   }
 
   Map<String, dynamic> timelineSpecificData(Map<String, dynamic> node) {
     final specificRaw = node['specificData'];
-    return specificRaw is Map
-        ? Map<String, dynamic>.from(specificRaw)
-        : const <String, dynamic>{};
+    return specificRaw is Map ? Map<String, dynamic>.from(specificRaw) : const <String, dynamic>{};
   }
 
   Map<String, dynamic> timelineSpecificDataByType(int typeCode) {
@@ -195,23 +175,16 @@ class AppointmentApprovalDetailController extends GetxController {
     return const <String, dynamic>{};
   }
 
-  Map<String, dynamic> get initiateSpecificData =>
-      timelineSpecificDataByType(0);
+  Map<String, dynamic> get initiateSpecificData => timelineSpecificDataByType(0);
 
   bool get isPersonReservation {
     final specific = initiateSpecificData;
-    final reservationType = _toInt(
-      specific['reservationType'] ??
-          specific['appointmentType'] ??
-          specific['type'],
-    );
+    final reservationType = _toInt(specific['reservationType'] ?? specific['appointmentType'] ?? specific['type']);
     if (reservationType > 0) {
       return reservationType == 1;
     }
 
-    final reservationCategoryName = displayText(
-      specific['reservationCategoryName'],
-    );
+    final reservationCategoryName = displayText(specific['reservationCategoryName']);
     if (reservationCategoryName != '--') {
       return reservationCategoryName.contains('人员');
     }
@@ -253,7 +226,6 @@ class AppointmentApprovalDetailController extends GetxController {
 
     addHeader('提交人', specific['submitRealName']);
     addHeader('提交人联系电话', specific['submitUserPhone']);
-    addHeader('预约类别', specific['reservationCategoryName']);
 
     final vehicleLines = <DetailLine>[];
     void addVehicle(String label, Object? value) {
@@ -262,14 +234,13 @@ class AppointmentApprovalDetailController extends GetxController {
       vehicleLines.add(DetailLine(label: label, value: text));
     }
 
-    addVehicle('车牌号', specific['carNumb']);
-    addVehicle('车牌颜色', _carPlateColorText(specific));
-    addVehicle('道路运输证号', specific['roadTransportPermitNumber']);
-    addVehicle('行驶证', specific['drivingLicensePic']);
-    addVehicle(
-      '行驶证有效期',
-      '${displayText(specific['drivingLicenseBegin'])}/${displayText(specific['drivingLicenseEnd'])}',
-    );
+    if (!isPersonReservation) {
+      addVehicle('车牌号', specific['carNumb']);
+      addVehicle('车牌颜色', _carPlateColorText(specific));
+      addVehicle('道路运输证号', specific['roadTransportPermitNumber']);
+      addVehicle('行驶证', specific['drivingLicensePic']);
+      addVehicle('行驶证有效期', '${displayText(specific['drivingLicenseBegin'])}/${displayText(specific['drivingLicenseEnd'])}');
+    }
 
     final trailerLines = <DetailLine>[];
     void addTrailer(String label, Object? value) {
@@ -280,23 +251,16 @@ class AppointmentApprovalDetailController extends GetxController {
 
     if (!isPersonReservation) {
       addTrailer('是否挂车', boolText(specific['trailer']));
-      addTrailer('挂车车牌号', specific['trailerLicensePlate']);
-      addTrailer('挂车道路运输证号', specific['trailerRoadTransportPermitNumber']);
-      addTrailer('挂车行驶证', specific['trailerTrailerDrivingLicense']);
+      addTrailer('挂车车牌号', specific['trailerLicensePlate'] ?? '-');
+      addTrailer('挂车道路运输证号', specific['trailerRoadTransportPermitNumber'] ?? '-');
+      addTrailer('挂车行驶证', specific['trailerTrailerDrivingLicense'] ?? '-');
     }
 
     final peopleLines = <DetailLine>[];
-    void addPeople(
-      String label,
-      Object? value, {
-      bool showWhenEmpty = false,
-      String emptyText = '-',
-    }) {
+    void addPeople(String label, Object? value, {bool showWhenEmpty = false, String emptyText = '-'}) {
       final text = displayText(value);
       if (text == '--' && !showWhenEmpty) return;
-      peopleLines.add(
-        DetailLine(label: label, value: text == '--' ? emptyText : text),
-      );
+      peopleLines.add(DetailLine(label: label, value: text == '--' ? emptyText : text));
     }
 
     addPeople('姓名', specific['realName']);
@@ -310,22 +274,9 @@ class AppointmentApprovalDetailController extends GetxController {
     addPeople('是否驾驶员', boolText(specific['driver']));
     addPeople('是否危货驾驶员', boolText(specific['dangerousGoodsDriver']));
     addPeople('驾驶证', specific['driverCardPic'], showWhenEmpty: true);
-    addPeople(
-      '驾驶证有效期限',
-      _rangeText(specific['driverCardBegin'], specific['driverCardEnd']),
-      showWhenEmpty: true,
-      emptyText: '-/-',
-    );
-    addPeople(
-      '道路危险货物驾驶人员从业资格证',
-      specific['dangerousGoodsDriverCardPic'],
-      showWhenEmpty: true,
-    );
-    addPeople(
-      '道路危险货物押运人员从业资格证',
-      specific['supercargoCardPic'],
-      showWhenEmpty: true,
-    );
+    addPeople('驾驶证有效期限', _rangeText(specific['driverCardBegin'], specific['driverCardEnd']), showWhenEmpty: true, emptyText: '-/-');
+    addPeople('道路危险货物驾驶人员从业资格证', specific['dangerousGoodsDriverCardPic'], showWhenEmpty: true);
+    addPeople('道路危险货物押运人员从业资格证', specific['supercargoCardPic'], showWhenEmpty: true);
 
     final cargoLines = <DetailLine>[];
     void addCargo(String label, Object? value) {
@@ -395,39 +346,18 @@ class AppointmentApprovalDetailController extends GetxController {
   List<DetailGroup> _buildCompanyApproveGroups(Map<String, dynamic> specific) {
     // 企业审批节点仅保留审批相关字段，字段名存在历史差异，这里做多 key 兜底。
     final lines = <DetailLine>[];
-    void addLine(
-      String label,
-      Object? value, {
-      bool showWhenEmpty = false,
-      String emptyText = '-',
-    }) {
+    void addLine(String label, Object? value, {bool showWhenEmpty = false, String emptyText = '-'}) {
       final text = displayText(value);
       if (text == '--' && !showWhenEmpty) return;
-      lines.add(
-        DetailLine(label: label, value: text == '--' ? emptyText : text),
-      );
+      lines.add(DetailLine(label: label, value: text == '--' ? emptyText : text));
     }
 
     addLine('审批状态', _approveStatusText(specific['checkStatus']));
-    addLine(
-      '审批人',
-      specific['checkUserName'] ??
-          specific['companyCheckUserName'] ??
-          specific['approveUserName'],
-      showWhenEmpty: true,
-    );
-    addLine(
-      '审批人电话',
-      specific['checkUserPhone'] ??
-          specific['companyCheckUserPhone'] ??
-          specific['approveUserPhone'],
-      showWhenEmpty: true,
-    );
+    addLine('审批人', specific['checkUserName'] ?? specific['companyCheckUserName'] ?? specific['approveUserName'], showWhenEmpty: true);
+    addLine('审批人电话', specific['checkUserPhone'] ?? specific['companyCheckUserPhone'] ?? specific['approveUserPhone'], showWhenEmpty: true);
     addLine('审批意见', specific['checkDesc']);
     addLine('审批时间', specific['checkTime'] ?? specific['createDate']);
-    return lines.isEmpty
-        ? const <DetailGroup>[]
-        : <DetailGroup>[DetailGroup(title: '企业审批', lines: lines)];
+    return lines.isEmpty ? const <DetailGroup>[] : <DetailGroup>[DetailGroup(title: '企业审批', lines: lines)];
   }
 
   List<DetailGroup> _buildParkApproveGroups(Map<String, dynamic> specific) {
@@ -443,25 +373,17 @@ class AppointmentApprovalDetailController extends GetxController {
     addLine('审批人', specific['checkUserName']);
     addLine('审批人电话', specific['checkUserPhone']);
     addLine('审批意见', specific['checkDesc']);
-    addLine(
-      '授权期限',
-      '${displayText(specific['validityBeginTime'])}/${displayText(specific['validityEndTime'])}',
-    );
-    addLine('入口', listText(specific['inDeviceNameList']));
+    addLine('授权期限', '${displayText(specific['validityBeginTime'])}/${displayText(specific['validityEndTime'])}');
+    addLine('入口', listText(specific['inDeviceNameList'] ?? '-'));
     addLine('出口', listText(specific['outDeviceNameList']));
     addLine('审批时间', specific['checkTime'] ?? specific['createDate']);
 
-    return lines.isEmpty
-        ? const <DetailGroup>[]
-        : <DetailGroup>[DetailGroup(title: '园区审批', lines: lines)];
+    return lines.isEmpty ? const <DetailGroup>[] : <DetailGroup>[DetailGroup(title: '园区审批', lines: lines)];
   }
 
   String listText(Object? value) {
     if (value is List) {
-      final list = value
-          .map((e) => e.toString().trim())
-          .where((e) => e.isNotEmpty && e.toLowerCase() != 'null')
-          .toList();
+      final list = value.map((e) => e.toString().trim()).where((e) => e.isNotEmpty && e.toLowerCase() != 'null').toList();
       return list.isEmpty ? '--' : list.join('、');
     }
     return displayText(value);
@@ -470,7 +392,7 @@ class AppointmentApprovalDetailController extends GetxController {
   /// 统一的文本兜底：屏蔽 null/空串，并返回页面约定占位符。
   String displayText(Object? value) {
     final text = value?.toString().trim() ?? '';
-    if (text.isEmpty || text.toLowerCase() == 'null' || text == '--/--') {
+    if (text.toLowerCase() == 'null' || text == '--/--') {
       return '--';
     }
     return text;
@@ -481,17 +403,13 @@ class AppointmentApprovalDetailController extends GetxController {
   }
 
   String _carPlateColorText(Map<String, dynamic> specific) {
+    final label = DictFieldQueryTool.carNumbColourLabel(specific['carNumbColour'], fallback: '--');
+    if (label != '--') return label;
+
     final name = displayText(specific['carNumbColourName']);
     if (name != '--') return name;
-    final code = _toInt(specific['carNumbColour']);
-    const map = <int, String>{
-      0: '白底黑字',
-      1: '蓝底白字',
-      2: '黄底黑字',
-      3: '黑底白字',
-      4: '绿底黑字',
-    };
-    return map[code] ?? displayText(specific['carNumbColour']);
+
+    return displayText(specific['carNumbColour']);
   }
 
   String _sexText(Object? value) {
@@ -527,20 +445,12 @@ class AppointmentApprovalDetailController extends GetxController {
 
     // 后端未返回字典名称时，按编码回退为固定文案。
     final code = _toInt(specific['loadType']);
-    const map = <int, String>{
-      0: '空载入园，空载出园',
-      1: '重载入园，空载出园',
-      2: '空载入园，重载出园',
-      3: '重载入园，重载出园',
-    };
+    const map = <int, String>{0: '空载入园，空载出园', 1: '重载入园，空载出园', 2: '空载入园，重载出园', 3: '重载入园，重载出园'};
     return map[code] ?? displayText(specific['loadType']);
   }
 
   String _goodsTypeText(Map<String, dynamic> goods) {
-    final label = DictFieldQueryTool.goodsTypeLabel(
-      goods['goodsType'],
-      fallback: '--',
-    );
+    final label = DictFieldQueryTool.goodsTypeLabel(goods['goodsType'], fallback: '--');
     if (label != '--') return label;
 
     final name = displayText(goods['goodsTypeName']);
