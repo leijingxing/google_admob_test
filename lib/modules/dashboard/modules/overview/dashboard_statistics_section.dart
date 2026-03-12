@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
+import '../../../../core/components/date_picker/custom_date_range_picker.dart';
+import '../../../../core/components/select/app_company_select_field.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/dimens.dart';
 import 'overview_statistics_controller.dart';
@@ -20,12 +22,27 @@ class DashboardStatisticsSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: [
+                const Expanded(child: _SectionTitle(title: '园内统计')),
+                _DateRangeFilter(
+                  range: controller.yardRange,
+                  onChanged: controller.onYardRangeChanged,
+                ),
+              ],
+            ),
+            SizedBox(height: AppDimens.dp6),
+            _YardStatsGrid(items: controller.yardStats),
+            SizedBox(height: AppDimens.dp16),
+            _SectionTitle(title: '审批统计'),
+            SizedBox(height: AppDimens.dp10),
+            _ApprovalCard(rows: controller.approvalRows),
+            SizedBox(height: AppDimens.dp16),
             _SectionTitle(title: '今日预约情况'),
             SizedBox(height: AppDimens.dp10),
             _ReservationTrendCard(
-              unitOptions: controller.reservationUnitOptions,
-              selectedUnit: controller.selectedReservationUnit,
-              onUnitChanged: controller.onReservationUnitChanged,
+              selectedCompany: controller.selectedReservationCompany,
+              onCompanyChanged: controller.onReservationCompanyChanged,
               onRefresh: controller.refreshReservationTrend,
               summaryMetrics: controller.reservationSummaryMetrics,
               series: controller.reservationTrendSeries,
@@ -37,9 +54,9 @@ class DashboardStatisticsSection extends StatelessWidget {
               title: '危化品入园统计',
               parkOptions: controller.parkOptions,
               selectedPark: controller.hazardousInPark,
-              rangeText: controller.hazardousInRangeText,
+              range: controller.hazardousInRange,
               onParkChanged: controller.onHazardousInParkChanged,
-              onRangeTap: () => controller.pickHazardousInRange(context),
+              onRangeChanged: controller.onHazardousInRangeChanged,
               data: controller.hazardousInPie,
             ),
             SizedBox(height: AppDimens.dp10),
@@ -47,19 +64,11 @@ class DashboardStatisticsSection extends StatelessWidget {
               title: '危化品出园统计',
               parkOptions: controller.parkOptions,
               selectedPark: controller.hazardousOutPark,
-              rangeText: controller.hazardousOutRangeText,
+              range: controller.hazardousOutRange,
               onParkChanged: controller.onHazardousOutParkChanged,
-              onRangeTap: () => controller.pickHazardousOutRange(context),
+              onRangeChanged: controller.onHazardousOutRangeChanged,
               data: controller.hazardousOutPie,
             ),
-            SizedBox(height: AppDimens.dp16),
-            _SectionTitle(title: '园内统计'),
-            SizedBox(height: AppDimens.dp10),
-            _YardStatsGrid(items: controller.yardStats),
-            SizedBox(height: AppDimens.dp16),
-            _SectionTitle(title: '审批统计'),
-            SizedBox(height: AppDimens.dp10),
-            _ApprovalCard(rows: controller.approvalRows),
           ],
         );
       },
@@ -90,18 +99,18 @@ class _PieStatCard extends StatelessWidget {
     required this.title,
     required this.parkOptions,
     required this.selectedPark,
-    required this.rangeText,
+    required this.range,
     required this.onParkChanged,
-    required this.onRangeTap,
+    required this.onRangeChanged,
     required this.data,
   });
 
   final String title;
   final List<String> parkOptions;
   final String selectedPark;
-  final String rangeText;
+  final DateTimeRange? range;
   final ValueChanged<String?> onParkChanged;
-  final VoidCallback onRangeTap;
+  final ValueChanged<DateTimeRange?> onRangeChanged;
   final List<PiePoint> data;
 
   @override
@@ -128,8 +137,16 @@ class _PieStatCard extends StatelessWidget {
                   ),
                 ),
               ),
-              _RangeButton(text: rangeText, onTap: onRangeTap),
             ],
+          ),
+          SizedBox(height: AppDimens.dp8),
+          CustomDateRangePicker(
+            startDate: range?.start,
+            endDate: range?.end,
+            compact: true,
+            onDateRangeSelected: (start, end) {
+              onRangeChanged(_buildDateRange(start, end));
+            },
           ),
           SizedBox(height: AppDimens.dp8),
           Row(
@@ -200,63 +217,17 @@ class _PieStatCard extends StatelessWidget {
   }
 }
 
-class _RangeButton extends StatelessWidget {
-  const _RangeButton({required this.text, required this.onTap});
-
-  final String text;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppDimens.dp8),
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: AppDimens.dp8,
-          vertical: AppDimens.dp6,
-        ),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF7FAFF),
-          borderRadius: BorderRadius.circular(AppDimens.dp8),
-          border: Border.all(color: const Color(0xFFE3EAF6)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.date_range_rounded,
-              size: AppDimens.sp12,
-              color: const Color(0xFF5E738D),
-            ),
-            SizedBox(width: AppDimens.dp4),
-            Text(
-              text,
-              style: TextStyle(
-                color: const Color(0xFF445A73),
-                fontSize: AppDimens.sp10,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ReservationTrendCard extends StatelessWidget {
   const _ReservationTrendCard({
-    required this.unitOptions,
-    required this.selectedUnit,
-    required this.onUnitChanged,
+    required this.selectedCompany,
+    required this.onCompanyChanged,
     required this.onRefresh,
     required this.summaryMetrics,
     required this.series,
   });
 
-  final List<String> unitOptions;
-  final String selectedUnit;
-  final ValueChanged<String?> onUnitChanged;
+  final AppSelectedCompany? selectedCompany;
+  final ValueChanged<AppSelectedCompany?> onCompanyChanged;
   final VoidCallback onRefresh;
   final List<ReservationSummaryMetric> summaryMetrics;
   final List<ReservationTrendSeries> series;
@@ -311,11 +282,10 @@ class _ReservationTrendCard extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: AppDimens.dp128,
-                child: _CompactSelectBox(
-                  value: selectedUnit,
-                  items: unitOptions,
-                  onChanged: onUnitChanged,
+                width: AppDimens.dp150,
+                child: _ReservationCompanyField(
+                  value: selectedCompany,
+                  onChanged: onCompanyChanged,
                 ),
               ),
               SizedBox(width: AppDimens.dp8),
@@ -356,10 +326,7 @@ class _ReservationTrendCard extends StatelessWidget {
               primaryXAxis: const CategoryAxis(
                 majorGridLines: MajorGridLines(width: 0),
                 axisLine: AxisLine(color: Color(0xFFD5DFEE)),
-                labelStyle: TextStyle(
-                  color: Color(0xFF7F92A8),
-                  fontSize: 10,
-                ),
+                labelStyle: TextStyle(color: Color(0xFF7F92A8), fontSize: 10),
               ),
               primaryYAxis: const NumericAxis(
                 minimum: 0,
@@ -371,10 +338,7 @@ class _ReservationTrendCard extends StatelessWidget {
                   width: 1,
                   color: Color(0xFFEDF2F8),
                 ),
-                labelStyle: TextStyle(
-                  color: Color(0xFF7F92A8),
-                  fontSize: 10,
-                ),
+                labelStyle: TextStyle(color: Color(0xFF7F92A8), fontSize: 10),
               ),
               zoomPanBehavior: ZoomPanBehavior(
                 enablePanning: true,
@@ -410,45 +374,68 @@ class _ReservationTrendCard extends StatelessWidget {
   }
 }
 
-class _CompactSelectBox extends StatelessWidget {
-  const _CompactSelectBox({
+class _ReservationCompanyField extends StatelessWidget {
+  const _ReservationCompanyField({
     required this.value,
-    required this.items,
     required this.onChanged,
   });
 
-  final String value;
-  final List<String> items;
-  final ValueChanged<String?> onChanged;
+  final AppSelectedCompany? value;
+  final ValueChanged<AppSelectedCompany?> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: AppDimens.dp36,
-      padding: EdgeInsets.symmetric(horizontal: AppDimens.dp10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FBFF),
-        borderRadius: BorderRadius.circular(AppDimens.dp8),
-        border: Border.all(color: const Color(0xFFD9E4F3)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded),
-          style: TextStyle(
-            color: const Color(0xFF5A6F8A),
-            fontSize: AppDimens.sp12,
-          ),
-          onChanged: onChanged,
-          items: items
-              .map(
-                (item) => DropdownMenuItem<String>(
-                  value: item,
-                  child: Text(item, overflow: TextOverflow.ellipsis),
+    return InkWell(
+      onTap: () async {
+        final result = await showAppCompanySelectDialog(
+          context,
+          initialValue: value,
+          title: '选择企业',
+        );
+        if (result != null) {
+          onChanged(result);
+        }
+      },
+      borderRadius: BorderRadius.circular(AppDimens.dp8),
+      child: Container(
+        height: AppDimens.dp36,
+        padding: EdgeInsets.symmetric(horizontal: AppDimens.dp10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FBFF),
+          borderRadius: BorderRadius.circular(AppDimens.dp8),
+          border: Border.all(color: const Color(0xFFD9E4F3)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                value?.displayName ?? '选择企业',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: value == null
+                      ? const Color(0xFF8A98AF)
+                      : const Color(0xFF5A6F8A),
+                  fontSize: AppDimens.sp12,
+                  fontWeight: FontWeight.w500,
                 ),
-              )
-              .toList(),
+              ),
+            ),
+            if (value != null)
+              GestureDetector(
+                onTap: () => onChanged(null),
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: EdgeInsets.only(right: AppDimens.dp6),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: AppDimens.dp16,
+                    color: const Color(0xFF9AA8BE),
+                  ),
+                ),
+              ),
+            const Icon(Icons.keyboard_arrow_down_rounded),
+          ],
         ),
       ),
     );
@@ -530,51 +517,21 @@ class _YardStatsGrid extends StatelessWidget {
 
   final List<YardStatCardData> items;
 
-  static const List<_YardCardPalette> _palettes = [
-    _YardCardPalette(
-      accent: Color(0xFF2F6BFF),
-      accentSoft: Color(0xFFEAF2FF),
-      surface: Color(0xFFF8FBFF),
-      border: Color(0xFFD7E6FF),
-    ),
-    _YardCardPalette(
-      accent: Color(0xFF00A67E),
-      accentSoft: Color(0xFFE8FAF4),
-      surface: Color(0xFFF7FCFA),
-      border: Color(0xFFD5F0E7),
-    ),
-    _YardCardPalette(
-      accent: Color(0xFFF08A24),
-      accentSoft: Color(0xFFFFF3E7),
-      surface: Color(0xFFFFFBF7),
-      border: Color(0xFFF8E1C7),
-    ),
-    _YardCardPalette(
-      accent: Color(0xFF7B61FF),
-      accentSoft: Color(0xFFF1EEFF),
-      surface: Color(0xFFFAF9FF),
-      border: Color(0xFFE0DAFF),
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 360;
+        final isNarrow = constraints.maxWidth < 560;
         final cardWidth = isNarrow
             ? constraints.maxWidth
-            : (constraints.maxWidth - AppDimens.dp10) / 2;
+            : (constraints.maxWidth - AppDimens.dp12) / 2;
         return Wrap(
           spacing: AppDimens.dp10,
           runSpacing: AppDimens.dp10,
-          children: items.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            final palette = _palettes[index % _palettes.length];
+          children: items.map((item) {
             return SizedBox(
               width: cardWidth,
-              child: _YardStatCard(item: item, palette: palette),
+              child: _YardStatCard(item: item),
             );
           }).toList(),
         );
@@ -584,192 +541,199 @@ class _YardStatsGrid extends StatelessWidget {
 }
 
 class _YardStatCard extends StatelessWidget {
-  const _YardStatCard({required this.item, required this.palette});
+  const _YardStatCard({required this.item});
 
   final YardStatCardData item;
-  final _YardCardPalette palette;
 
   @override
   Widget build(BuildContext context) {
-    final primaryMetric = item.metrics.isNotEmpty ? item.metrics.first : null;
-    final secondaryMetrics = item.metrics.skip(1).toList();
-
     return Container(
-      padding: EdgeInsets.all(AppDimens.dp12),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppDimens.dp10,
+        vertical: AppDimens.dp10,
+      ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.white, palette.surface],
-        ),
-        borderRadius: BorderRadius.circular(AppDimens.dp16),
-        border: Border.all(color: palette.border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimens.dp12),
+        border: Border.all(color: const Color(0xFFE3EBF5)),
         boxShadow: [
           BoxShadow(
-            color: palette.accent.withValues(alpha: 0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
+            color: const Color(0xFF0F2747).withValues(alpha: 0.035),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: AppDimens.dp36,
-                height: AppDimens.dp36,
-                decoration: BoxDecoration(
-                  color: palette.accentSoft,
-                  borderRadius: BorderRadius.circular(AppDimens.dp12),
-                ),
-                child: Icon(
-                  Icons.stacked_bar_chart_rounded,
-                  color: palette.accent,
-                  size: AppDimens.dp20,
-                ),
-              ),
-              SizedBox(width: AppDimens.dp10),
-              Expanded(
-                child: Text(
-                  item.title,
-                  style: TextStyle(
-                    color: const Color(0xFF22364D),
-                    fontSize: AppDimens.sp13,
-                    fontWeight: FontWeight.w700,
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppDimens.dp8,
+              vertical: AppDimens.dp6,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F8FC),
+              borderRadius: BorderRadius.circular(AppDimens.dp10),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: AppDimens.dp6,
+                  height: AppDimens.dp6,
+                  margin: EdgeInsets.only(top: AppDimens.dp4),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF4C7DFF),
+                    shape: BoxShape.circle,
                   ),
                 ),
-              ),
-            ],
+                SizedBox(width: AppDimens.dp6),
+                Expanded(
+                  child: Text(
+                    item.title,
+                    softWrap: true,
+                    style: TextStyle(
+                      color: const Color(0xFF23415F),
+                      fontSize: AppDimens.sp12,
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          if (primaryMetric != null) ...[
-            SizedBox(height: AppDimens.dp10),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(
-                horizontal: AppDimens.dp10,
-                vertical: AppDimens.dp8,
-              ),
-              decoration: BoxDecoration(
-                color: palette.accentSoft,
-                borderRadius: BorderRadius.circular(AppDimens.dp14),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    primaryMetric.label,
-                    style: TextStyle(
-                      color: palette.accent.withValues(alpha: 0.78),
-                      fontSize: AppDimens.sp10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: AppDimens.dp4),
-                  Text(
-                    primaryMetric.value,
-                    style: TextStyle(
-                      color: palette.accent,
-                      fontSize: AppDimens.sp22,
-                      fontWeight: FontWeight.w800,
-                      height: 1,
-                    ),
-                  ),
-                ],
-              ),
+          SizedBox(height: AppDimens.dp7),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columnCount = _metricColumnCount(
+                metricCount: item.metrics.length,
+                maxWidth: constraints.maxWidth,
+              );
+              final spacing = AppDimens.dp6;
+              final itemWidth =
+                  (constraints.maxWidth - spacing * (columnCount - 1)) /
+                  columnCount;
+              return Wrap(
+                spacing: spacing,
+                runSpacing: AppDimens.dp4,
+                children: item.metrics
+                    .map(
+                      (metric) => SizedBox(
+                        width: itemWidth,
+                        child: _InlineMetric(
+                          metric: metric,
+                          emphasize: item.metrics.length <= 2,
+                        ),
+                      ),
+                    )
+                    .toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _metricColumnCount({required int metricCount, required double maxWidth}) {
+    if (metricCount <= 1) return 1;
+    if (maxWidth < 320) return metricCount == 3 ? 1 : 2;
+    if (metricCount <= 2) return metricCount;
+    if (metricCount == 3) return 3;
+    if (metricCount >= 5 && maxWidth < 420) return 3;
+    return 5;
+  }
+}
+
+class _InlineMetric extends StatelessWidget {
+  const _InlineMetric({required this.metric, this.emphasize = false});
+
+  final YardMetric metric;
+  final bool emphasize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppDimens.dp8,
+        vertical: AppDimens.dp7,
+      ),
+      decoration: BoxDecoration(
+        color: emphasize ? const Color(0xFFF3F7FF) : const Color(0xFFF8FAFD),
+        borderRadius: BorderRadius.circular(AppDimens.dp9),
+        border: Border.all(
+          color: emphasize ? const Color(0xFFDCE7FA) : const Color(0xFFE8EEF6),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            metric.value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: const Color(0xFF243E5A),
+              fontSize: emphasize ? AppDimens.sp20 : AppDimens.sp17,
+              fontWeight: FontWeight.w800,
+              height: 1.05,
             ),
-          ],
-          if (secondaryMetrics.isNotEmpty) ...[
-            SizedBox(height: AppDimens.dp8),
-            Wrap(
-              spacing: AppDimens.dp8,
-              runSpacing: AppDimens.dp8,
-              children: secondaryMetrics
-                  .map(
-                    (metric) => _MiniMetric(
-                      metric: metric,
-                      palette: palette,
-                      widthFactor: secondaryMetrics.length == 1 ? 1 : 0.46,
-                    ),
-                  )
-                  .toList(),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            metric.label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: const Color(0xFF67809C),
+              fontSize: AppDimens.sp10,
+              fontWeight: FontWeight.w500,
+              height: 1.2,
             ),
-          ],
+          ),
         ],
       ),
     );
   }
 }
 
-class _MiniMetric extends StatelessWidget {
-  const _MiniMetric({
-    required this.metric,
-    required this.palette,
-    required this.widthFactor,
-  });
+class _DateRangeFilter extends StatelessWidget {
+  const _DateRangeFilter({required this.range, required this.onChanged});
 
-  final YardMetric metric;
-  final _YardCardPalette palette;
-  final double widthFactor;
+  final DateTimeRange? range;
+  final ValueChanged<DateTimeRange?> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return FractionallySizedBox(
-      widthFactor: widthFactor,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: AppDimens.dp9,
-          vertical: AppDimens.dp8,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppDimens.dp12),
-          border: Border.all(color: palette.border.withValues(alpha: 0.9)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              metric.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: const Color(0xFF627892),
-                fontSize: AppDimens.sp10,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            SizedBox(height: AppDimens.dp6),
-            Text(
-              metric.value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: const Color(0xFF1F3550),
-                fontSize: AppDimens.sp15,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
+    return SizedBox(
+      width: AppDimens.dp196,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: CustomDateRangePicker(
+          startDate: range?.start,
+          endDate: range?.end,
+          compact: true,
+          onDateRangeSelected: (start, end) {
+            onChanged(_buildDateRange(start, end));
+          },
         ),
       ),
     );
   }
 }
 
-class _YardCardPalette {
-  const _YardCardPalette({
-    required this.accent,
-    required this.accentSoft,
-    required this.surface,
-    required this.border,
-  });
-
-  final Color accent;
-  final Color accentSoft;
-  final Color surface;
-  final Color border;
+DateTimeRange? _buildDateRange(DateTime? start, DateTime? end) {
+  if (start == null && end == null) return null;
+  if (start != null && end != null) {
+    final sortedStart = start.isBefore(end) ? start : end;
+    final sortedEnd = start.isBefore(end) ? end : start;
+    return DateTimeRange(start: sortedStart, end: sortedEnd);
+  }
+  final singleDay = start ?? end!;
+  return DateTimeRange(start: singleDay, end: singleDay);
 }
 
 class _ApprovalCard extends StatelessWidget {

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../core/components/select/app_company_select_field.dart';
+
 /// 总览统计控制器：维护筛选状态与统计展示数据。
 class OverviewStatisticsController extends GetxController {
   /// 园区下拉选项。
   final List<String> parkOptions = const ['全部园区', '一园区', '二园区', '三园区'];
-
-  /// 今日预约情况：单位选项。
-  final List<String> reservationUnitOptions = const ['全部单位', '一园区', '二园区', '三园区'];
 
   /// 危化品入园统计筛选：园区。
   String hazardousInPark = '全部园区';
@@ -21,8 +20,11 @@ class OverviewStatisticsController extends GetxController {
   /// 危化品出园统计筛选：日期范围。
   DateTimeRange? hazardousOutRange;
 
-  /// 今日预约情况：选中单位。
-  String selectedReservationUnit = '全部单位';
+  /// 园内统计筛选：日期范围。
+  DateTimeRange? yardRange;
+
+  /// 今日预约情况：选中企业。
+  AppSelectedCompany? selectedReservationCompany;
 
   /// 审批统计假数据。
   final List<ApprovalStatRow> approvalRows = const [
@@ -231,10 +233,9 @@ class OverviewStatisticsController extends GetxController {
     update();
   }
 
-  /// 更新今日预约情况单位筛选。
-  void onReservationUnitChanged(String? value) {
-    if (value == null) return;
-    selectedReservationUnit = value;
+  /// 更新今日预约情况企业筛选。
+  void onReservationCompanyChanged(AppSelectedCompany? value) {
+    selectedReservationCompany = value;
     update();
   }
 
@@ -243,33 +244,21 @@ class OverviewStatisticsController extends GetxController {
     update();
   }
 
-  /// 选择入园统计时间范围。
-  Future<void> pickHazardousInRange(BuildContext context) async {
-    final now = DateTime.now();
-    final result = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(now.year - 2),
-      lastDate: DateTime(now.year + 1),
-      initialDateRange: hazardousInRange,
-      helpText: '选择开始日期-结束日期',
-    );
-    if (result == null) return;
-    hazardousInRange = result;
+  /// 更新入园统计时间范围。
+  void onHazardousInRangeChanged(DateTimeRange? value) {
+    hazardousInRange = value;
     update();
   }
 
-  /// 选择出园统计时间范围。
-  Future<void> pickHazardousOutRange(BuildContext context) async {
-    final now = DateTime.now();
-    final result = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(now.year - 2),
-      lastDate: DateTime(now.year + 1),
-      initialDateRange: hazardousOutRange,
-      helpText: '选择开始日期-结束日期',
-    );
-    if (result == null) return;
-    hazardousOutRange = result;
+  /// 更新出园统计时间范围。
+  void onHazardousOutRangeChanged(DateTimeRange? value) {
+    hazardousOutRange = value;
+    update();
+  }
+
+  /// 更新园内统计时间范围。
+  void onYardRangeChanged(DateTimeRange? value) {
+    yardRange = value;
     update();
   }
 
@@ -278,6 +267,9 @@ class OverviewStatisticsController extends GetxController {
 
   /// 出园统计时间范围文案。
   String get hazardousOutRangeText => _rangeText(hazardousOutRange);
+
+  /// 园内统计时间范围文案。
+  String get yardRangeText => _rangeText(yardRange);
 
   String _rangeText(DateTimeRange? range) {
     if (range == null) return '开始日期-结束日期';

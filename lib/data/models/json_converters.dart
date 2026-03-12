@@ -18,6 +18,23 @@ class IntSafeConverter implements JsonConverter<int, Object?> {
   Object? toJson(int object) => object;
 }
 
+/// double 容错转换：支持 double/int/num/string/null，失败默认 0。
+class DoubleSafeConverter implements JsonConverter<double, Object?> {
+  const DoubleSafeConverter();
+
+  @override
+  double fromJson(Object? json) {
+    if (json is double) return json;
+    if (json is int) return json.toDouble();
+    if (json is num) return json.toDouble();
+    if (json is String) return double.tryParse(json) ?? 0;
+    return 0;
+  }
+
+  @override
+  Object? toJson(double object) => object;
+}
+
 /// String 容错转换：null -> ''，其他类型转字符串。
 class StringSafeConverter implements JsonConverter<String, Object?> {
   const StringSafeConverter();

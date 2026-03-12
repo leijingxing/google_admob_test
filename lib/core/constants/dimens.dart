@@ -4,11 +4,13 @@ abstract class AppDimens {
   AppDimens._();
 
   static const double dp0 = 0;
+  static double dp1 = 1.w;
   static double dp2 = 2.w;
   static double dp4 = 4.w;
   static double dp3 = 3.w;
   static double dp5 = 5.w;
   static double dp6 = 6.w;
+  static double dp7 = 7.w;
   static double dp8 = 8.w;
   static double dp9 = 9.w;
   static double dp10 = 10.w;
@@ -64,6 +66,7 @@ abstract class AppDimens {
   static double sp14 = 14.sp;
   static double sp15 = 15.sp;
   static double sp16 = 16.sp;
+  static double sp17 = 17.sp;
   static double sp18 = 18.sp;
   static double sp20 = 20.sp;
   static double sp22 = 22.sp;

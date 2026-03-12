@@ -1,6 +1,8 @@
 import '../../core/env/env.dart';
 import '../../core/http/http_service.dart';
+import '../../core/http/paginated_parser.dart';
 import '../../core/http/result.dart';
+import '../models/auth/company_base_info_model.dart';
 import '../models/auth/login_entity.dart';
 
 /// 登录模块仓库层，统一管理鉴权相关数据请求。
@@ -107,6 +109,38 @@ class AuthRepository {
       '/api/system/user/getUserInfo',
       parser: (json) =>
           LoginEntity.fromJson(Map<String, dynamic>.from(json as Map)),
+    );
+  }
+
+  /// 分页查询企业基础信息。
+  Future<Result<PaginatedResult<CompanyBaseInfoModel>>> getCompanyBaseInfoPage({
+    int pageIndex = 1,
+    int pageSize = 20,
+    String? id,
+    String? companyCode,
+    String? companyName,
+    String? companyType,
+  }) {
+    final payload = <String, dynamic>{
+      ...buildPagePayload(pageIndex: pageIndex, pageSize: pageSize),
+      if ((id ?? '').trim().isNotEmpty) 'id': id!.trim(),
+      if ((companyCode ?? '').trim().isNotEmpty)
+        'companyCode': companyCode!.trim(),
+      if ((companyName ?? '').trim().isNotEmpty)
+        'companyName': companyName!.trim(),
+      if ((companyType ?? '').trim().isNotEmpty)
+        'companyType': companyType!.trim(),
+    };
+
+    return _httpService.post<PaginatedResult<CompanyBaseInfoModel>>(
+      '/api/system/companyBaseInfo/page',
+      data: payload,
+      parser: (json) => parsePaginatedResult<CompanyBaseInfoModel>(
+        json: json,
+        requestPageIndex: pageIndex,
+        requestPageSize: pageSize,
+        itemParser: (item) => CompanyBaseInfoModel.fromJson(item),
+      ),
     );
   }
 
