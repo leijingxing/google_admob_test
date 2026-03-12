@@ -7,6 +7,7 @@ import '../../../../../core/components/custom_refresh.dart';
 import '../../../../../core/components/custom_sliding_tab_bar.dart';
 import '../../../../../core/components/date_picker/custom_date_range_picker.dart';
 import '../../../../../core/constants/dimens.dart';
+import '../../../../../core/utils/user_manager.dart';
 import '../../../../../data/models/workbench/blacklist_approval_item_model.dart';
 import '../../../../../router/module_routes/workbench_routes.dart';
 import 'blacklist_approval_controller.dart';
@@ -352,7 +353,7 @@ class _BlacklistApprovalCard extends StatelessWidget {
       ),
     ];
 
-    if (item.parkCheckStatus == 0) {
+    if (!UserManager.isCompanyUser && item.parkCheckStatus == 0) {
       buttons.add(SizedBox(width: AppDimens.dp8));
       buttons.add(
         SizedBox(
@@ -384,7 +385,7 @@ class _BlacklistApprovalCard extends StatelessWidget {
           ),
         ),
       );
-    } else if (item.parkCheckStatus == 1) {
+    } else if (!UserManager.isCompanyUser && item.parkCheckStatus == 1) {
       buttons.add(SizedBox(width: AppDimens.dp8));
       buttons.add(
         SizedBox(

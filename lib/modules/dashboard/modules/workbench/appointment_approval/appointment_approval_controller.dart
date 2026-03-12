@@ -184,7 +184,13 @@ class AppointmentApprovalController extends GetxController {
   }
 
   bool canApprove(AppointmentApprovalItemModel item) {
-    return isParkUser && item.parkCheckStatus == 0 && item.status != 6;
+    if (item.status == 6) {
+      return false;
+    }
+    if (isCompanyUser) {
+      return item.companyCheckStatus == 0;
+    }
+    return item.parkCheckStatus == 0;
   }
 
   String submitTimeText(AppointmentApprovalItemModel item) {

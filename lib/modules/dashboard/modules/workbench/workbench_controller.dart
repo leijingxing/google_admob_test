@@ -90,7 +90,9 @@ class WorkbenchController extends GetxController {
     ];
 
     if (isCompanyUser) {
-      return allEntries.where((entry) => entry.title == '白名单审批').toList();
+      return allEntries
+          .where((entry) => entry.title == '白名单审批' || entry.title == '黑名单审批')
+          .toList();
     }
     return allEntries;
   }

@@ -7,6 +7,7 @@ import '../../../../../core/components/custom_refresh.dart';
 import '../../../../../core/components/custom_sliding_tab_bar.dart';
 import '../../../../../core/components/date_picker/custom_date_range_picker.dart';
 import '../../../../../core/constants/dimens.dart';
+import '../../../../../core/utils/user_manager.dart';
 import '../../../../../data/models/workbench/whitelist_approval_item_model.dart';
 import '../../../../../router/module_routes/workbench_routes.dart';
 import 'whitelist_approval_controller.dart';
@@ -318,7 +319,7 @@ class _WhitelistApprovalCard extends StatelessWidget {
       ),
     ];
 
-    if (item.parkCheckStatus == 0) {
+    if (!UserManager.isCompanyUser && item.parkCheckStatus == 0) {
       buttons.add(SizedBox(width: AppDimens.dp8));
       buttons.add(
         SizedBox(
