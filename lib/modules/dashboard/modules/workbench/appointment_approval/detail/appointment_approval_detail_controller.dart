@@ -378,7 +378,7 @@ class AppointmentApprovalDetailController extends GetxController {
     addLine('审批人', specific['checkUserName'] ?? specific['companyCheckUserName'] ?? specific['approveUserName'], showWhenEmpty: true);
     addLine('审批人电话', specific['checkUserPhone'] ?? specific['companyCheckUserPhone'] ?? specific['approveUserPhone'], showWhenEmpty: true);
     addLine('审批意见', specific['checkDesc']);
-    addLine('审批时间', specific['checkTime'] ?? specific['createDate']);
+    // addLine('审批时间', specific['checkTime'] ?? specific['createDate']);
     return lines.isEmpty ? const <DetailGroup>[] : <DetailGroup>[DetailGroup(title: '企业审批', lines: lines)];
   }
 

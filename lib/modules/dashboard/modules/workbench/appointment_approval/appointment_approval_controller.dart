@@ -183,9 +183,9 @@ class AppointmentApprovalController extends GetxController {
       case 0:
         return '待审批';
       case 1:
-        return '已通过';
+        return '通过';
       case 2:
-        return '已拒绝';
+        return '拒绝';
       case 6:
         return '已过期';
       default:
