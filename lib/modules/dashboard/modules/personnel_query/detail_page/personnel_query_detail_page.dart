@@ -801,8 +801,8 @@ class _BlackRecordTabState extends State<_BlackRecordTab> {
                   pageIndex,
                   pageSize,
                   keyword: _keywordController.text.trim(),
-                  realName: widget.row.name,
-                  // idCard: widget.row.idCard,
+                  // realName: widget.row.name,
+                  idCard: widget.row.idCard,
                   type: 1,
                 );
               },
