@@ -373,10 +373,10 @@ class AppointmentApprovalDetailController extends GetxController {
     addLine('审批人', specific['checkUserName']);
     addLine('审批人电话', specific['checkUserPhone']);
     addLine('审批意见', specific['checkDesc']);
-    addLine('授权期限', '${displayText(specific['validityBeginTime'])}/${displayText(specific['validityEndTime'])}');
+    addLine('授权期限开始', displayText(specific['validityBeginTime']));
+    addLine('授权期限结束', displayText(specific['validityEndTime']));
     addLine('入口', listText(specific['inDeviceNameList'] ?? '-'));
     addLine('出口', listText(specific['outDeviceNameList']));
-    addLine('审批时间', specific['checkTime'] ?? specific['createDate']);
 
     return lines.isEmpty ? const <DetailGroup>[] : <DetailGroup>[DetailGroup(title: '园区审批', lines: lines)];
   }
