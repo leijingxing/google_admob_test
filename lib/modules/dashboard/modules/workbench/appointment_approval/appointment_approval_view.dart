@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../../core/components/app_info_status_card.dart';
+import '../../../../../core/components/app_text_field.dart';
 import '../../../../../core/components/custom_refresh.dart';
 import '../../../../../core/components/custom_sliding_tab_bar.dart';
 import '../../../../../core/components/date_picker/custom_date_range_picker.dart';
@@ -160,6 +161,14 @@ class _TopFilterSection extends StatelessWidget {
             currentIndex: controller.currentTabIndex,
             onChanged: controller.onTabChanged,
             controller: tabController,
+          ),
+          SizedBox(height: AppDimens.dp8),
+          AppTextField.search(
+            controller: controller.keywordController,
+            hintText: '请输入车牌号或人员姓名',
+            onSubmitted: controller.applyKeyword,
+            onSearch: () =>
+                controller.applyKeyword(controller.keywordController.text),
           ),
           SizedBox(height: AppDimens.dp8),
           Row(

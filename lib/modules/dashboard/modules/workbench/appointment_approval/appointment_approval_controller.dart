@@ -11,6 +11,7 @@ import '../widgets/workbench_segment_tabs.dart';
 class AppointmentApprovalController extends GetxController {
   final WorkbenchRepository _workbenchRepository = WorkbenchRepository();
   final ValueNotifier<int> refreshTrigger = ValueNotifier<int>(0);
+  final TextEditingController keywordController = TextEditingController();
 
   /// 顶部 Tab：根据当前身份显示企业或园区审批维度。
   List<WorkbenchSegmentTabItem> get tabItems {
@@ -71,6 +72,7 @@ class AppointmentApprovalController extends GetxController {
   @override
   void onClose() {
     refreshTrigger.dispose();
+    keywordController.dispose();
     super.onClose();
   }
 
@@ -79,6 +81,7 @@ class AppointmentApprovalController extends GetxController {
     currentTabIndex = index;
     selectedStatus = _normalizeStatus(selectedStatus, index);
     update();
+    _triggerRefresh();
   }
 
   void applyFilters({
@@ -88,6 +91,21 @@ class AppointmentApprovalController extends GetxController {
     reservationType = nextReservationType;
     selectedStatus = _normalizeStatus(nextStatus, currentTabIndex);
     update();
+    _triggerRefresh();
+  }
+
+  /// 应用关键字搜索，支持按车牌号或人员姓名筛选。
+  void applyKeyword(String value) {
+    final nextKeywords = value.trim();
+    keywordController.value = TextEditingValue(
+      text: nextKeywords,
+      selection: TextSelection.collapsed(offset: nextKeywords.length),
+    );
+    final changed = keywords != nextKeywords;
+    keywords = nextKeywords;
+    if (changed) {
+      update();
+    }
     _triggerRefresh();
   }
 

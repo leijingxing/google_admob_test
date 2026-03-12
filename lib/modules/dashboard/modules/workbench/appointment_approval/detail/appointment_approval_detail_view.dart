@@ -13,6 +13,7 @@ class AppointmentApprovalDetailView
   const AppointmentApprovalDetailView({super.key});
 
   @override
+  /// 构建详情页整体布局，顶部为分栏切换，底部为内容区。
   Widget build(BuildContext context) {
     return GetBuilder<AppointmentApprovalDetailController>(
       builder: (logic) {
@@ -30,11 +31,13 @@ class AppointmentApprovalDetailView
   }
 }
 
+/// 顶部分栏切换区域。
 class _SectionTabs extends StatelessWidget {
   const _SectionTabs({required this.controller});
 
   final AppointmentApprovalDetailController controller;
 
+  /// 构建“基本信息 / 出入记录 / 违规记录”切换按钮。
   @override
   Widget build(BuildContext context) {
     const labels = ['基本信息', '出入记录', '违规记录'];
@@ -85,11 +88,13 @@ class _SectionTabs extends StatelessWidget {
   }
 }
 
+/// 根据当前分栏切换对应的详情内容。
 class _SectionBody extends StatelessWidget {
   const _SectionBody({required this.controller});
 
   final AppointmentApprovalDetailController controller;
 
+  /// 返回当前选中分栏对应的内容组件。
   @override
   Widget build(BuildContext context) {
     switch (controller.currentSection) {
