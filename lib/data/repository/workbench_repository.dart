@@ -129,14 +129,14 @@ class WorkbenchRepository {
 
   /// 获取预约审批分页列表。
   ///
-  /// [approvePageType]：2-园区待审批；3-园区已审批。
+  /// [approvePageType]：0-企业待审批；1-企业已审批；2-园区待审批；3-园区已审批。
   Future<Result<PaginatedResult<AppointmentApprovalItemModel>>>
   getReservationApprovePage({
     required int approvePageType,
     int current = 1,
     int size = 20,
     int? reservationType,
-    int? parkCheckStatus,
+    int? status,
     String? keywords,
     String? beginTime,
     String? endTime,
@@ -146,7 +146,7 @@ class WorkbenchRepository {
       'pageIndex': current,
       'pageSize': size,
       'reservationType': reservationType,
-      'parkCheckStatus': parkCheckStatus,
+      'status': status,
       'keywords': keywords,
       'beginTime': beginTime,
       'endTime': endTime,
@@ -156,34 +156,9 @@ class WorkbenchRepository {
       if (value is String && value.isEmpty) return true;
       return false;
     });
-
-    final postResult = await _httpService
-        .post<PaginatedResult<AppointmentApprovalItemModel>>(
-          '/api/closed-off/reservation/reservationApprovePage',
-          data: requestData,
-          parser: (json) => parsePaginatedResult<AppointmentApprovalItemModel>(
-            json: json,
-            requestPageIndex: current,
-            requestPageSize: size,
-            itemParser: (itemJson) =>
-                AppointmentApprovalItemModel.fromJson(itemJson),
-          ),
-        );
-
-    if (postResult is Success<PaginatedResult<AppointmentApprovalItemModel>>) {
-      return postResult;
-    }
-
-    final error =
-        (postResult as Failure<PaginatedResult<AppointmentApprovalItemModel>>)
-            .error;
-    if (error.code != 405) {
-      return postResult;
-    }
-
-    return _httpService.get<PaginatedResult<AppointmentApprovalItemModel>>(
+    return _httpService.post<PaginatedResult<AppointmentApprovalItemModel>>(
       '/api/closed-off/reservation/reservationApprovePage',
-      queryParameters: requestData,
+      data: requestData,
       parser: (json) => parsePaginatedResult<AppointmentApprovalItemModel>(
         json: json,
         requestPageIndex: current,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../../core/components/toast/toast_widget.dart';
+import '../../../../../core/utils/user_manager.dart';
 import '../../../../../data/models/workbench/appointment_approval_item_model.dart';
 import '../../../../../data/repository/workbench_repository.dart';
 import '../widgets/workbench_segment_tabs.dart';
@@ -11,52 +12,61 @@ class AppointmentApprovalController extends GetxController {
   final WorkbenchRepository _workbenchRepository = WorkbenchRepository();
   final ValueNotifier<int> refreshTrigger = ValueNotifier<int>(0);
 
-  /// 顶部 Tab：待审批 / 已审批。
-  final List<WorkbenchSegmentTabItem> tabItems = const [
-    WorkbenchSegmentTabItem(label: '待审批'),
-    WorkbenchSegmentTabItem(label: '已审批'),
-  ];
+  /// 顶部 Tab：根据当前身份显示企业或园区审批维度。
+  List<WorkbenchSegmentTabItem> get tabItems {
+    if (isCompanyUser) {
+      return const [
+        WorkbenchSegmentTabItem(label: '企业待审批'),
+        WorkbenchSegmentTabItem(label: '企业已审批'),
+      ];
+    }
+    if (isParkUser) {
+      return const [
+        WorkbenchSegmentTabItem(label: '园区待审批'),
+        WorkbenchSegmentTabItem(label: '园区已审批'),
+      ];
+    }
+    return const [
+      WorkbenchSegmentTabItem(label: '待审批'),
+      WorkbenchSegmentTabItem(label: '已审批'),
+    ];
+  }
 
-  /// 当前选中的 Tab 索引。
   int currentTabIndex = 0;
-
-  /// 预约类型筛选：null 表示全部。
   int? reservationType;
-
-  /// 状态筛选：null 表示全部。
-  int? parkCheckStatus;
-
-  /// 时间区间筛选。
+  int? selectedStatus;
   DateTimeRange? dateRange;
-
-  /// 关键字筛选。
   String keywords = '';
 
-  /// 预约类型选项。
   final List<WorkbenchFilterOption<int?>> reservationTypeOptions = const [
     WorkbenchFilterOption(label: '全部', value: null),
-    WorkbenchFilterOption(label: '来访人员', value: 1),
-    WorkbenchFilterOption(label: '普通车辆', value: 2),
-    WorkbenchFilterOption(label: '危化车辆', value: 3),
-    WorkbenchFilterOption(label: '危废车辆', value: 4),
-    WorkbenchFilterOption(label: '普通货车', value: 5),
+    WorkbenchFilterOption(label: '人员', value: 1),
+    WorkbenchFilterOption(label: '普通车', value: 2),
+    WorkbenchFilterOption(label: '危化车', value: 3),
+    WorkbenchFilterOption(label: '危废车', value: 4),
+    WorkbenchFilterOption(label: '货车', value: 5),
   ];
 
-  /// 状态选项。
-  static const List<WorkbenchFilterOption<int?>> _pendingStatusOptions = [
-    WorkbenchFilterOption(label: '全部', value: null),
-    WorkbenchFilterOption(label: '待审核', value: 0),
-  ];
+  bool get isCompanyUser => UserManager.isCompanyUser;
 
-  /// 已审批页状态选项。
-  static const List<WorkbenchFilterOption<int?>> _approvedStatusOptions = [
-    WorkbenchFilterOption(label: '全部', value: null),
-    WorkbenchFilterOption(label: '通过', value: 1),
-    WorkbenchFilterOption(label: '拒绝', value: 2),
-  ];
+  bool get isParkUser => UserManager.isParkUser;
 
-  List<WorkbenchFilterOption<int?>> get statusOptions =>
-      currentTabIndex == 0 ? _pendingStatusOptions : _approvedStatusOptions;
+  int get pendingStatusCode => isCompanyUser ? 0 : 3;
+
+  List<int> get approvedStatusCodes =>
+      isCompanyUser ? const [1, 2] : const [4, 5];
+
+  List<WorkbenchFilterOption<int?>> get statusOptions {
+    if (currentTabIndex == 0) {
+      return const [WorkbenchFilterOption(label: '全部', value: null)];
+    }
+
+    return [
+      const WorkbenchFilterOption(label: '全部', value: null),
+      WorkbenchFilterOption<int?>(label: statusText(1), value: 1),
+      WorkbenchFilterOption<int?>(label: statusText(2), value: 2),
+    ];
+  }
 
   @override
   void onClose() {
@@ -64,26 +74,23 @@ class AppointmentApprovalController extends GetxController {
     super.onClose();
   }
 
-  /// 切换顶部 Tab 并刷新列表。
   Future<void> onTabChanged(int index) async {
     if (currentTabIndex == index) return;
     currentTabIndex = index;
-    parkCheckStatus = _normalizeParkCheckStatus(parkCheckStatus, index);
+    selectedStatus = _normalizeStatus(selectedStatus, index);
     update();
   }
 
-  /// 应用筛选条件并刷新列表。
   void applyFilters({
     required int? nextReservationType,
     required int? nextStatus,
   }) {
     reservationType = nextReservationType;
-    parkCheckStatus = _normalizeParkCheckStatus(nextStatus, currentTabIndex);
+    selectedStatus = _normalizeStatus(nextStatus, currentTabIndex);
     update();
     _triggerRefresh();
   }
 
-  /// 选择时间区间并刷新列表。
   void onDateRangeSelected(DateTime? start, DateTime? end) {
     if (start == null && end == null) {
       dateRange = null;
@@ -99,7 +106,6 @@ class AppointmentApprovalController extends GetxController {
     _triggerRefresh();
   }
 
-  /// 分页加载预约审批列表。
   Future<List<AppointmentApprovalItemModel>> loadPage(
     int pageIndex,
     int pageSize,
@@ -107,18 +113,17 @@ class AppointmentApprovalController extends GetxController {
     return loadPageByTab(currentTabIndex, pageIndex, pageSize);
   }
 
-  /// 按指定 Tab 分页加载预约审批列表。
   Future<List<AppointmentApprovalItemModel>> loadPageByTab(
     int tabIndex,
     int pageIndex,
     int pageSize,
   ) async {
     final result = await _workbenchRepository.getReservationApprovePage(
-      approvePageType: tabIndex == 0 ? 2 : 3,
+      approvePageType: _approvePageTypeByTab(tabIndex),
       current: pageIndex,
       size: pageSize,
       reservationType: reservationType,
-      parkCheckStatus: _effectiveParkCheckStatus(tabIndex),
+      status: _effectiveStatus(tabIndex),
       keywords: keywords,
       beginTime: dateRange == null ? null : _formatDateTime(dateRange!.start),
       endTime: dateRange == null ? null : _formatDateTime(dateRange!.end),
@@ -133,45 +138,55 @@ class AppointmentApprovalController extends GetxController {
     );
   }
 
-  /// 时间范围显示文案。
   String get dateRangeText {
     if (dateRange == null) return '开始时间 - 结束时间';
     return '${_formatDate(dateRange!.start)} - ${_formatDate(dateRange!.end)}';
   }
 
-  /// 预约类型文案。
   String reservationTypeText(int type) {
     switch (type) {
       case 1:
-        return '来访人员';
+        return '人员';
       case 2:
-        return '普通车辆';
+        return '普通车';
       case 3:
-        return '危化车辆';
+        return '危化车';
       case 4:
-        return '危废车辆';
+        return '危废车';
       case 5:
-        return '普通货车';
+        return '货车';
       default:
         return '未知类型';
     }
   }
 
-  /// 状态文案。
   String statusText(int status) {
     switch (status) {
       case 0:
-        return '待审核';
+        return '待审批';
       case 1:
-        return '通过';
+        return '已通过';
       case 2:
-        return '拒绝';
+        return '已拒绝';
+      case 6:
+        return '已过期';
       default:
         return '未知状态';
     }
   }
 
-  /// 提交时间文案，按文档优先取 `createDate`。
+  /// 显示状态按当前审批主体取审核字段，不直接使用总状态 status。
+  int resolveStatus(AppointmentApprovalItemModel item) {
+    if (item.status == 6) {
+      return 6;
+    }
+    return isCompanyUser ? item.companyCheckStatus : item.parkCheckStatus;
+  }
+
+  bool canApprove(AppointmentApprovalItemModel item) {
+    return isParkUser && item.parkCheckStatus == 0 && item.status != 6;
+  }
+
   String submitTimeText(AppointmentApprovalItemModel item) {
     return item.createDate ?? '--';
   }
@@ -186,15 +201,25 @@ class AppointmentApprovalController extends GetxController {
 
   String _pad2(int value) => value.toString().padLeft(2, '0');
 
-  int? _effectiveParkCheckStatus(int tabIndex) {
-    return tabIndex == 0 ? 0 : _normalizeParkCheckStatus(parkCheckStatus, 1);
+  int _approvePageTypeByTab(int tabIndex) {
+    if (isCompanyUser) {
+      return tabIndex == 0 ? 0 : 1;
+    }
+    return tabIndex == 0 ? 2 : 3;
   }
 
-  int? _normalizeParkCheckStatus(int? status, int tabIndex) {
+  int? _effectiveStatus(int tabIndex) {
     if (tabIndex == 0) {
-      return status == 0 ? 0 : null;
+      return pendingStatusCode;
     }
-    if (status == 1 || status == 2) {
+    return _normalizeStatus(selectedStatus, 1);
+  }
+
+  int? _normalizeStatus(int? status, int tabIndex) {
+    if (tabIndex == 0) {
+      return status == pendingStatusCode ? pendingStatusCode : null;
+    }
+    if (status != null && approvedStatusCodes.contains(status)) {
       return status;
     }
     return null;
@@ -204,7 +229,6 @@ class AppointmentApprovalController extends GetxController {
     refreshTrigger.value++;
   }
 
-  /// 刷新当前列表。
   void refreshCurrentList() {
     _triggerRefresh();
   }

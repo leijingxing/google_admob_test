@@ -15,6 +15,12 @@ AppointmentApprovalItemModel _$AppointmentApprovalItemModelFromJson(
       : const IntSafeConverter().fromJson(json['reservationType']),
   carNumb: const NullableStringSafeConverter().fromJson(json['carNumb']),
   realName: const NullableStringSafeConverter().fromJson(json['realName']),
+  status: json['status'] == null
+      ? 0
+      : const IntSafeConverter().fromJson(json['status']),
+  companyCheckStatus: json['companyCheckStatus'] == null
+      ? 0
+      : const IntSafeConverter().fromJson(json['companyCheckStatus']),
   parkCheckStatus: json['parkCheckStatus'] == null
       ? 0
       : const IntSafeConverter().fromJson(json['parkCheckStatus']),
@@ -31,6 +37,10 @@ Map<String, dynamic> _$AppointmentApprovalItemModelToJson(
   'reservationType': const IntSafeConverter().toJson(instance.reservationType),
   'carNumb': const NullableStringSafeConverter().toJson(instance.carNumb),
   'realName': const NullableStringSafeConverter().toJson(instance.realName),
+  'status': const IntSafeConverter().toJson(instance.status),
+  'companyCheckStatus': const IntSafeConverter().toJson(
+    instance.companyCheckStatus,
+  ),
   'parkCheckStatus': const IntSafeConverter().toJson(instance.parkCheckStatus),
   'createDate': const NullableStringSafeConverter().toJson(instance.createDate),
   'parkCheckTime': const NullableStringSafeConverter().toJson(

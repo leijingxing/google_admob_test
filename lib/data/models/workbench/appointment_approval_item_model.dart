@@ -11,7 +11,7 @@ class AppointmentApprovalItemModel {
   @NullableStringSafeConverter()
   final String? id;
 
-  /// 预约类型：1-来访人员；2-普通车辆；3-危化车辆；4-危废车辆；5-普通货车。
+  /// 预约类型：1-人员；2-普通车；3-危化车；4-危废车；5-货车。
   @IntSafeConverter()
   final int reservationType;
 
@@ -23,7 +23,17 @@ class AppointmentApprovalItemModel {
   @NullableStringSafeConverter()
   final String? realName;
 
-  /// 园区审核状态：0-待审核；1-通过；2-拒绝；3-已过期（兜底）。
+  /// 列表当前状态：
+  /// 0-企业待审批；1-企业通过；2-企业不通过；
+  /// 3-园区待审批；4-园区通过；5-园区不通过；6-已过期。
+  @IntSafeConverter()
+  final int status;
+
+  /// 企业审核状态：0-待审核；1-通过；2-拒绝。
+  @IntSafeConverter()
+  final int companyCheckStatus;
+
+  /// 园区审核状态：0-待审核；1-通过；2-拒绝。
   @IntSafeConverter()
   final int parkCheckStatus;
 
@@ -40,6 +50,8 @@ class AppointmentApprovalItemModel {
     this.reservationType = 0,
     this.carNumb,
     this.realName,
+    this.status = 0,
+    this.companyCheckStatus = 0,
     this.parkCheckStatus = 0,
     this.createDate,
     this.parkCheckTime,
