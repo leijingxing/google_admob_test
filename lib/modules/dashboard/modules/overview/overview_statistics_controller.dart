@@ -1,10 +1,25 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/components/select/app_company_select_field.dart';
+import '../../../../core/components/toast/toast_widget.dart';
+import '../../../../data/models/overview/overview_models.dart';
+import '../../../../data/repository/overview_repository.dart';
+import 'overview_statistics_models.dart';
 
-/// 总览统计控制器：维护筛选状态与统计展示数据。
+/// 总览统计控制器：按区块维护筛选状态，便于后续分模块对接接口。
 class OverviewStatisticsController extends GetxController {
+  final OverviewRepository _repository = OverviewRepository();
+
+  static const String yardSectionId = 'overview_yard_section';
+  static const String approvalSectionId = 'overview_approval_section';
+  static const String reservationSectionId = 'overview_reservation_section';
+  static const String hazardousInSectionId = 'overview_hazardous_in_section';
+  static const String hazardousOutSectionId = 'overview_hazardous_out_section';
+  static const String enterpriseSectionId = 'overview_enterprise_section';
+
   /// 园区下拉选项。
   final List<String> parkOptions = const ['全部园区', '一园区', '二园区', '三园区'];
 
@@ -57,74 +72,8 @@ class OverviewStatisticsController extends GetxController {
     ),
   ];
 
-  /// 园内统计卡片（示例数据）。
-  final List<YardStatCardData> yardStats = const [
-    YardStatCardData(
-      title: '危化车辆统计',
-      metrics: [
-        YardMetric(value: '67', label: '当前在园'),
-        YardMetric(value: '207/423', label: '入/出园车辆'),
-        YardMetric(value: '140/327', label: '入/出园次数'),
-      ],
-    ),
-    YardStatCardData(
-      title: '危化品统计(吨/立方)',
-      metrics: [
-        YardMetric(value: '207', label: '入园'),
-        YardMetric(value: '140', label: '出园'),
-        YardMetric(value: '92963', label: '累计入园'),
-        YardMetric(value: '158694', label: '累计出园'),
-        YardMetric(value: '23', label: '种类'),
-      ],
-    ),
-    YardStatCardData(
-      title: '危废车辆统计',
-      metrics: [
-        YardMetric(value: '67', label: '当前在园'),
-        YardMetric(value: '207/423', label: '入/出园车辆'),
-        YardMetric(value: '140/327', label: '入/出园次数'),
-      ],
-    ),
-    YardStatCardData(
-      title: '危废物统计(吨/立方)',
-      metrics: [
-        YardMetric(value: '207', label: '入园'),
-        YardMetric(value: '140', label: '出园'),
-        YardMetric(value: '92963', label: '累计入园'),
-        YardMetric(value: '158694', label: '累计出园'),
-        YardMetric(value: '13', label: '种类'),
-      ],
-    ),
-    YardStatCardData(
-      title: '货车统计',
-      metrics: [
-        YardMetric(value: '67', label: '当前在园'),
-        YardMetric(value: '207/423', label: '入/出园车辆'),
-        YardMetric(value: '140/327', label: '入/出园次数'),
-      ],
-    ),
-    YardStatCardData(
-      title: '货物统计(吨/立方)',
-      metrics: [
-        YardMetric(value: '207', label: '入园'),
-        YardMetric(value: '140', label: '出园'),
-        YardMetric(value: '92963', label: '累计入园'),
-        YardMetric(value: '158694', label: '累计出园'),
-        YardMetric(value: '43', label: '种类'),
-      ],
-    ),
-    YardStatCardData(
-      title: '人员统计',
-      metrics: [YardMetric(value: '67', label: '入园人员')],
-    ),
-    YardStatCardData(
-      title: '待审批统计',
-      metrics: [
-        YardMetric(value: '67', label: '企业'),
-        YardMetric(value: '207', label: '园区'),
-      ],
-    ),
-  ];
+  /// 园内统计卡片。
+  List<YardStatCardData> yardStats = _defaultYardStats();
 
   /// 危化品入园饼图数据（示例）。
   List<PiePoint> get hazardousInPie => const [
@@ -259,165 +208,181 @@ class OverviewStatisticsController extends GetxController {
     ),
   ];
 
+  @override
+  void onInit() {
+    super.onInit();
+    unawaited(loadYardStatistics());
+  }
+
   /// 更新入园统计园区筛选。
   void onHazardousInParkChanged(String? value) {
     if (value == null) return;
     hazardousInPark = value;
-    update();
+    update([hazardousInSectionId]);
   }
 
   /// 更新出园统计园区筛选。
   void onHazardousOutParkChanged(String? value) {
     if (value == null) return;
     hazardousOutPark = value;
-    update();
+    update([hazardousOutSectionId]);
   }
 
   /// 更新今日预约情况企业筛选。
   void onReservationCompanyChanged(AppSelectedCompany? value) {
     selectedReservationCompany = value;
-    update();
+    update([reservationSectionId]);
   }
 
   /// 更新企业情况概览企业筛选。
   void onEnterpriseCompanyChanged(AppSelectedCompany? value) {
     selectedEnterpriseCompany = value;
-    update();
+    update([enterpriseSectionId]);
   }
 
   /// 刷新今日预约情况。
   void refreshReservationTrend() {
-    update();
+    update([reservationSectionId]);
   }
 
   /// 更新入园统计时间范围。
   void onHazardousInRangeChanged(DateTimeRange? value) {
     hazardousInRange = value;
-    update();
+    update([hazardousInSectionId]);
   }
 
   /// 更新出园统计时间范围。
   void onHazardousOutRangeChanged(DateTimeRange? value) {
     hazardousOutRange = value;
-    update();
+    update([hazardousOutSectionId]);
   }
 
   /// 更新园内统计时间范围。
   void onYardRangeChanged(DateTimeRange? value) {
     yardRange = value;
-    update();
+    update([yardSectionId]);
+    unawaited(loadYardStatistics());
   }
 
-  /// 入园统计时间范围文案。
-  String get hazardousInRangeText => _rangeText(hazardousInRange);
+  /// 拉取园内统计。
+  Future<void> loadYardStatistics() async {
+    final result = await _repository.getParkStatistics(
+      startTime: _rangeStartTime(yardRange),
+      endTime: _rangeEndTime(yardRange),
+    );
 
-  /// 出园统计时间范围文案。
-  String get hazardousOutRangeText => _rangeText(hazardousOutRange);
-
-  /// 园内统计时间范围文案。
-  String get yardRangeText => _rangeText(yardRange);
-
-  String _rangeText(DateTimeRange? range) {
-    if (range == null) return '开始日期-结束日期';
-    final start = '${range.start.year}-${range.start.month}-${range.start.day}';
-    final end = '${range.end.year}-${range.end.month}-${range.end.day}';
-    return '$start ~ $end';
+    result.when(
+      success: (data) {
+        yardStats = _buildYardStats(data);
+        update([yardSectionId]);
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
+      },
+    );
   }
-}
 
-/// 饼图点位数据。
-class PiePoint {
-  final String name;
-  final num value;
+  static List<YardStatCardData> _buildYardStats(
+    List<ParkStatisticsModel> data,
+  ) {
+    final byType = <int, ParkStatisticsModel>{
+      for (final item in data) item.type: item,
+    };
 
-  const PiePoint({required this.name, required this.value});
-}
+    return [
+      _buildVehicleStatCard('危化车辆统计', byType[3]),
+      _buildGoodsStatCard('危化品统计(吨/立方)', byType[3]),
+      _buildVehicleStatCard('危废车辆统计', byType[4]),
+      _buildGoodsStatCard('危废物统计(吨/立方)', byType[4]),
+      _buildVehicleStatCard('普通车统计', byType[2]),
+      _buildVehicleStatCard('货车统计', byType[5]),
+      _buildGoodsStatCard('货物统计(吨/立方)', byType[5]),
+      YardStatCardData(
+        title: '人员统计',
+        metrics: [
+          YardMetric(
+            value: '${byType[1]?.currentInParkCount ?? 0}',
+            label: '当前在园',
+          ),
+        ],
+      ),
+    ];
+  }
 
-/// 审批统计行数据。
-class ApprovalStatRow {
-  final String title;
-  final IconData icon;
-  final String leftLabel;
-  final String leftValue;
-  final String rightLabel;
-  final String rightValue;
+  static YardStatCardData _buildVehicleStatCard(
+    String title,
+    ParkStatisticsModel? model,
+  ) {
+    return YardStatCardData(
+      title: title,
+      metrics: [
+        YardMetric(value: '${model?.currentInParkCount ?? 0}', label: '当前在园'),
+        YardMetric(
+          value: '${model?.inParkCount ?? 0}/${model?.outParkCount ?? 0}',
+          label: '入/出园车辆',
+        ),
+        YardMetric(
+          value: '${model?.inCount ?? 0}/${model?.outCount ?? 0}',
+          label: '入/出园次数',
+        ),
+      ],
+    );
+  }
 
-  const ApprovalStatRow({
-    required this.title,
-    required this.icon,
-    required this.leftLabel,
-    required this.leftValue,
-    required this.rightLabel,
-    required this.rightValue,
-  });
-}
+  static YardStatCardData _buildGoodsStatCard(
+    String title,
+    ParkStatisticsModel? model,
+  ) {
+    return YardStatCardData(
+      title: title,
+      metrics: [
+        YardMetric(value: _formatNumber(model?.inGoodsAmount), label: '入园'),
+        YardMetric(value: _formatNumber(model?.outGoodsAmount), label: '出园'),
+        YardMetric(
+          value: _formatNumber(model?.totalInGoodsAmount),
+          label: '累计入园',
+        ),
+        YardMetric(
+          value: _formatNumber(model?.totalOutGoodsAmount),
+          label: '累计出园',
+        ),
+        YardMetric(value: '${model?.typeCount ?? 0}', label: '种类'),
+      ],
+    );
+  }
 
-/// 园内统计卡片数据。
-class YardStatCardData {
-  final String title;
-  final List<YardMetric> metrics;
+  static List<YardStatCardData> _defaultYardStats() =>
+      _buildYardStats(const <ParkStatisticsModel>[]);
 
-  const YardStatCardData({required this.title, required this.metrics});
-}
+  String? _rangeStartTime(DateTimeRange? range) {
+    if (range == null) return null;
+    return _formatDateTime(
+      DateTime(range.start.year, range.start.month, range.start.day, 0, 0, 0),
+    );
+  }
 
-/// 园内统计指标。
-class YardMetric {
-  final String value;
-  final String label;
+  String? _rangeEndTime(DateTimeRange? range) {
+    if (range == null) return null;
+    return _formatDateTime(
+      DateTime(range.end.year, range.end.month, range.end.day, 23, 59, 59),
+    );
+  }
 
-  const YardMetric({required this.value, required this.label});
-}
+  String _formatDateTime(DateTime dateTime) {
+    final year = dateTime.year.toString().padLeft(4, '0');
+    final month = dateTime.month.toString().padLeft(2, '0');
+    final day = dateTime.day.toString().padLeft(2, '0');
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final second = dateTime.second.toString().padLeft(2, '0');
+    return '$year-$month-$day $hour:$minute:$second';
+  }
 
-/// 今日预约概览指标。
-class ReservationSummaryMetric {
-  final String value;
-  final String label;
-
-  const ReservationSummaryMetric({required this.value, required this.label});
-}
-
-/// 今日预约趋势图系列。
-class ReservationTrendSeries {
-  final String label;
-  final Color color;
-  final List<ReservationTrendPoint> points;
-
-  const ReservationTrendSeries({
-    required this.label,
-    required this.color,
-    required this.points,
-  });
-}
-
-/// 今日预约趋势图点位。
-class ReservationTrendPoint {
-  final String time;
-  final double value;
-
-  const ReservationTrendPoint({required this.time, required this.value});
-}
-
-/// 企业情况概览条目。
-class EnterpriseOverviewItem {
-  final int index;
-  final String companyName;
-  final String ownerName;
-  final String phone;
-  final String pendingCount;
-  final String approvedCount;
-  final String newBlacklistCount;
-  final String newWhitelistCount;
-  final String onDutyEmployeeCount;
-
-  const EnterpriseOverviewItem({
-    required this.index,
-    required this.companyName,
-    required this.ownerName,
-    required this.phone,
-    required this.pendingCount,
-    required this.approvedCount,
-    required this.newBlacklistCount,
-    required this.newWhitelistCount,
-    required this.onDutyEmployeeCount,
-  });
+  static String _formatNumber(num? value) {
+    final safeValue = value ?? 0;
+    if (safeValue == safeValue.toInt()) {
+      return safeValue.toInt().toString();
+    }
+    return safeValue.toStringAsFixed(2);
+  }
 }
