@@ -1,9 +1,11 @@
 import '../../core/http/http_service.dart';
 import '../../core/http/result.dart';
 import '../models/overview/approval_black_white_list_model.dart';
+import '../models/overview/approval_pending_statistics_model.dart';
 import '../models/overview/company_overview_model.dart';
 import '../models/overview/hazardous_waste_in_and_out_model.dart';
 import '../models/overview/overview_models.dart';
+import '../models/overview/today_reservation_model.dart';
 
 /// 总览模块仓库。
 class OverviewRepository {
@@ -28,11 +30,40 @@ class OverviewRepository {
     );
   }
 
+  /// 待审批统计。
+  Future<Result<ApprovalPendingStatisticsModel>> getApprovalPendingStatistics({
+    String? startTime,
+    String? endTime,
+  }) {
+    return _httpService.post<ApprovalPendingStatisticsModel>(
+      '/api/closed-off/parkOverview/approvalPendingStatistics',
+      data: <String, dynamic>{'startTime': startTime, 'endTime': endTime}
+        ..removeWhere((key, value) => value == null || value == ''),
+      parser: (json) => ApprovalPendingStatisticsModel.fromJson(
+        Map<String, dynamic>.from(json as Map),
+      ),
+    );
+  }
+
   /// 今日审批-黑白名单统计。
   Future<Result<ApprovalBlackWhiteListModel>> getTodayApprovalBlackWhiteList() {
     return _httpService.get<ApprovalBlackWhiteListModel>(
       '/api/closed-off/parkOverview/todayApprovalBlackWhiteList',
       parser: (json) => ApprovalBlackWhiteListModel.fromJson(
+        Map<String, dynamic>.from(json as Map),
+      ),
+    );
+  }
+
+  /// 今日预约情况。
+  Future<Result<TodayReservationModel>> getTodayReservation({
+    String? companyId,
+  }) {
+    return _httpService.get<TodayReservationModel>(
+      '/api/closed-off/parkOverview/todayReservation',
+      queryParameters: <String, dynamic>{'companyId': companyId}
+        ..removeWhere((key, value) => value == null || value == ''),
+      parser: (json) => TodayReservationModel.fromJson(
         Map<String, dynamic>.from(json as Map),
       ),
     );

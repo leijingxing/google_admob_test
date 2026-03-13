@@ -6,9 +6,11 @@ import 'package:get/get.dart';
 import '../../../../core/components/select/app_company_select_field.dart';
 import '../../../../core/components/toast/toast_widget.dart';
 import '../../../../data/models/overview/approval_black_white_list_model.dart';
+import '../../../../data/models/overview/approval_pending_statistics_model.dart';
 import '../../../../data/models/overview/company_overview_model.dart';
 import '../../../../data/models/overview/hazardous_waste_in_and_out_model.dart';
 import '../../../../data/models/overview/overview_models.dart';
+import '../../../../data/models/overview/today_reservation_model.dart';
 import '../../../../data/repository/overview_repository.dart';
 import 'overview_statistics_models.dart';
 
@@ -44,6 +46,14 @@ class OverviewStatisticsController extends GetxController {
   /// 园内统计卡片。
   List<YardStatCardData> yardStats = _defaultYardStats();
 
+  /// 园内统计原始数据缓存。
+  List<ParkStatisticsModel> yardStatisticsSource =
+      const <ParkStatisticsModel>[];
+
+  /// 待审批统计。
+  ApprovalPendingStatisticsModel approvalPendingStatistics =
+      const ApprovalPendingStatisticsModel();
+
   /// 危化品入园饼图数据。
   List<PiePoint> hazardousInPie = const <PiePoint>[];
 
@@ -51,84 +61,12 @@ class OverviewStatisticsController extends GetxController {
   List<PiePoint> hazardousOutPie = const <PiePoint>[];
 
   /// 今日预约概览指标。
-  List<ReservationSummaryMetric> get reservationSummaryMetrics => const [
-    ReservationSummaryMetric(value: '0', label: '人员'),
-    ReservationSummaryMetric(value: '245', label: '普通车辆'),
-    ReservationSummaryMetric(value: '121', label: '危化车辆'),
-    ReservationSummaryMetric(value: '0', label: '危废车辆'),
-    ReservationSummaryMetric(value: '8/366', label: '待审批/已提交'),
-  ];
+  List<ReservationSummaryMetric> reservationSummaryMetrics =
+      _defaultReservationSummaryMetrics();
 
   /// 今日预约折线数据。
-  List<ReservationTrendSeries> get reservationTrendSeries => const [
-    ReservationTrendSeries(
-      label: '人员',
-      color: Color(0xFF4C7DFF),
-      points: [
-        ReservationTrendPoint(time: '00:00', value: 0),
-        ReservationTrendPoint(time: '02:00', value: 0),
-        ReservationTrendPoint(time: '04:00', value: 0),
-        ReservationTrendPoint(time: '06:00', value: 0),
-        ReservationTrendPoint(time: '08:00', value: 0),
-        ReservationTrendPoint(time: '10:00', value: 0),
-        ReservationTrendPoint(time: '12:00', value: 0),
-        ReservationTrendPoint(time: '14:00', value: 0),
-        ReservationTrendPoint(time: '16:00', value: 0),
-        ReservationTrendPoint(time: '18:00', value: 0),
-        ReservationTrendPoint(time: '20:00', value: 0),
-        ReservationTrendPoint(time: '22:00', value: 0),
-      ],
-    ),
-    ReservationTrendSeries(
-      label: '普通车辆',
-      color: Color(0xFF59D3B4),
-      points: [
-        ReservationTrendPoint(time: '00:00', value: 6),
-        ReservationTrendPoint(time: '02:00', value: 2),
-        ReservationTrendPoint(time: '04:00', value: 0),
-        ReservationTrendPoint(time: '06:00', value: 0),
-        ReservationTrendPoint(time: '08:00', value: 24),
-        ReservationTrendPoint(time: '10:00', value: 29),
-        ReservationTrendPoint(time: '12:00', value: 16),
-        ReservationTrendPoint(time: '13:00', value: 41),
-        ReservationTrendPoint(time: '14:00', value: 31),
-        ReservationTrendPoint(time: '15:00', value: 3),
-        ReservationTrendPoint(time: '16:00', value: 0),
-        ReservationTrendPoint(time: '22:00', value: 0),
-      ],
-    ),
-    ReservationTrendSeries(
-      label: '危化车辆',
-      color: Color(0xFFE4A32A),
-      points: [
-        ReservationTrendPoint(time: '00:00', value: 0),
-        ReservationTrendPoint(time: '02:00', value: 0),
-        ReservationTrendPoint(time: '04:00', value: 0),
-        ReservationTrendPoint(time: '06:00', value: 0),
-        ReservationTrendPoint(time: '07:00', value: 8),
-        ReservationTrendPoint(time: '08:00', value: 20),
-        ReservationTrendPoint(time: '09:00', value: 15),
-        ReservationTrendPoint(time: '10:00', value: 16),
-        ReservationTrendPoint(time: '11:00', value: 14),
-        ReservationTrendPoint(time: '12:00', value: 12),
-        ReservationTrendPoint(time: '13:00', value: 6),
-        ReservationTrendPoint(time: '14:00', value: 9),
-        ReservationTrendPoint(time: '15:00', value: 0),
-        ReservationTrendPoint(time: '22:00', value: 0),
-      ],
-    ),
-    ReservationTrendSeries(
-      label: '危废车辆',
-      color: Color(0xFFFF7B2F),
-      points: [
-        ReservationTrendPoint(time: '00:00', value: 0),
-        ReservationTrendPoint(time: '06:00', value: 0),
-        ReservationTrendPoint(time: '12:00', value: 0),
-        ReservationTrendPoint(time: '18:00', value: 0),
-        ReservationTrendPoint(time: '22:00', value: 0),
-      ],
-    ),
-  ];
+  List<ReservationTrendSeries> reservationTrendSeries =
+      _defaultReservationTrendSeries();
 
   /// 企业情况概览列表。
   List<EnterpriseOverviewItem> enterpriseOverviewItems =
@@ -139,6 +77,7 @@ class OverviewStatisticsController extends GetxController {
     super.onInit();
     unawaited(loadYardStatistics());
     unawaited(loadApprovalStatistics());
+    unawaited(loadReservationStatistics());
     unawaited(loadHazardousInStatistics());
     unawaited(loadHazardousOutStatistics());
     unawaited(loadEnterpriseOverview());
@@ -148,6 +87,7 @@ class OverviewStatisticsController extends GetxController {
   void onReservationCompanyChanged(AppSelectedCompany? value) {
     selectedReservationCompany = value;
     update([reservationSectionId]);
+    unawaited(loadReservationStatistics());
   }
 
   /// 更新企业情况概览企业筛选。
@@ -159,7 +99,7 @@ class OverviewStatisticsController extends GetxController {
 
   /// 刷新今日预约情况。
   void refreshReservationTrend() {
-    update([reservationSectionId]);
+    unawaited(loadReservationStatistics());
   }
 
   /// 更新入园统计时间范围。
@@ -185,20 +125,39 @@ class OverviewStatisticsController extends GetxController {
 
   /// 拉取园内统计。
   Future<void> loadYardStatistics() async {
+    final startTime = _rangeStartTime(yardRange);
+    final endTime = _rangeEndTime(yardRange);
+
     final result = await _repository.getParkStatistics(
+      startTime: startTime,
+      endTime: endTime,
+    );
+    final pendingResult = await _repository.getApprovalPendingStatistics(
       startTime: _rangeStartTime(yardRange),
       endTime: _rangeEndTime(yardRange),
     );
 
     result.when(
       success: (data) {
-        yardStats = _buildYardStats(data);
-        update([yardSectionId]);
+        yardStatisticsSource = data;
+        yardStats = _buildYardStats(data, approvalPendingStatistics);
       },
       failure: (error) {
         AppToast.showError(error.message);
       },
     );
+
+    pendingResult.when(
+      success: (data) {
+        approvalPendingStatistics = data;
+        yardStats = _buildYardStats(yardStatisticsSource, data);
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
+      },
+    );
+
+    update([yardSectionId]);
   }
 
   /// 拉取审批统计。
@@ -209,6 +168,24 @@ class OverviewStatisticsController extends GetxController {
       success: (data) {
         approvalRows = _buildApprovalRows(data);
         update([approvalSectionId]);
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
+      },
+    );
+  }
+
+  /// 拉取今日预约情况。
+  Future<void> loadReservationStatistics() async {
+    final result = await _repository.getTodayReservation(
+      companyId: selectedReservationCompany?.id,
+    );
+
+    result.when(
+      success: (data) {
+        reservationSummaryMetrics = _buildReservationSummaryMetrics(data);
+        reservationTrendSeries = _buildReservationTrendSeries(data);
+        update([reservationSectionId]);
       },
       failure: (error) {
         AppToast.showError(error.message);
@@ -273,6 +250,7 @@ class OverviewStatisticsController extends GetxController {
 
   static List<YardStatCardData> _buildYardStats(
     List<ParkStatisticsModel> data,
+    ApprovalPendingStatisticsModel pendingStatistics,
   ) {
     final byType = <int, ParkStatisticsModel>{
       for (final item in data) item.type: item,
@@ -292,6 +270,19 @@ class OverviewStatisticsController extends GetxController {
           YardMetric(
             value: '${byType[1]?.currentInParkCount ?? 0}',
             label: '当前在园',
+          ),
+        ],
+      ),
+      YardStatCardData(
+        title: '待审批统计',
+        metrics: [
+          YardMetric(
+            value: '${pendingStatistics.companyPendingCount}',
+            label: '企业待审批数量',
+          ),
+          YardMetric(
+            value: '${pendingStatistics.parkPendingCount}',
+            label: '园区待审批数量',
           ),
         ],
       ),
@@ -340,8 +331,10 @@ class OverviewStatisticsController extends GetxController {
     );
   }
 
-  static List<YardStatCardData> _defaultYardStats() =>
-      _buildYardStats(const <ParkStatisticsModel>[]);
+  static List<YardStatCardData> _defaultYardStats() => _buildYardStats(
+    const <ParkStatisticsModel>[],
+    const ApprovalPendingStatisticsModel(),
+  );
 
   static List<ApprovalStatRow> _buildApprovalRows(
     ApprovalBlackWhiteListModel model,
@@ -376,6 +369,81 @@ class OverviewStatisticsController extends GetxController {
 
   static List<ApprovalStatRow> _defaultApprovalRows() =>
       _buildApprovalRows(const ApprovalBlackWhiteListModel());
+
+  static List<ReservationSummaryMetric> _buildReservationSummaryMetrics(
+    TodayReservationModel model,
+  ) {
+    return [
+      ReservationSummaryMetric(value: '${model.personNum}', label: '人员'),
+      ReservationSummaryMetric(value: '${model.commonCarNum}', label: '普通车'),
+      ReservationSummaryMetric(value: '${model.commonTruckNum}', label: '普通货车'),
+      ReservationSummaryMetric(value: '${model.hazardousCarNum}', label: '危化车'),
+      ReservationSummaryMetric(
+        value: '${model.hazardousWasteCarNum}',
+        label: '危废车',
+      ),
+      ReservationSummaryMetric(
+        value: '${model.pendingApprovalNum}',
+        label: '待审批',
+      ),
+      ReservationSummaryMetric(value: '${model.submittedNum}', label: '已提交'),
+    ];
+  }
+
+  static List<ReservationSummaryMetric> _defaultReservationSummaryMetrics() =>
+      _buildReservationSummaryMetrics(const TodayReservationModel());
+
+  static List<ReservationTrendSeries> _buildReservationTrendSeries(
+    TodayReservationModel model,
+  ) {
+    final hourlyMap = <String, TodayReservationTimelineData>{
+      for (final item in model.timeLine) item.hour.padLeft(2, '0'): item.data,
+    };
+
+    List<ReservationTrendPoint> buildPoints(
+      int Function(TodayReservationTimelineData data) selector,
+    ) {
+      return List<ReservationTrendPoint>.generate(24, (index) {
+        final hour = index.toString().padLeft(2, '0');
+        final data = hourlyMap[hour] ?? const TodayReservationTimelineData();
+        return ReservationTrendPoint(
+          time: '$hour:00',
+          value: selector(data).toDouble(),
+        );
+      });
+    }
+
+    return [
+      ReservationTrendSeries(
+        label: '人员',
+        color: const Color(0xFF4C7DFF),
+        points: buildPoints((data) => data.personNum),
+      ),
+      ReservationTrendSeries(
+        label: '普通车',
+        color: const Color(0xFF59D3B4),
+        points: buildPoints((data) => data.commonCarNum),
+      ),
+      ReservationTrendSeries(
+        label: '普通货车',
+        color: const Color(0xFF7F8CFF),
+        points: buildPoints((data) => data.commonTruckNum),
+      ),
+      ReservationTrendSeries(
+        label: '危化车',
+        color: const Color(0xFFE4A32A),
+        points: buildPoints((data) => data.hazardousCarNum),
+      ),
+      ReservationTrendSeries(
+        label: '危废车',
+        color: const Color(0xFFFF7B2F),
+        points: buildPoints((data) => data.hazardousWasteCarNum),
+      ),
+    ];
+  }
+
+  static List<ReservationTrendSeries> _defaultReservationTrendSeries() =>
+      _buildReservationTrendSeries(const TodayReservationModel());
 
   static List<PiePoint> _buildHazardousPie(
     List<HazardousWasteInAndOutModel> data,

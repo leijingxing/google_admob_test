@@ -4,6 +4,7 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 
 import '../../../../../core/components/select/app_company_select_field.dart';
 import '../../../../../core/constants/dimens.dart';
+import '../../../../../core/utils/user_manager.dart';
 import '../overview_statistics_controller.dart';
 import '../overview_statistics_models.dart';
 import 'overview_statistics_shared.dart';
@@ -53,6 +54,18 @@ class _ReservationTrendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showCompanyFilter = UserManager.isParkUser;
+    final maxValue = series
+        .expand((item) => item.points)
+        .fold<double>(
+          0,
+          (previous, item) => item.value > previous ? item.value : previous,
+        );
+    final axisMax = maxValue <= 0
+        ? 10.0
+        : ((maxValue / 5).ceil() * 5).toDouble();
+    final axisInterval = axisMax <= 10 ? 2.0 : (axisMax / 5).ceilToDouble();
+
     return Container(
       padding: EdgeInsets.all(AppDimens.dp12),
       decoration: BoxDecoration(
@@ -100,24 +113,26 @@ class _ReservationTrendCard extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(
-                width: AppDimens.dp150,
-                child: OverviewCompanySelectField(
-                  value: selectedCompany,
-                  onChanged: onCompanyChanged,
+              if (showCompanyFilter) ...[
+                SizedBox(
+                  width: AppDimens.dp150,
+                  child: OverviewCompanySelectField(
+                    value: selectedCompany,
+                    onChanged: onCompanyChanged,
+                  ),
                 ),
-              ),
-              SizedBox(width: AppDimens.dp8),
+                SizedBox(width: AppDimens.dp8),
+              ],
               _RefreshButton(onTap: onRefresh),
             ],
           ),
-          SizedBox(height: AppDimens.dp12),
+          SizedBox(height: AppDimens.dp8),
           LayoutBuilder(
             builder: (context, constraints) {
               final isNarrow = constraints.maxWidth < 420;
               final itemWidth = isNarrow
                   ? (constraints.maxWidth - AppDimens.dp8) / 2
-                  : (constraints.maxWidth - AppDimens.dp8 * 4) / 5;
+                  : (constraints.maxWidth - AppDimens.dp8 * 3) / 4;
               return Wrap(
                 spacing: AppDimens.dp8,
                 runSpacing: AppDimens.dp8,
@@ -147,17 +162,20 @@ class _ReservationTrendCard extends StatelessWidget {
                 axisLine: AxisLine(color: Color(0xFFD5DFEE)),
                 labelStyle: TextStyle(color: Color(0xFF7F92A8), fontSize: 10),
               ),
-              primaryYAxis: const NumericAxis(
+              primaryYAxis: NumericAxis(
                 minimum: 0,
-                maximum: 54,
-                interval: 10,
-                axisLine: AxisLine(width: 0),
-                majorTickLines: MajorTickLines(size: 0),
-                majorGridLines: MajorGridLines(
+                maximum: axisMax,
+                interval: axisInterval,
+                axisLine: const AxisLine(width: 0),
+                majorTickLines: const MajorTickLines(size: 0),
+                majorGridLines: const MajorGridLines(
                   width: 1,
                   color: Color(0xFFEDF2F8),
                 ),
-                labelStyle: TextStyle(color: Color(0xFF7F92A8), fontSize: 10),
+                labelStyle: const TextStyle(
+                  color: Color(0xFF7F92A8),
+                  fontSize: 10,
+                ),
               ),
               zoomPanBehavior: ZoomPanBehavior(
                 enablePanning: true,
@@ -235,7 +253,7 @@ class _ReservationSummaryChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: const Color(0xFFF1F5FA),
-        borderRadius: BorderRadius.circular(AppDimens.dp10),
+        borderRadius: BorderRadius.circular(AppDimens.dp8),
       ),
       child: Column(
         children: [
@@ -243,17 +261,17 @@ class _ReservationSummaryChip extends StatelessWidget {
             metric.value,
             style: TextStyle(
               color: const Color(0xFF346CFF),
-              fontSize: AppDimens.sp22,
+              fontSize: AppDimens.sp18,
               fontWeight: FontWeight.w800,
               height: 1,
             ),
           ),
-          SizedBox(height: AppDimens.dp6),
+          SizedBox(height: AppDimens.dp4),
           Text(
             metric.label,
             style: TextStyle(
               color: const Color(0xFF47617D),
-              fontSize: AppDimens.sp11,
+              fontSize: AppDimens.sp10,
               fontWeight: FontWeight.w600,
             ),
           ),
