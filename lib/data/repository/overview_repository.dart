@@ -5,6 +5,7 @@ import '../models/overview/approval_pending_statistics_model.dart';
 import '../models/overview/company_overview_model.dart';
 import '../models/overview/hazardous_waste_in_and_out_model.dart';
 import '../models/overview/overview_models.dart';
+import '../models/overview/park_inner_flow_statistics_model.dart';
 import '../models/overview/today_reservation_model.dart';
 
 /// 总览模块仓库。
@@ -66,6 +67,30 @@ class OverviewRepository {
       parser: (json) => TodayReservationModel.fromJson(
         Map<String, dynamic>.from(json as Map),
       ),
+    );
+  }
+
+  /// 园区内人车流统计。
+  Future<Result<List<ParkInnerFlowStatisticsModel>>>
+  getParkInnerFlowStatistics({
+    required int type,
+    String? strDateTime,
+    String? endDateTime,
+  }) {
+    return _httpService.post<List<ParkInnerFlowStatisticsModel>>(
+      '/api/closed-off/parkOverview/parkInnerFlowStatistics',
+      data: <String, dynamic>{
+        'type': type,
+        'strDateTime': strDateTime,
+        'endDateTime': endDateTime,
+      }..removeWhere((key, value) => value == null || value == ''),
+      parser: (json) => (json is List ? json : const <dynamic>[])
+          .map(
+            (item) => ParkInnerFlowStatisticsModel.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList(),
     );
   }
 

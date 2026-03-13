@@ -10,6 +10,7 @@ import '../../../../data/models/overview/approval_pending_statistics_model.dart'
 import '../../../../data/models/overview/company_overview_model.dart';
 import '../../../../data/models/overview/hazardous_waste_in_and_out_model.dart';
 import '../../../../data/models/overview/overview_models.dart';
+import '../../../../data/models/overview/park_inner_flow_statistics_model.dart';
 import '../../../../data/models/overview/today_reservation_model.dart';
 import '../../../../data/repository/overview_repository.dart';
 import 'overview_statistics_models.dart';
@@ -21,6 +22,7 @@ class OverviewStatisticsController extends GetxController {
   static const String yardSectionId = 'overview_yard_section';
   static const String approvalSectionId = 'overview_approval_section';
   static const String reservationSectionId = 'overview_reservation_section';
+  static const String innerFlowSectionId = 'overview_inner_flow_section';
   static const String hazardousInSectionId = 'overview_hazardous_in_section';
   static const String hazardousOutSectionId = 'overview_hazardous_out_section';
   static const String enterpriseSectionId = 'overview_enterprise_section';
@@ -34,11 +36,26 @@ class OverviewStatisticsController extends GetxController {
   /// 园内统计筛选：日期范围。
   DateTimeRange? yardRange;
 
+  /// 园区内人车流统计筛选：日期范围。
+  DateTimeRange? innerFlowRange;
+
   /// 今日预约情况：选中企业。
   AppSelectedCompany? selectedReservationCompany;
 
   /// 企业情况概览：选中企业。
   AppSelectedCompany? selectedEnterpriseCompany;
+
+  /// 园区内人车流当前选中类型。
+  int selectedInnerFlowType = 1;
+
+  /// 园区内人车流类型按钮。
+  List<FlowTypeOption> get innerFlowTypes => const [
+    FlowTypeOption(type: 1, label: '人员'),
+    FlowTypeOption(type: 2, label: '普通车'),
+    FlowTypeOption(type: 3, label: '危化车'),
+    FlowTypeOption(type: 4, label: '危废车'),
+    FlowTypeOption(type: 5, label: '货车'),
+  ];
 
   /// 审批统计数据。
   List<ApprovalStatRow> approvalRows = _defaultApprovalRows();
@@ -54,12 +71,6 @@ class OverviewStatisticsController extends GetxController {
   ApprovalPendingStatisticsModel approvalPendingStatistics =
       const ApprovalPendingStatisticsModel();
 
-  /// 危化品入园饼图数据。
-  List<PiePoint> hazardousInPie = const <PiePoint>[];
-
-  /// 危化品出园饼图数据。
-  List<PiePoint> hazardousOutPie = const <PiePoint>[];
-
   /// 今日预约概览指标。
   List<ReservationSummaryMetric> reservationSummaryMetrics =
       _defaultReservationSummaryMetrics();
@@ -67,6 +78,15 @@ class OverviewStatisticsController extends GetxController {
   /// 今日预约折线数据。
   List<ReservationTrendSeries> reservationTrendSeries =
       _defaultReservationTrendSeries();
+
+  /// 园区内人车流折线数据。
+  List<ReservationTrendSeries> innerFlowSeries = _defaultInnerFlowSeries();
+
+  /// 危化品入园饼图数据。
+  List<PiePoint> hazardousInPie = const <PiePoint>[];
+
+  /// 危化品出园饼图数据。
+  List<PiePoint> hazardousOutPie = const <PiePoint>[];
 
   /// 企业情况概览列表。
   List<EnterpriseOverviewItem> enterpriseOverviewItems =
@@ -78,6 +98,7 @@ class OverviewStatisticsController extends GetxController {
     unawaited(loadYardStatistics());
     unawaited(loadApprovalStatistics());
     unawaited(loadReservationStatistics());
+    unawaited(loadInnerFlowStatistics());
     unawaited(loadHazardousInStatistics());
     unawaited(loadHazardousOutStatistics());
     unawaited(loadEnterpriseOverview());
@@ -100,6 +121,21 @@ class OverviewStatisticsController extends GetxController {
   /// 刷新今日预约情况。
   void refreshReservationTrend() {
     unawaited(loadReservationStatistics());
+  }
+
+  /// 更新园区内人车流类型。
+  void onInnerFlowTypeChanged(int value) {
+    if (selectedInnerFlowType == value) return;
+    selectedInnerFlowType = value;
+    update([innerFlowSectionId]);
+    unawaited(loadInnerFlowStatistics());
+  }
+
+  /// 更新园区内人车流时间范围。
+  void onInnerFlowRangeChanged(DateTimeRange? value) {
+    innerFlowRange = value;
+    update([innerFlowSectionId]);
+    unawaited(loadInnerFlowStatistics());
   }
 
   /// 更新入园统计时间范围。
@@ -186,6 +222,25 @@ class OverviewStatisticsController extends GetxController {
         reservationSummaryMetrics = _buildReservationSummaryMetrics(data);
         reservationTrendSeries = _buildReservationTrendSeries(data);
         update([reservationSectionId]);
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
+      },
+    );
+  }
+
+  /// 拉取园区内人车流统计。
+  Future<void> loadInnerFlowStatistics() async {
+    final result = await _repository.getParkInnerFlowStatistics(
+      type: selectedInnerFlowType,
+      strDateTime: _rangeStartTime(innerFlowRange),
+      endDateTime: _rangeEndTime(innerFlowRange),
+    );
+
+    result.when(
+      success: (data) {
+        innerFlowSeries = _buildInnerFlowSeries(data);
+        update([innerFlowSectionId]);
       },
       failure: (error) {
         AppToast.showError(error.message);
@@ -445,6 +500,43 @@ class OverviewStatisticsController extends GetxController {
   static List<ReservationTrendSeries> _defaultReservationTrendSeries() =>
       _buildReservationTrendSeries(const TodayReservationModel());
 
+  static List<ReservationTrendSeries> _buildInnerFlowSeries(
+    List<ParkInnerFlowStatisticsModel> data,
+  ) {
+    final sortedData = [...data]
+      ..sort((a, b) => _compareTimeAxis(a.timeAxis, b.timeAxis));
+
+    return [
+      ReservationTrendSeries(
+        label: '入园',
+        color: const Color(0xFF2F6BFF),
+        points: sortedData
+            .map(
+              (item) => ReservationTrendPoint(
+                time: item.timeAxis,
+                value: item.inCount.toDouble(),
+              ),
+            )
+            .toList(),
+      ),
+      ReservationTrendSeries(
+        label: '出园',
+        color: const Color(0xFF18B57D),
+        points: sortedData
+            .map(
+              (item) => ReservationTrendPoint(
+                time: item.timeAxis,
+                value: item.outCount.toDouble(),
+              ),
+            )
+            .toList(),
+      ),
+    ];
+  }
+
+  static List<ReservationTrendSeries> _defaultInnerFlowSeries() =>
+      _buildInnerFlowSeries(const <ParkInnerFlowStatisticsModel>[]);
+
   static List<PiePoint> _buildHazardousPie(
     List<HazardousWasteInAndOutModel> data,
   ) {
@@ -516,5 +608,14 @@ class OverviewStatisticsController extends GetxController {
       return safeValue.toInt().toString();
     }
     return safeValue.toStringAsFixed(2);
+  }
+
+  static int _compareTimeAxis(String left, String right) {
+    final leftNumber = int.tryParse(left);
+    final rightNumber = int.tryParse(right);
+    if (leftNumber != null && rightNumber != null) {
+      return leftNumber.compareTo(rightNumber);
+    }
+    return left.compareTo(right);
   }
 }

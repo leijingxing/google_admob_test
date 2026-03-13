@@ -72,6 +72,14 @@ class ReservationTrendPoint {
   const ReservationTrendPoint({required this.time, required this.value});
 }
 
+/// 园区内人车流类型按钮。
+class FlowTypeOption {
+  final int type;
+  final String label;
+
+  const FlowTypeOption({required this.type, required this.label});
+}
+
 /// 企业情况概览条目。
 class EnterpriseOverviewItem {
   final int index;
