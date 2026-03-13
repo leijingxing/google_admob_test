@@ -26,6 +26,9 @@ class OverviewStatisticsController extends GetxController {
   /// 今日预约情况：选中企业。
   AppSelectedCompany? selectedReservationCompany;
 
+  /// 企业情况概览：选中企业。
+  AppSelectedCompany? selectedEnterpriseCompany;
+
   /// 审批统计假数据。
   final List<ApprovalStatRow> approvalRows = const [
     ApprovalStatRow(
@@ -219,6 +222,43 @@ class OverviewStatisticsController extends GetxController {
     ),
   ];
 
+  /// 企业情况概览列表（示例数据）。
+  final List<EnterpriseOverviewItem> enterpriseOverviewItems = const [
+    EnterpriseOverviewItem(
+      index: 1,
+      companyName: '江苏安盛化工有限公司',
+      ownerName: '张敏',
+      phone: '138****2231',
+      pendingCount: '12',
+      approvedCount: '58',
+      newBlacklistCount: '1',
+      newWhitelistCount: '6',
+      onDutyEmployeeCount: '84',
+    ),
+    EnterpriseOverviewItem(
+      index: 2,
+      companyName: '华腾物流运输有限公司',
+      ownerName: '刘洋',
+      phone: '139****7812',
+      pendingCount: '7',
+      approvedCount: '33',
+      newBlacklistCount: '0',
+      newWhitelistCount: '3',
+      onDutyEmployeeCount: '41',
+    ),
+    EnterpriseOverviewItem(
+      index: 3,
+      companyName: '联诚危废处置中心',
+      ownerName: '周倩',
+      phone: '136****5408',
+      pendingCount: '3',
+      approvedCount: '19',
+      newBlacklistCount: '0',
+      newWhitelistCount: '2',
+      onDutyEmployeeCount: '27',
+    ),
+  ];
+
   /// 更新入园统计园区筛选。
   void onHazardousInParkChanged(String? value) {
     if (value == null) return;
@@ -236,6 +276,12 @@ class OverviewStatisticsController extends GetxController {
   /// 更新今日预约情况企业筛选。
   void onReservationCompanyChanged(AppSelectedCompany? value) {
     selectedReservationCompany = value;
+    update();
+  }
+
+  /// 更新企业情况概览企业筛选。
+  void onEnterpriseCompanyChanged(AppSelectedCompany? value) {
+    selectedEnterpriseCompany = value;
     update();
   }
 
@@ -349,4 +395,29 @@ class ReservationTrendPoint {
   final double value;
 
   const ReservationTrendPoint({required this.time, required this.value});
+}
+
+/// 企业情况概览条目。
+class EnterpriseOverviewItem {
+  final int index;
+  final String companyName;
+  final String ownerName;
+  final String phone;
+  final String pendingCount;
+  final String approvedCount;
+  final String newBlacklistCount;
+  final String newWhitelistCount;
+  final String onDutyEmployeeCount;
+
+  const EnterpriseOverviewItem({
+    required this.index,
+    required this.companyName,
+    required this.ownerName,
+    required this.phone,
+    required this.pendingCount,
+    required this.approvedCount,
+    required this.newBlacklistCount,
+    required this.newWhitelistCount,
+    required this.onDutyEmployeeCount,
+  });
 }
