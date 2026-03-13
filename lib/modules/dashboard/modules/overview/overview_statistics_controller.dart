@@ -5,6 +5,9 @@ import 'package:get/get.dart';
 
 import '../../../../core/components/select/app_company_select_field.dart';
 import '../../../../core/components/toast/toast_widget.dart';
+import '../../../../data/models/overview/approval_black_white_list_model.dart';
+import '../../../../data/models/overview/company_overview_model.dart';
+import '../../../../data/models/overview/hazardous_waste_in_and_out_model.dart';
 import '../../../../data/models/overview/overview_models.dart';
 import '../../../../data/repository/overview_repository.dart';
 import 'overview_statistics_models.dart';
@@ -19,15 +22,6 @@ class OverviewStatisticsController extends GetxController {
   static const String hazardousInSectionId = 'overview_hazardous_in_section';
   static const String hazardousOutSectionId = 'overview_hazardous_out_section';
   static const String enterpriseSectionId = 'overview_enterprise_section';
-
-  /// 园区下拉选项。
-  final List<String> parkOptions = const ['全部园区', '一园区', '二园区', '三园区'];
-
-  /// 危化品入园统计筛选：园区。
-  String hazardousInPark = '全部园区';
-
-  /// 危化品出园统计筛选：园区。
-  String hazardousOutPark = '全部园区';
 
   /// 危化品入园统计筛选：日期范围。
   DateTimeRange? hazardousInRange;
@@ -44,52 +38,17 @@ class OverviewStatisticsController extends GetxController {
   /// 企业情况概览：选中企业。
   AppSelectedCompany? selectedEnterpriseCompany;
 
-  /// 审批统计假数据。
-  final List<ApprovalStatRow> approvalRows = const [
-    ApprovalStatRow(
-      title: '今日已审批',
-      icon: Icons.task_alt_rounded,
-      leftLabel: '企业',
-      leftValue: '147',
-      rightLabel: '园区',
-      rightValue: '362',
-    ),
-    ApprovalStatRow(
-      title: '今日新增黑名单',
-      icon: Icons.person_off_rounded,
-      leftLabel: '人员',
-      leftValue: '0',
-      rightLabel: '车辆',
-      rightValue: '0',
-    ),
-    ApprovalStatRow(
-      title: '今日新增白名单',
-      icon: Icons.verified_user_rounded,
-      leftLabel: '人员',
-      leftValue: '13',
-      rightLabel: '车辆',
-      rightValue: '31',
-    ),
-  ];
+  /// 审批统计数据。
+  List<ApprovalStatRow> approvalRows = _defaultApprovalRows();
 
   /// 园内统计卡片。
   List<YardStatCardData> yardStats = _defaultYardStats();
 
-  /// 危化品入园饼图数据（示例）。
-  List<PiePoint> get hazardousInPie => const [
-    PiePoint(name: '易燃液体', value: 38),
-    PiePoint(name: '压缩气体', value: 24),
-    PiePoint(name: '腐蚀品', value: 20),
-    PiePoint(name: '其他', value: 18),
-  ];
+  /// 危化品入园饼图数据。
+  List<PiePoint> hazardousInPie = const <PiePoint>[];
 
-  /// 危化品出园饼图数据（示例）。
-  List<PiePoint> get hazardousOutPie => const [
-    PiePoint(name: '易燃液体', value: 33),
-    PiePoint(name: '压缩气体', value: 27),
-    PiePoint(name: '腐蚀品', value: 22),
-    PiePoint(name: '其他', value: 18),
-  ];
+  /// 危化品出园饼图数据。
+  List<PiePoint> hazardousOutPie = const <PiePoint>[];
 
   /// 今日预约概览指标。
   List<ReservationSummaryMetric> get reservationSummaryMetrics => const [
@@ -171,61 +130,18 @@ class OverviewStatisticsController extends GetxController {
     ),
   ];
 
-  /// 企业情况概览列表（示例数据）。
-  final List<EnterpriseOverviewItem> enterpriseOverviewItems = const [
-    EnterpriseOverviewItem(
-      index: 1,
-      companyName: '江苏安盛化工有限公司',
-      ownerName: '张敏',
-      phone: '138****2231',
-      pendingCount: '12',
-      approvedCount: '58',
-      newBlacklistCount: '1',
-      newWhitelistCount: '6',
-      onDutyEmployeeCount: '84',
-    ),
-    EnterpriseOverviewItem(
-      index: 2,
-      companyName: '华腾物流运输有限公司',
-      ownerName: '刘洋',
-      phone: '139****7812',
-      pendingCount: '7',
-      approvedCount: '33',
-      newBlacklistCount: '0',
-      newWhitelistCount: '3',
-      onDutyEmployeeCount: '41',
-    ),
-    EnterpriseOverviewItem(
-      index: 3,
-      companyName: '联诚危废处置中心',
-      ownerName: '周倩',
-      phone: '136****5408',
-      pendingCount: '3',
-      approvedCount: '19',
-      newBlacklistCount: '0',
-      newWhitelistCount: '2',
-      onDutyEmployeeCount: '27',
-    ),
-  ];
+  /// 企业情况概览列表。
+  List<EnterpriseOverviewItem> enterpriseOverviewItems =
+      _defaultEnterpriseOverviewItems();
 
   @override
   void onInit() {
     super.onInit();
     unawaited(loadYardStatistics());
-  }
-
-  /// 更新入园统计园区筛选。
-  void onHazardousInParkChanged(String? value) {
-    if (value == null) return;
-    hazardousInPark = value;
-    update([hazardousInSectionId]);
-  }
-
-  /// 更新出园统计园区筛选。
-  void onHazardousOutParkChanged(String? value) {
-    if (value == null) return;
-    hazardousOutPark = value;
-    update([hazardousOutSectionId]);
+    unawaited(loadApprovalStatistics());
+    unawaited(loadHazardousInStatistics());
+    unawaited(loadHazardousOutStatistics());
+    unawaited(loadEnterpriseOverview());
   }
 
   /// 更新今日预约情况企业筛选。
@@ -238,6 +154,7 @@ class OverviewStatisticsController extends GetxController {
   void onEnterpriseCompanyChanged(AppSelectedCompany? value) {
     selectedEnterpriseCompany = value;
     update([enterpriseSectionId]);
+    unawaited(loadEnterpriseOverview());
   }
 
   /// 刷新今日预约情况。
@@ -249,12 +166,14 @@ class OverviewStatisticsController extends GetxController {
   void onHazardousInRangeChanged(DateTimeRange? value) {
     hazardousInRange = value;
     update([hazardousInSectionId]);
+    unawaited(loadHazardousInStatistics());
   }
 
   /// 更新出园统计时间范围。
   void onHazardousOutRangeChanged(DateTimeRange? value) {
     hazardousOutRange = value;
     update([hazardousOutSectionId]);
+    unawaited(loadHazardousOutStatistics());
   }
 
   /// 更新园内统计时间范围。
@@ -275,6 +194,76 @@ class OverviewStatisticsController extends GetxController {
       success: (data) {
         yardStats = _buildYardStats(data);
         update([yardSectionId]);
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
+      },
+    );
+  }
+
+  /// 拉取审批统计。
+  Future<void> loadApprovalStatistics() async {
+    final result = await _repository.getTodayApprovalBlackWhiteList();
+
+    result.when(
+      success: (data) {
+        approvalRows = _buildApprovalRows(data);
+        update([approvalSectionId]);
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
+      },
+    );
+  }
+
+  /// 拉取危化品入园统计。
+  Future<void> loadHazardousInStatistics() async {
+    final result = await _repository.getHazardousWasteInAndOut(
+      strDateTime: _rangeStartTime(hazardousInRange),
+      endDateTime: _rangeEndTime(hazardousInRange),
+      inOut: '1',
+    );
+
+    result.when(
+      success: (data) {
+        hazardousInPie = _buildHazardousPie(data);
+        update([hazardousInSectionId]);
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
+      },
+    );
+  }
+
+  /// 拉取危化品出园统计。
+  Future<void> loadHazardousOutStatistics() async {
+    final result = await _repository.getHazardousWasteInAndOut(
+      strDateTime: _rangeStartTime(hazardousOutRange),
+      endDateTime: _rangeEndTime(hazardousOutRange),
+      inOut: '0',
+    );
+
+    result.when(
+      success: (data) {
+        hazardousOutPie = _buildHazardousPie(data);
+        update([hazardousOutSectionId]);
+      },
+      failure: (error) {
+        AppToast.showError(error.message);
+      },
+    );
+  }
+
+  /// 拉取企业情况概览。
+  Future<void> loadEnterpriseOverview() async {
+    final result = await _repository.getCompanyOverview(
+      companyId: selectedEnterpriseCompany?.id,
+    );
+
+    result.when(
+      success: (data) {
+        enterpriseOverviewItems = _buildEnterpriseOverviewItems(data);
+        update([enterpriseSectionId]);
       },
       failure: (error) {
         AppToast.showError(error.message);
@@ -353,6 +342,81 @@ class OverviewStatisticsController extends GetxController {
 
   static List<YardStatCardData> _defaultYardStats() =>
       _buildYardStats(const <ParkStatisticsModel>[]);
+
+  static List<ApprovalStatRow> _buildApprovalRows(
+    ApprovalBlackWhiteListModel model,
+  ) {
+    return [
+      ApprovalStatRow(
+        title: '今日已审批',
+        icon: Icons.task_alt_rounded,
+        leftLabel: '企业',
+        leftValue: '${model.companyApprovalCount}',
+        rightLabel: '园区',
+        rightValue: '${model.parkApprovalCount}',
+      ),
+      ApprovalStatRow(
+        title: '今日新增黑名单',
+        icon: Icons.person_off_rounded,
+        leftLabel: '人员',
+        leftValue: '${model.personBlackListCount}',
+        rightLabel: '车辆',
+        rightValue: '${model.carBlackListCount}',
+      ),
+      ApprovalStatRow(
+        title: '今日新增白名单',
+        icon: Icons.verified_user_rounded,
+        leftLabel: '人员',
+        leftValue: '${model.personWhiteListCount}',
+        rightLabel: '车辆',
+        rightValue: '${model.carWhiteListCount}',
+      ),
+    ];
+  }
+
+  static List<ApprovalStatRow> _defaultApprovalRows() =>
+      _buildApprovalRows(const ApprovalBlackWhiteListModel());
+
+  static List<PiePoint> _buildHazardousPie(
+    List<HazardousWasteInAndOutModel> data,
+  ) {
+    return data
+        .map(
+          (item) => PiePoint(
+            name: item.goodsName.isEmpty ? '未命名' : item.goodsName,
+            value: item.count,
+          ),
+        )
+        .toList();
+  }
+
+  static List<EnterpriseOverviewItem> _buildEnterpriseOverviewItems(
+    List<CompanyOverviewModel> data,
+  ) {
+    return data.asMap().entries.map((entry) {
+      final index = entry.key;
+      final item = entry.value;
+      final phone = item.responsibleMobile.isNotEmpty
+          ? item.responsibleMobile
+          : item.responsiblePhone;
+      return EnterpriseOverviewItem(
+        index: index + 1,
+        companyName: item.companyName,
+        ownerName: item.responsiblePerson,
+        phone: phone.isEmpty ? '--' : phone,
+        pendingCount: '${item.approvalPendingCount}',
+        approvedCount: '${item.approvalApprovedCount}',
+        newBlacklistCount: '${item.blackListCount}',
+        newWhitelistCount: '${item.whiteListCount}',
+        onDutyEmployeeCount: item.onDutyPersonName.isEmpty
+            ? '--'
+            : item.onDutyPersonName,
+      );
+    }).toList();
+  }
+
+  static List<EnterpriseOverviewItem> _defaultEnterpriseOverviewItems() =>
+      const <EnterpriseOverviewItem>[];
 
   String? _rangeStartTime(DateTimeRange? range) {
     if (range == null) return null;

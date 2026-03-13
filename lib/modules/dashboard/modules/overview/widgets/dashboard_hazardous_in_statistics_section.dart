@@ -24,10 +24,7 @@ class DashboardHazardousInStatisticsSection extends StatelessWidget {
             SizedBox(height: AppDimens.dp10),
             _PieStatCard(
               title: '危化品入园统计',
-              parkOptions: controller.parkOptions,
-              selectedPark: controller.hazardousInPark,
               range: controller.hazardousInRange,
-              onParkChanged: controller.onHazardousInParkChanged,
               onRangeChanged: controller.onHazardousInRangeChanged,
               data: controller.hazardousInPie,
             ),
@@ -41,19 +38,13 @@ class DashboardHazardousInStatisticsSection extends StatelessWidget {
 class _PieStatCard extends StatelessWidget {
   const _PieStatCard({
     required this.title,
-    required this.parkOptions,
-    required this.selectedPark,
     required this.range,
-    required this.onParkChanged,
     required this.onRangeChanged,
     required this.data,
   });
 
   final String title;
-  final List<String> parkOptions;
-  final String selectedPark;
   final DateTimeRange? range;
-  final ValueChanged<String?> onParkChanged;
   final ValueChanged<DateTimeRange?> onRangeChanged;
   final List<PiePoint> data;
 
@@ -82,50 +73,6 @@ class _PieStatCard extends StatelessWidget {
             range: range,
             onChanged: onRangeChanged,
             width: double.infinity,
-          ),
-          SizedBox(height: AppDimens.dp8),
-          Row(
-            children: [
-              Text(
-                '园区',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: AppDimens.sp12,
-                ),
-              ),
-              SizedBox(width: AppDimens.dp8),
-              Expanded(
-                child: Container(
-                  height: AppDimens.dp34,
-                  padding: EdgeInsets.symmetric(horizontal: AppDimens.dp10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7FAFF),
-                    borderRadius: BorderRadius.circular(AppDimens.dp10),
-                    border: Border.all(color: const Color(0xFFE3EAF6)),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: selectedPark,
-                      isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: AppDimens.sp12,
-                      ),
-                      onChanged: onParkChanged,
-                      items: parkOptions
-                          .map(
-                            (e) => DropdownMenuItem<String>(
-                              value: e,
-                              child: Text(e),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
           SizedBox(height: AppDimens.dp10),
           SizedBox(

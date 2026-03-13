@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../../../core/components/select/app_company_select_field.dart';
 import '../../../../../core/constants/dimens.dart';
+import '../../../../../core/utils/user_manager.dart';
 import '../overview_statistics_controller.dart';
 import '../overview_statistics_models.dart';
 import 'overview_statistics_shared.dart';
@@ -46,6 +47,7 @@ class _EnterpriseOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showCompanyFilter = UserManager.isParkUser;
     return Container(
       padding: EdgeInsets.all(AppDimens.dp10),
       decoration: BoxDecoration(
@@ -90,13 +92,14 @@ class _EnterpriseOverviewCard extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(
-                width: AppDimens.dp150,
-                child: OverviewCompanySelectField(
-                  value: selectedCompany,
-                  onChanged: onCompanyChanged,
+              if (showCompanyFilter)
+                SizedBox(
+                  width: AppDimens.dp150,
+                  child: OverviewCompanySelectField(
+                    value: selectedCompany,
+                    onChanged: onCompanyChanged,
+                  ),
                 ),
-              ),
             ],
           ),
           SizedBox(height: AppDimens.dp10),
