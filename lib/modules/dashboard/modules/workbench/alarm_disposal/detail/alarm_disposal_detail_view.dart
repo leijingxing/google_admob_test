@@ -6,6 +6,10 @@ import '../../../../../../core/constants/dimens.dart';
 import '../../../../../../core/utils/file_service.dart';
 import 'alarm_disposal_detail_controller.dart';
 
+const Color _alarmAccentColor = Color(0xFFE53935);
+const Color _alarmAccentSoftColor = Color(0xFFFFEBEE);
+const Color _alarmAccentBorderColor = Color(0xFFF2C7CB);
+
 /// 报警详情页。
 class AlarmDisposalDetailView extends GetView<AlarmDisposalDetailController> {
   const AlarmDisposalDetailView({super.key});
@@ -119,13 +123,13 @@ class _SummaryCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFFE07A34).withValues(alpha: 0.08),
-            const Color(0xFFE07A34).withValues(alpha: 0.02),
+            _alarmAccentColor.withValues(alpha: 0.08),
+            _alarmAccentColor.withValues(alpha: 0.02),
             Colors.white,
           ],
         ),
         borderRadius: BorderRadius.circular(AppDimens.dp16),
-        border: Border.all(color: const Color(0xFFE8C4AB)),
+        border: Border.all(color: _alarmAccentBorderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,13 +152,13 @@ class _SummaryCard extends StatelessWidget {
                   vertical: AppDimens.dp6,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF1E8),
+                  color: _alarmAccentSoftColor,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   statusText,
                   style: TextStyle(
-                    color: const Color(0xFFE07A34),
+                    color: _alarmAccentColor,
                     fontSize: AppDimens.sp12,
                     fontWeight: FontWeight.w700,
                   ),

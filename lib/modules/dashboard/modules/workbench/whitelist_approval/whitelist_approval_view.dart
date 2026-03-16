@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../../core/components/app_info_status_card.dart';
+import '../../../../../core/components/app_text_field.dart';
 import '../../../../../core/components/custom_refresh.dart';
 import '../../../../../core/components/custom_sliding_tab_bar.dart';
 import '../../../../../core/components/date_picker/custom_date_range_picker.dart';
 import '../../../../../core/constants/dimens.dart';
+import '../../../../../core/utils/user_manager.dart';
 import '../../../../../data/models/workbench/whitelist_approval_item_model.dart';
 import '../../../../../router/module_routes/workbench_routes.dart';
 import 'whitelist_approval_controller.dart';
@@ -234,43 +236,12 @@ class _KeywordField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: AppDimens.dp34,
-      child: TextField(
-        controller: controller.keywordController,
-        textInputAction: TextInputAction.search,
-        onSubmitted: controller.applyKeyword,
-        decoration: InputDecoration(
-          hintText: '请输入企业名称、车牌号',
-          hintStyle: TextStyle(
-            color: const Color(0xFF9AA2AE),
-            fontSize: AppDimens.sp12,
-          ),
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: AppDimens.dp10,
-            vertical: AppDimens.dp8,
-          ),
-          filled: true,
-          fillColor: const Color(0xFFF6F8FC),
-          suffixIcon: IconButton(
-            onPressed: () =>
-                controller.applyKeyword(controller.keywordController.text),
-            icon: const Icon(Icons.search, size: 18),
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppDimens.dp4),
-            borderSide: const BorderSide(color: Color(0xFFDADDE3)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppDimens.dp4),
-            borderSide: const BorderSide(color: Color(0xFFDADDE3)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppDimens.dp4),
-            borderSide: const BorderSide(color: Color(0xFF1F7BFF)),
-          ),
-        ),
-      ),
+    return AppTextField.search(
+      controller: controller.keywordController,
+      hintText: '请输入企业名称、车牌号',
+      onSubmitted: controller.applyKeyword,
+      onSearch: () =>
+          controller.applyKeyword(controller.keywordController.text),
     );
   }
 }
@@ -348,7 +319,7 @@ class _WhitelistApprovalCard extends StatelessWidget {
       ),
     ];
 
-    if (item.parkCheckStatus == 0) {
+    if (!UserManager.isCompanyUser && item.parkCheckStatus == 0) {
       buttons.add(SizedBox(width: AppDimens.dp8));
       buttons.add(
         SizedBox(

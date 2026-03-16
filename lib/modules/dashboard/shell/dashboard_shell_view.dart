@@ -3,10 +3,15 @@ import 'package:get/get.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/dimens.dart';
+import '../modules/logistics_query/logistics_query_binding.dart';
 import '../modules/logistics_query/logistics_query_statistics_section.dart';
 import '../modules/overview/dashboard_statistics_section.dart';
+import '../modules/overview/overview_binding.dart';
+import '../modules/personnel_query/personnel_query_binding.dart';
 import '../modules/personnel_query/personnel_query_statistics_section.dart';
+import '../modules/vehicle_query/vehicle_query_binding.dart';
 import '../modules/vehicle_query/vehicle_query_statistics_section.dart';
+import '../modules/workbench/workbench_binding.dart';
 import '../modules/workbench/workbench_content_section.dart';
 import 'dashboard_shell_controller.dart';
 
@@ -44,13 +49,14 @@ class DashboardShellView extends GetView<DashboardShellController> {
                     color: logic.currentModule.color,
                     child: IndexedStack(
                       index: logic.currentIndex,
-                      children: const [
-                        _WorkbenchPane(),
-                        _OverviewPane(),
-                        _VehicleQueryPane(),
-                        _PersonnelQueryPane(),
-                        _LogisticsQueryPane(),
-                      ],
+                      children: List<Widget>.generate(logic.modules.length, (
+                        index,
+                      ) {
+                        if (!logic.isModuleLoaded(index)) {
+                          return const SizedBox.shrink();
+                        }
+                        return _buildModulePane(index);
+                      }),
                     ),
                   ),
                 ),
@@ -60,6 +66,44 @@ class DashboardShellView extends GetView<DashboardShellController> {
         );
       },
     );
+  }
+
+  Widget _buildModulePane(int index) {
+    _ensureModuleBinding(index);
+    switch (index) {
+      case 0:
+        return const _WorkbenchPane();
+      case 1:
+        return const _OverviewPane();
+      case 2:
+        return const _VehicleQueryPane();
+      case 3:
+        return const _PersonnelQueryPane();
+      case 4:
+        return const _LogisticsQueryPane();
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  void _ensureModuleBinding(int index) {
+    switch (index) {
+      case 0:
+        WorkbenchBinding().dependencies();
+        break;
+      case 1:
+        OverviewBinding().dependencies();
+        break;
+      case 2:
+        VehicleQueryBinding().dependencies();
+        break;
+      case 3:
+        PersonnelQueryBinding().dependencies();
+        break;
+      case 4:
+        LogisticsQueryBinding().dependencies();
+        break;
+    }
   }
 }
 

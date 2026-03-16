@@ -6,6 +6,11 @@ import '../../../../../../core/constants/dimens.dart';
 import '../../../../../../core/utils/file_service.dart';
 import 'warning_disposal_detail_controller.dart';
 
+const Color _warningAccentColor = Color(0xFFF2994A);
+const Color _warningAccentSoftColor = Color(0xFFFFF4E8);
+const Color _warningAccentBorderColor = Color(0xFFECC9A8);
+const Color _warningAccentTextColor = Color(0xFFE07A34);
+
 /// 预警详情页。
 class WarningDisposalDetailView
     extends GetView<WarningDisposalDetailController> {
@@ -108,13 +113,13 @@ class _SummaryCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF1F7BFF).withValues(alpha: 0.08),
-            const Color(0xFF1F7BFF).withValues(alpha: 0.02),
+            _warningAccentColor.withValues(alpha: 0.08),
+            _warningAccentColor.withValues(alpha: 0.02),
             Colors.white,
           ],
         ),
         borderRadius: BorderRadius.circular(AppDimens.dp16),
-        border: Border.all(color: const Color(0xFFC7D9FF)),
+        border: Border.all(color: _warningAccentBorderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,13 +142,13 @@ class _SummaryCard extends StatelessWidget {
                   vertical: AppDimens.dp6,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEAF1FF),
+                  color: _warningAccentSoftColor,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   statusText,
                   style: TextStyle(
-                    color: const Color(0xFF1E4FCF),
+                    color: _warningAccentTextColor,
                     fontSize: AppDimens.sp12,
                     fontWeight: FontWeight.w700,
                   ),

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../../../core/components/app_form_styles.dart';
 import '../../../../../core/components/app_info_status_card.dart';
+import '../../../../../core/components/app_text_field.dart';
 import '../../../../../core/components/custom_refresh.dart';
 import '../../../../../core/components/custom_sliding_tab_bar.dart';
 import '../../../../../core/components/date_picker/custom_date_range_picker.dart';
@@ -321,26 +322,12 @@ class _TopKeywordField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: AppDimens.dp34,
-      child: TextField(
-        controller: controller.keywordController,
-        textInputAction: TextInputAction.search,
-        onSubmitted: controller.applyKeyword,
-        decoration: AppFormStyles.inputDecoration(
-          hintText: '请输入巡检点位、异常描述',
-          prefixIcon: const Icon(
-            Icons.search_rounded,
-            size: 18,
-            color: Color(0xFF7B8798),
-          ),
-          suffixIcon: IconButton(
-            onPressed: () =>
-                controller.applyKeyword(controller.keywordController.text),
-            icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-          ),
-        ),
-      ),
+    return AppTextField.search(
+      controller: controller.keywordController,
+      hintText: '请输入巡检点位、异常描述',
+      onSubmitted: controller.applyKeyword,
+      onSearch: () =>
+          controller.applyKeyword(controller.keywordController.text),
     );
   }
 }

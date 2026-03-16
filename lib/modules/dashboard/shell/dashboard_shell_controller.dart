@@ -42,20 +42,30 @@ class DashboardShellController extends GetxController {
   ];
 
   int currentIndex = 0;
+  final Set<int> _loadedModuleIndexes = <int>{0};
 
   DashboardShellModuleItem get currentModule => modules[currentIndex];
+
+  Set<int> get loadedModuleIndexes => _loadedModuleIndexes;
 
   @override
   void onInit() {
     super.onInit();
     final argIndex = Get.arguments is int ? Get.arguments as int : 0;
     currentIndex = argIndex.clamp(0, modules.length - 1);
+    _loadedModuleIndexes
+      ..clear()
+      ..add(currentIndex);
   }
+
+  /// 判断模块页是否已经创建过。
+  bool isModuleLoaded(int index) => _loadedModuleIndexes.contains(index);
 
   /// 切换左侧模块。
   void switchModule(int index) {
     if (index == currentIndex) return;
     currentIndex = index;
+    _loadedModuleIndexes.add(index);
     update();
   }
 }

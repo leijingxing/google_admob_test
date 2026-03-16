@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../../core/components/app_info_status_card.dart';
+import '../../../../../core/components/app_text_field.dart';
 import '../../../../../core/components/custom_refresh.dart';
 import '../../../../../core/components/custom_sliding_tab_bar.dart';
 import '../../../../../core/components/date_picker/custom_date_range_picker.dart';
@@ -162,6 +163,14 @@ class _TopFilterSection extends StatelessWidget {
             controller: tabController,
           ),
           SizedBox(height: AppDimens.dp8),
+          AppTextField.search(
+            controller: controller.keywordController,
+            hintText: '请输入车牌号或人员姓名',
+            onSubmitted: controller.applyKeyword,
+            onSearch: () =>
+                controller.applyKeyword(controller.keywordController.text),
+          ),
+          SizedBox(height: AppDimens.dp8),
           Row(
             children: [
               Expanded(
@@ -198,7 +207,7 @@ class _TopFilterSection extends StatelessWidget {
 
   Future<void> _showFilterBottomSheet(BuildContext context) async {
     int? tempReservationType = controller.reservationType;
-    int? tempParkCheckStatus = controller.parkCheckStatus;
+    int? tempStatus = controller.selectedStatus;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -242,10 +251,10 @@ class _TopFilterSection extends StatelessWidget {
                       SizedBox(height: AppDimens.dp10),
                       _FilterDropdownField(
                         title: '状态',
-                        value: tempParkCheckStatus,
+                        value: tempStatus,
                         options: controller.statusOptions,
                         onChanged: (value) {
-                          setModalState(() => tempParkCheckStatus = value);
+                          setModalState(() => tempStatus = value);
                         },
                       ),
                     ],
@@ -270,7 +279,7 @@ class _TopFilterSection extends StatelessWidget {
                             onPressed: () {
                               controller.applyFilters(
                                 nextReservationType: tempReservationType,
-                                nextStatus: tempParkCheckStatus,
+                                nextStatus: tempStatus,
                               );
                               Navigator.of(bottomSheetContext).pop();
                             },
@@ -351,8 +360,9 @@ class _ApprovalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusText = controller.statusText(item.parkCheckStatus);
-    final statusStyle = _statusStyle(item.parkCheckStatus);
+    final currentStatus = controller.resolveStatus(item);
+    final statusText = controller.statusText(currentStatus);
+    final statusStyle = _statusStyle(currentStatus);
     final title = (item.carNumb != null && item.carNumb!.isNotEmpty)
         ? item.carNumb!
         : (item.realName ?? '--');
@@ -418,7 +428,7 @@ class _ApprovalCard extends StatelessWidget {
       ),
     ];
 
-    if (item.parkCheckStatus == 0) {
+    if (controller.canApprove(item)) {
       buttons.add(SizedBox(width: AppDimens.dp8));
       buttons.add(
         SizedBox(
@@ -461,16 +471,24 @@ class _ApprovalCard extends StatelessWidget {
   AppCardStatusStyle _statusStyle(int status) {
     switch (status) {
       case 1:
+      case 4:
         return const AppCardStatusStyle(
           textColor: Color(0xFF0E8C4C),
           backgroundColor: Color(0xFFE7F8EE),
           borderColor: Color(0xFFB8E8CC),
         );
       case 2:
+      case 5:
         return const AppCardStatusStyle(
           textColor: Color(0xFFDA5A18),
           backgroundColor: Color(0xFFFFF1E8),
           borderColor: Color(0xFFF6D0B8),
+        );
+      case 6:
+        return const AppCardStatusStyle(
+          textColor: Color(0xFF667085),
+          backgroundColor: Color(0xFFF2F4F7),
+          borderColor: Color(0xFFD0D5DD),
         );
       default:
         return const AppCardStatusStyle(

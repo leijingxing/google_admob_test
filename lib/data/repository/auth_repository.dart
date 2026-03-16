@@ -1,6 +1,8 @@
 import '../../core/env/env.dart';
 import '../../core/http/http_service.dart';
+import '../../core/http/paginated_parser.dart';
 import '../../core/http/result.dart';
+import '../models/auth/company_base_info_model.dart';
 import '../models/auth/login_entity.dart';
 
 /// 登录模块仓库层，统一管理鉴权相关数据请求。
@@ -11,7 +13,10 @@ class AuthRepository {
   Future<Result<Map<String, dynamic>>> getVerifyCode() {
     return _httpService.get<Map<String, dynamic>>(
       '/api/oauth2/proxy/captcha',
-      queryParameters: {'appCode': Environment.currentEnv.appCode, 'debug': true},
+      queryParameters: {
+        'appCode': Environment.currentEnv.appCode,
+        'debug': true,
+      },
       parser: (json) => Map<String, dynamic>.from(json as Map),
     );
   }
@@ -20,9 +25,15 @@ class AuthRepository {
   Future<String> getAuthorizationUrl() async {
     final result = await _httpService.get<dynamic>(
       '/api/oauth2/getAuthorizationUrl',
-      queryParameters: {'appCode': Environment.currentEnv.appCode, 'web_redirect_uri': ''},
+      queryParameters: {
+        'appCode': Environment.currentEnv.appCode,
+        'web_redirect_uri': '',
+      },
     );
-    return result.when(success: (data) => data.toString(), failure: (error) => throw Exception(error.message));
+    return result.when(
+      success: (data) => data.toString(),
+      failure: (error) => throw Exception(error.message),
+    );
   }
 
   /// 代理登录获取授权码。
@@ -51,7 +62,10 @@ class AuthRepository {
         'password': password,
       },
     );
-    return result.when(success: (data) => data.toString(), failure: (error) => throw Exception(error.message));
+    return result.when(
+      success: (data) => data.toString(),
+      failure: (error) => throw Exception(error.message),
+    );
   }
 
   /// 通过授权码换取 token。
@@ -62,7 +76,10 @@ class AuthRepository {
 
     final result = await _httpService.get<Map<String, dynamic>>(
       '/api/oauth2/getAccessToken',
-      queryParameters: {'appCode': Environment.currentEnv.appCode, 'code': code},
+      queryParameters: {
+        'appCode': Environment.currentEnv.appCode,
+        'code': code,
+      },
       parser: (json) => Map<String, dynamic>.from(json as Map),
     );
 
@@ -78,9 +95,53 @@ class AuthRepository {
     );
   }
 
+  /// 获取当前登录人身份类型。
+  Future<Result<String>> getIdentityType() {
+    return _httpService.get<String>(
+      '/api/closed-off/userInfo/getIdentityType',
+      parser: (json) => json?.toString() ?? '',
+    );
+  }
+
   /// 获取当前登录用户信息。
   Future<Result<LoginEntity>> getUserProfile() {
-    return _httpService.get<LoginEntity>('/api/system/user/getUserInfo', parser: (json) => LoginEntity.fromJson(Map<String, dynamic>.from(json as Map)));
+    return _httpService.get<LoginEntity>(
+      '/api/system/user/getUserInfo',
+      parser: (json) =>
+          LoginEntity.fromJson(Map<String, dynamic>.from(json as Map)),
+    );
+  }
+
+  /// 分页查询通过租户公司集合。
+  Future<Result<PaginatedResult<CompanyBaseInfoModel>>> getCompanyBaseInfoPage({
+    int pageIndex = 1,
+    int pageSize = 20,
+    String? id,
+    String? companyCode,
+    String? companyName,
+    String? companyType,
+  }) {
+    final payload = <String, dynamic>{
+      ...buildPagePayload(pageIndex: pageIndex, pageSize: pageSize),
+      if ((id ?? '').trim().isNotEmpty) 'id': id!.trim(),
+      if ((companyCode ?? '').trim().isNotEmpty)
+        'companyCode': companyCode!.trim(),
+      if ((companyName ?? '').trim().isNotEmpty)
+        'companyName': companyName!.trim(),
+      if ((companyType ?? '').trim().isNotEmpty)
+        'companyType': companyType!.trim(),
+    };
+
+    return _httpService.get<PaginatedResult<CompanyBaseInfoModel>>(
+      '/api/system/companyBaseInfo/getCompanyByTenantId',
+      queryParameters: payload,
+      parser: (json) => parsePaginatedResult<CompanyBaseInfoModel>(
+        json: json,
+        requestPageIndex: pageIndex,
+        requestPageSize: pageSize,
+        itemParser: (item) => CompanyBaseInfoModel.fromJson(item),
+      ),
+    );
   }
 
   /// 退出登录，预留服务端登出扩展点。

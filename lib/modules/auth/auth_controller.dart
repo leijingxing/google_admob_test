@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -192,6 +193,7 @@ class AuthController extends GetxController {
         await StorageUtil.remove(StorageConstants.loginUsername);
         await StorageUtil.remove(StorageConstants.loginPassword);
       }
+      _fetchAndCacheIdentityType();
       if (_isDisposed || isClosed) return;
       await HomeRoutes.offAll();
     } catch (error) {
@@ -201,6 +203,22 @@ class AuthController extends GetxController {
       if (!_isDisposed && !isClosed) {
         isClick.value = false;
       }
+    }
+  }
+
+  void _fetchAndCacheIdentityType() {
+    unawaited(_fetchAndCacheIdentityTypeAsync());
+  }
+
+  Future<void> _fetchAndCacheIdentityTypeAsync() async {
+    try {
+      final result = await _authRepository.getIdentityType();
+      await result.when(
+        success: (data) => UserManager.saveIdentityType(data),
+        failure: (_) => UserManager.saveIdentityType(null),
+      );
+    } catch (_) {
+      await UserManager.saveIdentityType(null);
     }
   }
 

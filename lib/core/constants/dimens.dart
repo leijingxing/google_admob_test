@@ -4,14 +4,17 @@ abstract class AppDimens {
   AppDimens._();
 
   static const double dp0 = 0;
+  static double dp1 = 1.w;
   static double dp2 = 2.w;
   static double dp4 = 4.w;
   static double dp3 = 3.w;
   static double dp5 = 5.w;
   static double dp6 = 6.w;
+  static double dp7 = 7.w;
   static double dp8 = 8.w;
   static double dp9 = 9.w;
   static double dp10 = 10.w;
+  static double dp11 = 11.w;
   static double dp12 = 12.w;
   static double dp14 = 14.w;
   static double dp16 = 16.w;
@@ -52,11 +55,13 @@ abstract class AppDimens {
   static double dp220 = 220.w;
   static double dp256 = 256.w;
   static double dp300 = 300.w;
+  static double dp999 = 999.w;
 
   /// 文字尺寸
   static double sp5 = 5.sp;
   static double sp6 = 6.sp;
   static double sp8 = 8.sp;
+  static double sp9 = 9.sp;
   static double sp10 = 10.sp;
   static double sp11 = 11.sp;
   static double sp12 = 12.sp;
@@ -64,6 +69,7 @@ abstract class AppDimens {
   static double sp14 = 14.sp;
   static double sp15 = 15.sp;
   static double sp16 = 16.sp;
+  static double sp17 = 17.sp;
   static double sp18 = 18.sp;
   static double sp20 = 20.sp;
   static double sp22 = 22.sp;

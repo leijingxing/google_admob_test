@@ -10,6 +10,9 @@ ExceptionConfirmationItemModel _$ExceptionConfirmationItemModelFromJson(
   Map<String, dynamic> json,
 ) => ExceptionConfirmationItemModel(
   id: const NullableStringSafeConverter().fromJson(json['id']),
+  reportUserId: const NullableStringSafeConverter().fromJson(
+    json['reportUserId'],
+  ),
   reportUserName: const NullableStringSafeConverter().fromJson(
     json['reportUserName'],
   ),
@@ -48,6 +51,9 @@ Map<String, dynamic> _$ExceptionConfirmationItemModelToJson(
   ExceptionConfirmationItemModel instance,
 ) => <String, dynamic>{
   'id': const NullableStringSafeConverter().toJson(instance.id),
+  'reportUserId': const NullableStringSafeConverter().toJson(
+    instance.reportUserId,
+  ),
   'reportUserName': const NullableStringSafeConverter().toJson(
     instance.reportUserName,
   ),

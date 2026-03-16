@@ -13,14 +13,8 @@ import '../../../../data/repository/logistics_query_repository.dart';
 class LogisticsQueryStatisticsController extends GetxController {
   final LogisticsQueryRepository _repository = LogisticsQueryRepository();
 
-  static const Map<int, String> _goodsTypeTextMap = <int, String>{
-    0: '危化品',
-    1: '危废品',
-    2: '普通货物',
-  };
-
   static const List<String> _pageDictTypes = <String>[
-    DictFieldQueryTool.hazardousType,
+    DictFieldQueryTool.goodsType,
     DictFieldQueryTool.loadType,
   ];
 
@@ -45,7 +39,9 @@ class LogisticsQueryStatisticsController extends GetxController {
   /// 货物类型文案。
   static String? goodsTypeText(int? goodsType, {bool fallbackRaw = false}) {
     if (goodsType == null) return null;
-    return _goodsTypeTextMap[goodsType] ?? (fallbackRaw ? '$goodsType' : null);
+    final label = DictFieldQueryTool.goodsTypeLabel(goodsType, fallback: '');
+    if (label.isNotEmpty) return label;
+    return fallbackRaw ? '$goodsType' : null;
   }
 
   /// 装载类型文案。

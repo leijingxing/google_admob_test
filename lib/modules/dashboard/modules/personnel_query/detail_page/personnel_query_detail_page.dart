@@ -606,7 +606,7 @@ class _AccessRecordTabState extends State<_AccessRecordTab> {
                 return _RecordCard(
                   title: '联系电话：${_emptyDash(item.userPhone)}',
                   rows: [
-                    '目的地：${_emptyDash(item.destination)}',
+                    '目的地：${_emptyDash(item.companyName)}',
                     '准入类别：${PersonnelQueryDetailController.recordTypeText(item.recordType)}',
                     '入园时间/闸机：${_emptyDash(item.inDate)} / ${_emptyDash(item.inDeviceName)}',
                     '出园时间/闸机：${_emptyDash(item.outDate)} / ${_emptyDash(item.outDeviceName)}',
@@ -691,6 +691,8 @@ class _ViolationRecordTabState extends State<_ViolationRecordTab> {
             child: CustomEasyRefreshList<VehicleViolationRecordModel>(
               refreshTrigger: _refreshTrigger,
               dataLoader: (pageIndex, pageSize) {
+                // todo 违规记录接口暂未接入，当前固定返回空列表。
+                return Future.value(const <VehicleViolationRecordModel>[]);
                 return widget.controller.loadViolationRecords(
                   pageIndex,
                   pageSize,
@@ -799,7 +801,8 @@ class _BlackRecordTabState extends State<_BlackRecordTab> {
                   pageIndex,
                   pageSize,
                   keyword: _keywordController.text.trim(),
-                  realName: widget.row.name,
+                  // realName: widget.row.name,
+                  idCard: widget.row.idCard,
                   type: 1,
                 );
               },

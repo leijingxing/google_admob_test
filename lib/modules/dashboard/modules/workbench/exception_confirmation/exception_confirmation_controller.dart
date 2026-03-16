@@ -97,7 +97,7 @@ class ExceptionConfirmationController extends GetxController {
   }
 
   bool canConfirm(ExceptionConfirmationItemModel item) {
-    return item.confirmStatus != 1 &&
+    return item.confirmStatus == 2 &&
         (item.confirmerId == null || item.confirmerId!.trim().isEmpty);
   }
 
@@ -105,10 +105,14 @@ class ExceptionConfirmationController extends GetxController {
     if (tabIndex == 1) {
       return confirmStatus == 1;
     }
-    return confirmStatus != 1;
+    return confirmStatus == 2;
   }
 
-  String statusText(int value) => value == 1 ? '已确认' : '待确认';
+  String statusText(int value) {
+    if (value == 1) return '已确认';
+    if (value == 2) return '待确认';
+    return '已撤销';
+  }
 
   String validText(int value) {
     switch (value) {
@@ -129,10 +133,17 @@ class ExceptionConfirmationController extends GetxController {
         borderColor: Color(0xFFB8E8CC),
       );
     }
+    if (value == 2) {
+      return const AppCardStatusStyle(
+        textColor: Color(0xFFE07A34),
+        backgroundColor: Color(0xFFFFF1E8),
+        borderColor: Color(0xFFF6D0B8),
+      );
+    }
     return const AppCardStatusStyle(
-      textColor: Color(0xFFE07A34),
-      backgroundColor: Color(0xFFFFF1E8),
-      borderColor: Color(0xFFF6D0B8),
+      textColor: Color(0xFF66768B),
+      backgroundColor: Color(0xFFF3F5F8),
+      borderColor: Color(0xFFD9E0E8),
     );
   }
 

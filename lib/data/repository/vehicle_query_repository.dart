@@ -183,10 +183,11 @@ class VehicleQueryRepository {
     String? keyword,
     String? carNumb,
     String? realName,
+    String? idCard,
     Object? type,
   }) {
     final payload = buildPagePayload(pageIndex: pageIndex, pageSize: pageSize)
-      ..addAll({'keyword': keyword, 'carNumb': carNumb, 'realName': realName, 'type': type})
+      ..addAll({'keyword': keyword, 'carNumb': carNumb, 'realName': realName,'idCard': idCard, 'type': type})
       ..removeWhere((key, value) => value == null || value == '');
 
     return _httpService.post<PaginatedResult<VehicleBlackRecordModel>>(

@@ -64,7 +64,11 @@ class ExceptionConfirmationDetailPage extends StatelessWidget {
     );
   }
 
-  String _statusText(int value) => value == 1 ? '已确认' : '待确认';
+  String _statusText(int value) {
+    if (value == 1) return '已确认';
+    if (value == 2) return '待确认';
+    return '已撤销';
+  }
 
   String _validText(int value) {
     switch (value) {
