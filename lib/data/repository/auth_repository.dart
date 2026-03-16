@@ -112,7 +112,7 @@ class AuthRepository {
     );
   }
 
-  /// 分页查询企业基础信息。
+  /// 分页查询通过租户公司集合。
   Future<Result<PaginatedResult<CompanyBaseInfoModel>>> getCompanyBaseInfoPage({
     int pageIndex = 1,
     int pageSize = 20,
@@ -132,9 +132,9 @@ class AuthRepository {
         'companyType': companyType!.trim(),
     };
 
-    return _httpService.post<PaginatedResult<CompanyBaseInfoModel>>(
-      '/api/system/companyBaseInfo/page',
-      data: payload,
+    return _httpService.get<PaginatedResult<CompanyBaseInfoModel>>(
+      '/api/system/companyBaseInfo/getCompanyByTenantId',
+      queryParameters: payload,
       parser: (json) => parsePaginatedResult<CompanyBaseInfoModel>(
         json: json,
         requestPageIndex: pageIndex,

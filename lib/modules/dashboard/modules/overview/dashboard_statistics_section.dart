@@ -27,7 +27,7 @@ class DashboardStatisticsSection extends StatelessWidget {
         DashboardReservationStatisticsSection(),
         OverviewSectionSpacing(),
         DashboardHazardousInStatisticsSection(),
-        SizedBox(height: 10),
+        OverviewSectionSpacing(),
         DashboardHazardousOutStatisticsSection(),
         OverviewSectionSpacing(),
         DashboardEnterpriseOverviewSection(),

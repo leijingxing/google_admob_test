@@ -18,16 +18,16 @@ class DashboardYardStatisticsSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Expanded(child: OverviewSectionTitle(title: '园内统计')),
-                OverviewDateRangeFilter(
-                  range: controller.yardRange,
-                  onChanged: controller.onYardRangeChanged,
-                ),
-              ],
+            OverviewSectionHeader(
+              title: '园内统计',
+              trailing: OverviewDateRangeFilter(
+                range: controller.yardRange,
+                onChanged: controller.onYardRangeChanged,
+              ),
+              onRefresh: controller.refreshYardStatistics,
+              isRefreshing: controller.isYardRefreshing,
             ),
-            SizedBox(height: AppDimens.dp6),
+            SizedBox(height: OverviewSectionTokens.contentGap),
             _YardStatsGrid(items: controller.yardStats),
           ],
         );
@@ -71,23 +71,8 @@ class _YardStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppDimens.dp10,
-        vertical: AppDimens.dp10,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimens.dp12),
-        border: Border.all(color: const Color(0xFFE3EBF5)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F2747).withValues(alpha: 0.035),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+    return OverviewCard(
+      padding: EdgeInsets.all(OverviewSectionTokens.cardPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -97,8 +82,10 @@ class _YardStatCard extends StatelessWidget {
               vertical: AppDimens.dp6,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFF5F8FC),
-              borderRadius: BorderRadius.circular(AppDimens.dp10),
+              color: OverviewSectionTokens.mutedBackground,
+              borderRadius: BorderRadius.circular(
+                OverviewSectionTokens.metricRadius,
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,8 +94,8 @@ class _YardStatCard extends StatelessWidget {
                   width: AppDimens.dp6,
                   height: AppDimens.dp6,
                   margin: EdgeInsets.only(top: AppDimens.dp4),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF4C7DFF),
+                  decoration: BoxDecoration(
+                    color: OverviewSectionTokens.accent,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -128,7 +115,7 @@ class _YardStatCard extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: AppDimens.dp7),
+          SizedBox(height: OverviewSectionTokens.itemGap),
           LayoutBuilder(
             builder: (context, constraints) {
               final columnCount = _metricColumnCount(
@@ -179,47 +166,17 @@ class _InlineMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppDimens.dp8,
-        vertical: AppDimens.dp7,
-      ),
-      decoration: BoxDecoration(
-        color: emphasize ? const Color(0xFFF3F7FF) : const Color(0xFFF8FAFD),
-        borderRadius: BorderRadius.circular(AppDimens.dp9),
-        border: Border.all(
-          color: emphasize ? const Color(0xFFDCE7FA) : const Color(0xFFE8EEF6),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            metric.value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: const Color(0xFF243E5A),
-              fontSize: emphasize ? AppDimens.sp20 : AppDimens.sp17,
-              fontWeight: FontWeight.w800,
-              height: 1.05,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            metric.label,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: const Color(0xFF67809C),
-              fontSize: AppDimens.sp10,
-              fontWeight: FontWeight.w500,
-              height: 1.2,
-            ),
-          ),
-        ],
-      ),
+    return OverviewMetricTile(
+      value: metric.value,
+      label: metric.label,
+      emphasize: emphasize,
+      valueColor: const Color(0xFF243E5A),
+      backgroundColor: emphasize
+          ? OverviewSectionTokens.metricEmphasisBackground
+          : OverviewSectionTokens.metricBackground,
+      borderColor: emphasize
+          ? OverviewSectionTokens.accentSoftBorder
+          : OverviewSectionTokens.metricBorder,
     );
   }
 }

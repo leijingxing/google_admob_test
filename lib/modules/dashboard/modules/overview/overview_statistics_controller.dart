@@ -92,6 +92,14 @@ class OverviewStatisticsController extends GetxController {
   List<EnterpriseOverviewItem> enterpriseOverviewItems =
       _defaultEnterpriseOverviewItems();
 
+  bool isYardRefreshing = false;
+  bool isApprovalRefreshing = false;
+  bool isReservationRefreshing = false;
+  bool isInnerFlowRefreshing = false;
+  bool isHazardousInRefreshing = false;
+  bool isHazardousOutRefreshing = false;
+  bool isEnterpriseRefreshing = false;
+
   @override
   void onInit() {
     super.onInit();
@@ -121,6 +129,36 @@ class OverviewStatisticsController extends GetxController {
   /// 刷新今日预约情况。
   void refreshReservationTrend() {
     unawaited(loadReservationStatistics());
+  }
+
+  /// 刷新园内统计。
+  void refreshYardStatistics() {
+    unawaited(loadYardStatistics());
+  }
+
+  /// 刷新审批统计。
+  void refreshApprovalStatistics() {
+    unawaited(loadApprovalStatistics());
+  }
+
+  /// 刷新人车流统计。
+  void refreshInnerFlowStatistics() {
+    unawaited(loadInnerFlowStatistics());
+  }
+
+  /// 刷新危化品入园统计。
+  void refreshHazardousInStatistics() {
+    unawaited(loadHazardousInStatistics());
+  }
+
+  /// 刷新危化品出园统计。
+  void refreshHazardousOutStatistics() {
+    unawaited(loadHazardousOutStatistics());
+  }
+
+  /// 刷新企业概览。
+  void refreshEnterpriseOverview() {
+    unawaited(loadEnterpriseOverview());
   }
 
   /// 更新园区内人车流类型。
@@ -161,6 +199,8 @@ class OverviewStatisticsController extends GetxController {
 
   /// 拉取园内统计。
   Future<void> loadYardStatistics() async {
+    isYardRefreshing = true;
+    update([yardSectionId]);
     final startTime = _rangeStartTime(yardRange);
     final endTime = _rangeEndTime(yardRange);
 
@@ -193,26 +233,33 @@ class OverviewStatisticsController extends GetxController {
       },
     );
 
+    isYardRefreshing = false;
     update([yardSectionId]);
   }
 
   /// 拉取审批统计。
   Future<void> loadApprovalStatistics() async {
+    isApprovalRefreshing = true;
+    update([approvalSectionId]);
     final result = await _repository.getTodayApprovalBlackWhiteList();
 
     result.when(
       success: (data) {
         approvalRows = _buildApprovalRows(data);
-        update([approvalSectionId]);
       },
       failure: (error) {
         AppToast.showError(error.message);
       },
     );
+
+    isApprovalRefreshing = false;
+    update([approvalSectionId]);
   }
 
   /// 拉取今日预约情况。
   Future<void> loadReservationStatistics() async {
+    isReservationRefreshing = true;
+    update([reservationSectionId]);
     final result = await _repository.getTodayReservation(
       companyId: selectedReservationCompany?.id,
     );
@@ -221,16 +268,20 @@ class OverviewStatisticsController extends GetxController {
       success: (data) {
         reservationSummaryMetrics = _buildReservationSummaryMetrics(data);
         reservationTrendSeries = _buildReservationTrendSeries(data);
-        update([reservationSectionId]);
       },
       failure: (error) {
         AppToast.showError(error.message);
       },
     );
+
+    isReservationRefreshing = false;
+    update([reservationSectionId]);
   }
 
   /// 拉取园区内人车流统计。
   Future<void> loadInnerFlowStatistics() async {
+    isInnerFlowRefreshing = true;
+    update([innerFlowSectionId]);
     final result = await _repository.getParkInnerFlowStatistics(
       type: selectedInnerFlowType,
       strDateTime: _rangeStartTime(innerFlowRange),
@@ -240,16 +291,20 @@ class OverviewStatisticsController extends GetxController {
     result.when(
       success: (data) {
         innerFlowSeries = _buildInnerFlowSeries(data);
-        update([innerFlowSectionId]);
       },
       failure: (error) {
         AppToast.showError(error.message);
       },
     );
+
+    isInnerFlowRefreshing = false;
+    update([innerFlowSectionId]);
   }
 
   /// 拉取危化品入园统计。
   Future<void> loadHazardousInStatistics() async {
+    isHazardousInRefreshing = true;
+    update([hazardousInSectionId]);
     final result = await _repository.getHazardousWasteInAndOut(
       strDateTime: _rangeStartTime(hazardousInRange),
       endDateTime: _rangeEndTime(hazardousInRange),
@@ -259,16 +314,20 @@ class OverviewStatisticsController extends GetxController {
     result.when(
       success: (data) {
         hazardousInPie = _buildHazardousPie(data);
-        update([hazardousInSectionId]);
       },
       failure: (error) {
         AppToast.showError(error.message);
       },
     );
+
+    isHazardousInRefreshing = false;
+    update([hazardousInSectionId]);
   }
 
   /// 拉取危化品出园统计。
   Future<void> loadHazardousOutStatistics() async {
+    isHazardousOutRefreshing = true;
+    update([hazardousOutSectionId]);
     final result = await _repository.getHazardousWasteInAndOut(
       strDateTime: _rangeStartTime(hazardousOutRange),
       endDateTime: _rangeEndTime(hazardousOutRange),
@@ -278,16 +337,20 @@ class OverviewStatisticsController extends GetxController {
     result.when(
       success: (data) {
         hazardousOutPie = _buildHazardousPie(data);
-        update([hazardousOutSectionId]);
       },
       failure: (error) {
         AppToast.showError(error.message);
       },
     );
+
+    isHazardousOutRefreshing = false;
+    update([hazardousOutSectionId]);
   }
 
   /// 拉取企业情况概览。
   Future<void> loadEnterpriseOverview() async {
+    isEnterpriseRefreshing = true;
+    update([enterpriseSectionId]);
     final result = await _repository.getCompanyOverview(
       companyId: selectedEnterpriseCompany?.id,
     );
@@ -295,12 +358,14 @@ class OverviewStatisticsController extends GetxController {
     result.when(
       success: (data) {
         enterpriseOverviewItems = _buildEnterpriseOverviewItems(data);
-        update([enterpriseSectionId]);
       },
       failure: (error) {
         AppToast.showError(error.message);
       },
     );
+
+    isEnterpriseRefreshing = false;
+    update([enterpriseSectionId]);
   }
 
   static List<YardStatCardData> _buildYardStats(

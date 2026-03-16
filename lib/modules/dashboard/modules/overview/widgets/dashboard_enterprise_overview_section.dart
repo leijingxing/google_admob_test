@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../../core/components/select/app_company_select_field.dart';
+import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/dimens.dart';
 import '../../../../../core/utils/user_manager.dart';
 import '../overview_statistics_controller.dart';
@@ -20,8 +21,12 @@ class DashboardEnterpriseOverviewSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const OverviewSectionTitle(title: '企业情况概览'),
-            SizedBox(height: AppDimens.dp10),
+            OverviewSectionHeader(
+              title: '企业情况概览',
+              onRefresh: controller.refreshEnterpriseOverview,
+              isRefreshing: controller.isEnterpriseRefreshing,
+            ),
+            SizedBox(height: OverviewSectionTokens.contentGap),
             _EnterpriseOverviewCard(
               selectedCompany: controller.selectedEnterpriseCompany,
               onCompanyChanged: controller.onEnterpriseCompanyChanged,
@@ -48,65 +53,29 @@ class _EnterpriseOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showCompanyFilter = UserManager.isParkUser;
-    return Container(
-      padding: EdgeInsets.all(AppDimens.dp10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimens.dp14),
-        border: Border.all(color: const Color(0xFFE2EAF6)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2F6BFF).withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return OverviewCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: AppDimens.dp8,
-            runSpacing: AppDimens.dp8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: AppDimens.dp4,
-                    height: AppDimens.dp14,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2F6BFF),
-                      borderRadius: BorderRadius.circular(AppDimens.dp4),
+          OverviewCardTitle(
+            title: '企业列表',
+            trailing: showCompanyFilter
+                ? SizedBox(
+                    width: AppDimens.dp150,
+                    child: OverviewCompanySelectField(
+                      value: selectedCompany,
+                      onChanged: onCompanyChanged,
                     ),
-                  ),
-                  SizedBox(width: AppDimens.dp6),
-                  Text(
-                    '企业情况概览',
-                    style: TextStyle(
-                      color: const Color(0xFF203651),
-                      fontSize: AppDimens.sp14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-              if (showCompanyFilter)
-                SizedBox(
-                  width: AppDimens.dp150,
-                  child: OverviewCompanySelectField(
-                    value: selectedCompany,
-                    onChanged: onCompanyChanged,
-                  ),
-                ),
-            ],
+                  )
+                : null,
           ),
-          SizedBox(height: AppDimens.dp10),
+          SizedBox(height: OverviewSectionTokens.contentGap),
           ...items.map((item) {
             final isLast = item == items.last;
             return Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : AppDimens.dp8),
+              padding: EdgeInsets.only(
+                bottom: isLast ? 0 : OverviewSectionTokens.itemGap,
+              ),
               child: _EnterpriseOverviewListItem(item: item),
             );
           }),
@@ -126,16 +95,9 @@ class _EnterpriseOverviewListItem extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(AppDimens.dp10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimens.dp12),
-        border: Border.all(color: const Color(0xFFE1E9F4)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF153055).withValues(alpha: 0.025),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: OverviewSectionTokens.cardTintBackground,
+        borderRadius: BorderRadius.circular(OverviewSectionTokens.cardRadius),
+        border: Border.all(color: OverviewSectionTokens.metricBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,14 +113,16 @@ class _EnterpriseOverviewListItem extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF5F8FC),
-                  borderRadius: BorderRadius.circular(AppDimens.dp10),
-                  border: Border.all(color: const Color(0xFFE1E9F3)),
+                  color: OverviewSectionTokens.metricBackground,
+                  borderRadius: BorderRadius.circular(
+                    OverviewSectionTokens.metricRadius,
+                  ),
+                  border: Border.all(color: OverviewSectionTokens.metricBorder),
                 ),
                 child: Text(
                   item.index.toString().padLeft(2, '0'),
                   style: TextStyle(
-                    color: const Color(0xFF4E6785),
+                    color: AppColors.headerSubtitle,
                     fontSize: AppDimens.sp12,
                     fontWeight: FontWeight.w800,
                   ),
@@ -171,7 +135,7 @@ class _EnterpriseOverviewListItem extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: const Color(0xFF203651),
+                    color: AppColors.headerTitle,
                     fontSize: AppDimens.sp14,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
@@ -180,20 +144,22 @@ class _EnterpriseOverviewListItem extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: AppDimens.dp8),
+          SizedBox(height: OverviewSectionTokens.itemGap),
           Container(
             padding: EdgeInsets.all(AppDimens.dp8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFD),
-              borderRadius: BorderRadius.circular(AppDimens.dp10),
-              border: Border.all(color: const Color(0xFFE8EEF5)),
+              color: OverviewSectionTokens.cardBackground,
+              borderRadius: BorderRadius.circular(
+                OverviewSectionTokens.metricRadius,
+              ),
+              border: Border.all(color: OverviewSectionTokens.metricBorder),
             ),
             child: Column(
               children: [
                 _CompactInfoField(label: '负责人', value: item.ownerName),
-                SizedBox(height: AppDimens.dp8),
+                SizedBox(height: OverviewSectionTokens.itemGap),
                 _CompactInfoField(label: '联系电话', value: item.phone),
-                SizedBox(height: AppDimens.dp8),
+                SizedBox(height: OverviewSectionTokens.itemGap),
                 Row(
                   children: [
                     Expanded(
@@ -203,7 +169,7 @@ class _EnterpriseOverviewListItem extends StatelessWidget {
                         emphasize: true,
                       ),
                     ),
-                    SizedBox(width: AppDimens.dp8),
+                    SizedBox(width: OverviewSectionTokens.itemGap),
                     Expanded(
                       child: _CompactInfoField(
                         label: '今日在岗员工',
@@ -216,13 +182,15 @@ class _EnterpriseOverviewListItem extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: AppDimens.dp8),
+          SizedBox(height: OverviewSectionTokens.itemGap),
           Container(
             padding: EdgeInsets.all(AppDimens.dp7),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFD),
-              borderRadius: BorderRadius.circular(AppDimens.dp10),
-              border: Border.all(color: const Color(0xFFE8EEF5)),
+              color: OverviewSectionTokens.cardBackground,
+              borderRadius: BorderRadius.circular(
+                OverviewSectionTokens.metricRadius,
+              ),
+              border: Border.all(color: OverviewSectionTokens.metricBorder),
             ),
             child: Row(
               children: [
@@ -231,8 +199,8 @@ class _EnterpriseOverviewListItem extends StatelessWidget {
                     metric: _EnterpriseMetricData(
                       label: '今日已审批',
                       value: item.approvedCount,
-                      accentColor: const Color(0xFF18A874),
-                      backgroundColor: const Color(0xFFF5FBF8),
+                      valueColor: AppColors.success,
+                      backgroundColor: OverviewSectionTokens.successSoft,
                     ),
                   ),
                 ),
@@ -242,8 +210,8 @@ class _EnterpriseOverviewListItem extends StatelessWidget {
                     metric: _EnterpriseMetricData(
                       label: '新增黑名单',
                       value: item.newBlacklistCount,
-                      accentColor: const Color(0xFFF06A6A),
-                      backgroundColor: const Color(0xFFFFF6F6),
+                      valueColor: AppColors.error,
+                      backgroundColor: OverviewSectionTokens.dangerSoft,
                     ),
                   ),
                 ),
@@ -253,8 +221,9 @@ class _EnterpriseOverviewListItem extends StatelessWidget {
                     metric: _EnterpriseMetricData(
                       label: '新增白名单',
                       value: item.newWhitelistCount,
-                      accentColor: const Color(0xFF8A63F8),
-                      backgroundColor: const Color(0xFFF8F6FF),
+                      valueColor: OverviewSectionTokens.accent,
+                      backgroundColor:
+                          OverviewSectionTokens.metricEmphasisBackground,
                     ),
                   ),
                 ),
@@ -280,50 +249,7 @@ class _CompactInfoField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppDimens.dp8,
-        vertical: AppDimens.dp7,
-      ),
-      decoration: BoxDecoration(
-        color: emphasize ? Colors.white : const Color(0xFFFDFEFF),
-        borderRadius: BorderRadius.circular(AppDimens.dp8),
-        border: Border.all(color: const Color(0xFFE2EAF5)),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: AppDimens.dp60,
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: const Color(0xFF7E90A8),
-                fontSize: AppDimens.sp10,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: emphasize
-                    ? const Color(0xFF244C84)
-                    : const Color(0xFF233B56),
-                fontSize: emphasize ? AppDimens.sp12 : AppDimens.sp11,
-                fontWeight: FontWeight.w700,
-                height: 1.1,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return OverviewInfoRow(label: label, value: value, emphasize: emphasize);
   }
 }
 
@@ -334,54 +260,11 @@ class _EnterpriseMetricChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppDimens.dp8,
-        vertical: AppDimens.dp8,
-      ),
-      decoration: BoxDecoration(
-        color: metric.backgroundColor,
-        borderRadius: BorderRadius.circular(AppDimens.dp8),
-        border: Border.all(color: const Color(0xFFE3EAF4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: AppDimens.dp14,
-            height: AppDimens.dp3,
-            decoration: BoxDecoration(
-              color: metric.accentColor,
-              borderRadius: BorderRadius.circular(AppDimens.dp999),
-            ),
-          ),
-          SizedBox(height: AppDimens.dp8),
-          Text(
-            metric.value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: const Color(0xFF223C5A),
-              fontSize: AppDimens.sp16,
-              fontWeight: FontWeight.w800,
-              height: 1,
-            ),
-          ),
-          SizedBox(height: AppDimens.dp4),
-          Text(
-            metric.label,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: const Color(0xFF667F9D),
-              fontSize: AppDimens.sp10,
-              fontWeight: FontWeight.w600,
-              height: 1.2,
-            ),
-          ),
-        ],
-      ),
+    return OverviewMetricTile(
+      label: metric.label,
+      value: metric.value,
+      backgroundColor: metric.backgroundColor,
+      valueColor: metric.valueColor,
     );
   }
 }
@@ -390,12 +273,12 @@ class _EnterpriseMetricData {
   const _EnterpriseMetricData({
     required this.label,
     required this.value,
-    required this.accentColor,
+    required this.valueColor,
     required this.backgroundColor,
   });
 
   final String label;
   final String value;
-  final Color accentColor;
+  final Color valueColor;
   final Color backgroundColor;
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
+import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/dimens.dart';
 import '../overview_statistics_controller.dart';
 import '../overview_statistics_models.dart';
@@ -19,8 +20,12 @@ class DashboardInnerFlowStatisticsSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const OverviewSectionTitle(title: '园区内人车流统计'),
-            SizedBox(height: AppDimens.dp10),
+            OverviewSectionHeader(
+              title: '园区内人车流统计',
+              onRefresh: controller.refreshInnerFlowStatistics,
+              isRefreshing: controller.isInnerFlowRefreshing,
+            ),
+            SizedBox(height: OverviewSectionTokens.contentGap),
             _InnerFlowStatisticsCard(
               range: controller.innerFlowRange,
               onRangeChanged: controller.onInnerFlowRangeChanged,
@@ -66,42 +71,21 @@ class _InnerFlowStatisticsCard extends StatelessWidget {
         : ((maxValue / 5).ceil() * 5).toDouble();
     final axisInterval = axisMax <= 10 ? 2.0 : (axisMax / 5).ceilToDouble();
 
-    return Container(
-      padding: EdgeInsets.all(AppDimens.dp12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimens.dp14),
-        border: Border.all(color: const Color(0xFFE2EAF6)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2F6BFF).withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return OverviewCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '园区内人车流趋势',
-                  style: TextStyle(
-                    color: const Color(0xFF203651),
-                    fontSize: AppDimens.sp14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              OverviewDateRangeFilter(range: range, onChanged: onRangeChanged),
-            ],
+          OverviewCardTitle(
+            title: '园区内人车流趋势',
+            trailing: OverviewDateRangeFilter(
+              range: range,
+              onChanged: onRangeChanged,
+            ),
           ),
-          SizedBox(height: AppDimens.dp10),
+          SizedBox(height: OverviewSectionTokens.contentGap),
           Wrap(
-            spacing: AppDimens.dp8,
-            runSpacing: AppDimens.dp8,
+            spacing: OverviewSectionTokens.itemGap,
+            runSpacing: OverviewSectionTokens.itemGap,
             children: options
                 .map(
                   (item) => _FlowTypeButton(
@@ -112,7 +96,7 @@ class _InnerFlowStatisticsCard extends StatelessWidget {
                 )
                 .toList(),
           ),
-          SizedBox(height: AppDimens.dp12),
+          SizedBox(height: OverviewSectionTokens.cardPadding),
           SizedBox(
             height: 240,
             child: SfCartesianChart(
@@ -134,10 +118,10 @@ class _InnerFlowStatisticsCard extends StatelessWidget {
                 majorTickLines: const MajorTickLines(size: 0),
                 majorGridLines: const MajorGridLines(
                   width: 1,
-                  color: Color(0xFFEDF2F8),
+                  color: OverviewSectionTokens.metricBorder,
                 ),
                 labelStyle: const TextStyle(
-                  color: Color(0xFF7F92A8),
+                  color: AppColors.textSecondary,
                   fontSize: 10,
                 ),
               ),
@@ -185,16 +169,20 @@ class _FlowTypeButton extends StatelessWidget {
           vertical: AppDimens.dp7,
         ),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF2F6BFF) : const Color(0xFFF4F7FB),
+          color: selected
+              ? OverviewSectionTokens.accent
+              : OverviewSectionTokens.mutedBackground,
           borderRadius: BorderRadius.circular(AppDimens.dp20),
           border: Border.all(
-            color: selected ? const Color(0xFF2F6BFF) : const Color(0xFFDCE5F1),
+            color: selected
+                ? OverviewSectionTokens.accent
+                : OverviewSectionTokens.metricBorder,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.white : const Color(0xFF47617D),
+            color: selected ? Colors.white : AppColors.headerSubtitle,
             fontSize: AppDimens.sp12,
             fontWeight: FontWeight.w600,
           ),

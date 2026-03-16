@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/dimens.dart';
 import '../overview_statistics_controller.dart';
 import '../overview_statistics_models.dart';
@@ -20,10 +19,14 @@ class DashboardHazardousInStatisticsSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const OverviewSectionTitle(title: '危化品统计'),
-            SizedBox(height: AppDimens.dp10),
-            _PieStatCard(
+            OverviewSectionHeader(
               title: '危化品入园统计',
+              onRefresh: controller.refreshHazardousInStatistics,
+              isRefreshing: controller.isHazardousInRefreshing,
+            ),
+            SizedBox(height: OverviewSectionTokens.contentGap),
+            _PieStatCard(
+              title: '占比明细',
               range: controller.hazardousInRange,
               onRangeChanged: controller.onHazardousInRangeChanged,
               data: controller.hazardousInPie,
@@ -50,31 +53,18 @@ class _PieStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(AppDimens.dp12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimens.dp14),
-        border: Border.all(color: const Color(0xFFE2EAF6)),
-      ),
+    return OverviewCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: AppDimens.sp14,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(height: AppDimens.dp8),
+          OverviewCardTitle(title: title),
+          SizedBox(height: OverviewSectionTokens.itemGap),
           OverviewDateRangeFilter(
             range: range,
             onChanged: onRangeChanged,
             width: double.infinity,
           ),
-          SizedBox(height: AppDimens.dp10),
+          SizedBox(height: OverviewSectionTokens.contentGap),
           SizedBox(
             height: AppDimens.dp200,
             child: SfCircularChart(
