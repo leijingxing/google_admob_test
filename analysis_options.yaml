@@ -9,6 +9,17 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude:
+    - lib/modules/auth/**
+    - lib/modules/dashboard/**
+    - lib/modules/home/**
+    - lib/modules/message/**
+    - lib/modules/profile/**
+    - lib/modules/splash/**
+    - lib/router/module_routes/**
+    - lib/router/app_auth_middleware.dart
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`

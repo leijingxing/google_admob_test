@@ -1,4 +1,0 @@
-interface:
-  display_name: "Flutter Project Guidelines"
-  short_description: "Enforce flutter_base coding constraints"
-  default_prompt: "Use -project-guidelines to implement changes under this repository's architecture and quality constraints."

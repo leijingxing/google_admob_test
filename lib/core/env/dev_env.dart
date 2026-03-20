@@ -3,7 +3,7 @@ import 'env.dart';
 /// 开发环境配置。
 class DevEnv implements Env {
   @override
-  String get title => '[DEV] 封闭化';
+  String get title => '[DEV] Google AdMob Demo';
 
   @override
   String get apiBaseUrl => 'http://10.1.34.16:31641';

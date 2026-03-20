@@ -17,6 +17,9 @@ class $AssetsImagesGen {
   /// File path: assets/images/.gitkeep
   String get aGitkeep => 'assets/images/.gitkeep';
 
+  /// Directory path: assets/images/reader
+  $AssetsImagesReaderGen get reader => const $AssetsImagesReaderGen();
+
   /// List of all assets
   List<String> get values => [aGitkeep];
 }
@@ -29,6 +32,74 @@ class $AssetsSvgGen {
 
   /// List of all assets
   List<String> get values => [aGitkeep];
+}
+
+class $AssetsImagesReaderGen {
+  const $AssetsImagesReaderGen();
+
+  /// File path: assets/images/reader/mist_port_cover.png
+  AssetGenImage get mistPortCover => const AssetGenImage('assets/images/reader/mist_port_cover.png');
+
+  /// File path: assets/images/reader/mist_port_page_1.png
+  AssetGenImage get mistPortPage1 => const AssetGenImage('assets/images/reader/mist_port_page_1.png');
+
+  /// File path: assets/images/reader/mist_port_page_2.png
+  AssetGenImage get mistPortPage2 => const AssetGenImage('assets/images/reader/mist_port_page_2.png');
+
+  /// File path: assets/images/reader/mist_port_page_3.png
+  AssetGenImage get mistPortPage3 => const AssetGenImage('assets/images/reader/mist_port_page_3.png');
+
+  /// File path: assets/images/reader/mist_port_page_4.png
+  AssetGenImage get mistPortPage4 => const AssetGenImage('assets/images/reader/mist_port_page_4.png');
+
+  /// File path: assets/images/reader/paper_bird_cover.png
+  AssetGenImage get paperBirdCover => const AssetGenImage('assets/images/reader/paper_bird_cover.png');
+
+  /// File path: assets/images/reader/paper_bird_page_1.png
+  AssetGenImage get paperBirdPage1 => const AssetGenImage('assets/images/reader/paper_bird_page_1.png');
+
+  /// File path: assets/images/reader/paper_bird_page_2.png
+  AssetGenImage get paperBirdPage2 => const AssetGenImage('assets/images/reader/paper_bird_page_2.png');
+
+  /// File path: assets/images/reader/paper_bird_page_3.png
+  AssetGenImage get paperBirdPage3 => const AssetGenImage('assets/images/reader/paper_bird_page_3.png');
+
+  /// File path: assets/images/reader/paper_bird_page_4.png
+  AssetGenImage get paperBirdPage4 => const AssetGenImage('assets/images/reader/paper_bird_page_4.png');
+
+  /// File path: assets/images/reader/star_hotel_cover.png
+  AssetGenImage get starHotelCover => const AssetGenImage('assets/images/reader/star_hotel_cover.png');
+
+  /// File path: assets/images/reader/star_hotel_page_1.png
+  AssetGenImage get starHotelPage1 => const AssetGenImage('assets/images/reader/star_hotel_page_1.png');
+
+  /// File path: assets/images/reader/star_hotel_page_2.png
+  AssetGenImage get starHotelPage2 => const AssetGenImage('assets/images/reader/star_hotel_page_2.png');
+
+  /// File path: assets/images/reader/star_hotel_page_3.png
+  AssetGenImage get starHotelPage3 => const AssetGenImage('assets/images/reader/star_hotel_page_3.png');
+
+  /// File path: assets/images/reader/star_hotel_page_4.png
+  AssetGenImage get starHotelPage4 => const AssetGenImage('assets/images/reader/star_hotel_page_4.png');
+
+  /// List of all assets
+  List<AssetGenImage> get values => [
+    mistPortCover,
+    mistPortPage1,
+    mistPortPage2,
+    mistPortPage3,
+    mistPortPage4,
+    paperBirdCover,
+    paperBirdPage1,
+    paperBirdPage2,
+    paperBirdPage3,
+    paperBirdPage4,
+    starHotelCover,
+    starHotelPage1,
+    starHotelPage2,
+    starHotelPage3,
+    starHotelPage4,
+  ];
 }
 
 class Assets {

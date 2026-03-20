@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:get/get.dart';
 
 import '../../data/models/auth/login_entity.dart';
-import '../../router/module_routes/auth_routes.dart';
 import '../constants/storage.dart';
 import 'storage_util.dart';
 
@@ -110,6 +109,5 @@ class UserManager {
   /// 清理登录态并回到登录页。
   static Future<void> logout() async {
     await clearAll();
-    await AuthRoutes.offAll();
   }
 }

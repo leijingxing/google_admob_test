@@ -2,6 +2,7 @@ import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:talker/talker.dart';
 
 import 'core/constants/storage.dart';
@@ -54,6 +55,7 @@ class Global {
   ///   3. 记录首开标记与系统 UI 样式。
   static Future<void> init({required Env env}) async {
     WidgetsFlutterBinding.ensureInitialized();
+    await MobileAds.instance.initialize();
     _initEasyRefreshLocalization();
     await StorageUtil.init();
 
